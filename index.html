@@ -298,20 +298,41 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 
   <div class="page" id="page-sell" style="overflow:hidden;display:none;flex-direction:column;">
-    <div class="sell-search">
-      <input type="text" id="prod-search" placeholder="🔍 ค้นหาสินค้า..." oninput="filterProducts()">
+    <!-- mode toggle -->
+    <div style="display:flex;background:#fff;border-bottom:2px solid rgba(192,57,43,.15);flex-shrink:0;">
+      <button id="mode-liff-btn" onclick="setSellMode('liff')" style="flex:1;padding:10px;border:none;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
+        📱 สั่งผ่าน LINE OA
+      </button>
+      <button id="mode-local-btn" onclick="setSellMode('local')" style="flex:1;padding:10px;border:none;background:#f5f5f5;color:#888;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;">
+        🛒 สั่งแทนลูกค้า
+      </button>
     </div>
-    <div style="flex:1;overflow-y:auto;padding-bottom:70px;">
-      <div class="product-grid" id="product-grid"></div>
-    </div>
-    <div class="cart-bar">
-      <div class="cart-bar-left" onclick="openCart()" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex:1;">
-        <span style="font-size:20px">🛒</span>
-        <span class="cart-badge" id="cart-badge">0</span>
-        <span style="font-size:13px;color:var(--muted)">รายการสินค้า</span>
-        <div class="cart-bar-total" id="cart-bar-total" style="margin-left:auto;padding-right:10px;">฿0</div>
+
+    <!-- LIFF iframe mode -->
+    <div id="sell-liff" style="flex:1;display:flex;flex-direction:column;">
+      <div style="padding:10px 14px;background:#FDF0EF;border-bottom:1px solid rgba(192,57,43,.15);font-size:12px;color:#888;flex-shrink:0;">
+        💡 ลูกค้าสั่งผ่านหน้าร้าน LINE OA — ระบบจะรู้ว่าคุณเป็นผู้แนะนำ
       </div>
-      <button class="cart-bar-btn" onclick="openCart()">สั่งซื้อ</button>
+      <iframe id="liff-iframe" src="" style="flex:1;border:none;width:100%;" allow="camera;microphone;geolocation"></iframe>
+    </div>
+
+    <!-- Local product mode -->
+    <div id="sell-local" style="flex:1;overflow:hidden;display:none;flex-direction:column;">
+      <div class="sell-search">
+        <input type="text" id="prod-search" placeholder="🔍 ค้นหาสินค้า..." oninput="filterProducts()">
+      </div>
+      <div style="flex:1;overflow-y:auto;padding-bottom:70px;">
+        <div class="product-grid" id="product-grid"></div>
+      </div>
+      <div class="cart-bar">
+        <div class="cart-bar-left" onclick="openCart()" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex:1;">
+          <span style="font-size:20px">🛒</span>
+          <span class="cart-badge" id="cart-badge">0</span>
+          <span style="font-size:13px;color:var(--muted)">รายการสินค้า</span>
+          <div class="cart-bar-total" id="cart-bar-total" style="margin-left:auto;padding-right:10px;">฿0</div>
+        </div>
+        <button class="cart-bar-btn" onclick="openCart()">สั่งซื้อ</button>
+      </div>
     </div>
   </div>
 
@@ -342,6 +363,29 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <button class="bnav-btn" id="nav-map" onclick="switchPage('map')">
       <span class="bnav-icon">🗺️</span>เส้นทาง
     </button>
+  </div>
+</div>
+
+<!-- CUSTOMER PIN MODAL -->
+<div class="mov" id="pin-cust-modal">
+  <div class="mbox">
+    <div class="mhdr">
+      <h2>📍 เพิ่มลูกค้าใหม่</h2>
+      <div class="mclose" onclick="closePinCustModal()">×</div>
+    </div>
+    <div id="pin-cust-coords" style="font-size:11px;color:#888;margin-bottom:12px;padding:6px 10px;background:#FDF0EF;border-radius:8px;"></div>
+    <div class="cfield"><label>ชื่อ / ชื่อร้าน *</label><input type="text" id="pc-name" placeholder="เช่น ร้านสมชาย, คุณมาลี"></div>
+    <div class="cfield"><label>เบอร์โทร</label><input type="tel" id="pc-phone" placeholder="0812345678"></div>
+    <div class="cfield"><label>ประเภท</label>
+      <select id="pc-type" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(192,57,43,.25);background:#fff;color:#1a1a1a;font-family:var(--font);font-size:13px;outline:none;">
+        <option value="shop">🏪 ร้านค้า</option>
+        <option value="home">🏠 บ้าน</option>
+        <option value="business">🏢 ธุรกิจ</option>
+        <option value="other">📍 อื่นๆ</option>
+      </select>
+    </div>
+    <div class="cfield"><label>หมายเหตุ</label><textarea id="pc-note" placeholder="สินค้าที่สนใจ, วันนัด, ข้อมูลเพิ่มเติม..." style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(192,57,43,.25);background:#fff;color:#1a1a1a;font-family:var(--font);font-size:13px;outline:none;resize:none;height:70px;"></textarea></div>
+    <button class="confirm-btn" onclick="savePinCustomer()">✅ บันทึกลูกค้า</button>
   </div>
 </div>
 
@@ -443,6 +487,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 // GAS URL ฝังตรงนี้เลย
 const SESSION_KEY = 'sales_session';
 const BASE_URL    = window.location.origin + window.location.pathname.replace('sales.html','');
+const LINE_OA_ID   = '@monshin';
+const LINE_OA_URL  = 'https://line.me/R/ti/p/' + encodeURIComponent(LINE_OA_ID);
+const BACKEND_URL  = 'https://lineoa-u0v2.onrender.com';
+const LIFF_URL     = 'https://liff.line.me/2010305355-NY9E6yu7';
 
 function getGasUrl() { return 'https://script.google.com/macros/s/AKfycbw8PT4PBw0AVXiYiyp9LW4mZexvHxkBiohODVoTkq26Tu4YskhyDsbA821E2MBaLJjl/exec'; }
 async function gasCall(body) {
@@ -462,6 +510,8 @@ let customers = JSON.parse(localStorage.getItem('sales_customers')||'[]');
 let routeSelected = [];
 let routeLayer = null, routeTotalKm = 0;
 let addPinMode = false;
+let _pendingPinLat = null, _pendingPinLng = null;
+let _editCustId = null;
 let salesMap = null, pinMap = null;
 let pinLat = null, pinLng = null;
 let pinMarker = null;
@@ -557,7 +607,7 @@ function enterApp(sess) {
 // ══════════════════════════════════════════
 function renderIdCard() {
   const s = session;
-  const refUrl = `${BASE_URL}index.html?ref=${s.salesId}`;
+  const refUrl = `${BACKEND_URL}/invite/${s.salesId}`;
   const el = document.getElementById('id-card-content');
   el.innerHTML = `
     <div class="sales-id-card">
@@ -574,10 +624,10 @@ function renderIdCard() {
           <div id="qr-canvas"></div>
         </div>
         <div class="id-qr-info">
-          <div class="id-qr-label">ลิงก์ส่วนตัว</div>
+          <div class="id-qr-label">ลิงก์ LINE OA ส่วนตัว</div>
           <div class="id-link">${refUrl}</div>
           <div style="font-size:11px;color:var(--muted);line-height:1.6">
-            ลูกค้าสแกน QR หรือกดลิงก์นี้<br>ออเดอร์จะอ้างอิงถึงคุณอัตโนมัติ
+            ลูกค้าสแกน QR หรือกดลิงก์นี้<br>Add LINE OA แล้วสั่งสินค้า<br>ระบบจะรู้ว่าคุณเป็นผู้แนะนำ
           </div>
         </div>
       </div>
@@ -621,7 +671,7 @@ function shareMyLink() {
   } else { copyMyLink(); }
 }
 function copyMyLink() {
-  const url = `${BASE_URL}index.html?ref=${session.salesId}`;
+  const url = `${BACKEND_URL}/invite/${session.salesId}`;
   navigator.clipboard.writeText(url).then(() => showToast('✅ คัดลอกลิงก์แล้ว','success'));
 }
 
@@ -688,8 +738,8 @@ function renderProducts(list) {
     const priceText = sizes.length > 1 ? '฿' + minPrice.toLocaleString() + '+' : '฿' + minPrice.toLocaleString();
     const btnLabel = sizes.length > 1 ? '🔍 เลือกขนาด' : '+ ใส่ตะกร้า';
     const imgHtml = p.img
-      ? '<img src="' + p.img + '" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px 10px 0 0;" loading="lazy" onerror="this.style.display=\'none\'">'
-      : '<div class="prod-emoji">' + (p.emoji||'📦') + '</div>';
+      ? '<div style="width:100%;aspect-ratio:1587/2245;overflow:hidden;border-radius:10px 10px 0 0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;"><img src="' + p.img + '" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.parentElement.innerHTML=\'<span style=font-size:52px>' + (p.emoji||'📦') + '</span>\'"></div>'
+      : '<div style="width:100%;aspect-ratio:1587/2245;background:#FDF0EF;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:52px;">' + (p.emoji||'📦') + '</div>';
     const pid = String(p.id).replace(/'/g, '');
     return '<div class="prod-card" onclick="openProductModal(\'' + pid + '\')" style="cursor:pointer">'
       + imgHtml
@@ -711,8 +761,8 @@ function openProductModal(id) {
   if (sizes.length > 1) {
     // มีหลายขนาด → เปิด size modal
     const imgHtml = p.img
-      ? '<img src="' + p.img + '" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;margin-bottom:12px;">'
-      : '<div style="font-size:52px;text-align:center;margin-bottom:12px">' + (p.emoji||'📦') + '</div>';
+      ? '<img src="' + p.img + '" style="width:100%;max-height:200px;object-fit:contain;border-radius:12px;margin-bottom:12px;background:#f5f5f5;">'
+      : '<div style="font-size:40px;text-align:center;margin-bottom:12px">' + (p.emoji||'📦') + '</div>';
     document.getElementById('size-modal-body').innerHTML =
       imgHtml
       + '<div style="font-size:15px;font-weight:700;margin-bottom:4px">' + p.name + '</div>'
@@ -907,13 +957,9 @@ function initSalesMap() {
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(salesMap);
     salesMap.on('click', e => {
       if (!addPinMode) return;
-      const latlng = e.latlng;
-      const name = prompt('ชื่อลูกค้า/ร้านค้า:');
-      if (!name) return;
-      const cust = { id:'c_'+Date.now(), name, lat:latlng.lat, lng:latlng.lng, createdAt:Date.now() };
-      customers.push(cust);
-      localStorage.setItem('sales_customers', JSON.stringify(customers));
-      addCustomerMarker(cust);
+      _pendingPinLat = e.latlng.lat;
+      _pendingPinLng = e.latlng.lng;
+      openPinCustModal(_pendingPinLat, _pendingPinLng);
       setAddPin(false);
     });
     customers.forEach(c => addCustomerMarker(c));
@@ -922,10 +968,103 @@ function initSalesMap() {
 
 function addCustomerMarker(c) {
   if (!salesMap || !c.lat) return;
-  const m = L.marker([c.lat,c.lng], {
-    icon: L.divIcon({ html:`<div style="width:22px;height:22px;border-radius:50%;background:#4f8ef7;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">${c.name[0]}</div>`, iconSize:[22,22], iconAnchor:[11,11], className:'' })
-  }).addTo(salesMap).bindPopup(`<b>${c.name}</b>${c.phone?'<br>📞 '+c.phone:''}`);
+  const colors = { shop:'#C0392B', home:'#4f8ef7', business:'#e67e22', other:'#8e44ad' };
+  const icons  = { shop:'🏪', home:'🏠', business:'🏢', other:'📍' };
+  const bg = colors[c.type] || colors.shop;
+  const m = L.marker([c.lat, c.lng], {
+    icon: L.divIcon({
+      html: '<div style="width:26px;height:26px;border-radius:50%;background:' + bg + ';border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:11px;">' + (icons[c.type]||'📍') + '</div>',
+      iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-14], className:''
+    })
+  }).addTo(salesMap);
+  m.bindPopup(
+    '<div style="font-family:Sarabun,sans-serif;min-width:160px;">'
+    + '<div style="font-size:14px;font-weight:700;margin-bottom:4px;">' + (icons[c.type]||'📍') + ' ' + c.name + '</div>'
+    + (c.phone ? '<div style="font-size:12px;color:#C0392B;margin-bottom:3px;">📞 ' + c.phone + '</div>' : '')
+    + (c.note  ? '<div style="font-size:11px;color:#888;margin-bottom:6px;">' + c.note + '</div>' : '')
+    + '<div style="display:flex;gap:6px;margin-top:6px;">'
+    + '<button onclick="openPinCustModal(null,null,\"" + c.id + "\")" style="flex:1;padding:5px;border-radius:6px;border:1px solid rgba(192,57,43,.3);background:#fff;color:#C0392B;font-size:11px;font-weight:600;cursor:pointer;">✏️ แก้ไข</button>'
+    + '<button onclick="deleteCustomer(\"" + c.id + "\")" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e74c3c;background:#fff;color:#e74c3c;font-size:11px;font-weight:600;cursor:pointer;">🗑️ ลบ</button>'
+    + '</div></div>'
+  );
   customerMarkers[c.id] = m;
+}
+
+function openPinCustModal(lat, lng, editId) {
+  _editCustId = editId || null;
+  const title = editId ? '✏️ แก้ไขลูกค้า' : '📍 เพิ่มลูกค้าใหม่';
+  document.querySelector('#pin-cust-modal .mhdr h2').textContent = title;
+  document.getElementById('pin-cust-coords').textContent = lat && lng
+    ? '📍 พิกัด: ' + lat.toFixed(5) + ', ' + lng.toFixed(5)
+    : '';
+  if (editId) {
+    const c = customers.find(x => x.id === editId);
+    if (c) {
+      document.getElementById('pc-name').value  = c.name  || '';
+      document.getElementById('pc-phone').value = c.phone || '';
+      document.getElementById('pc-type').value  = c.type  || 'shop';
+      document.getElementById('pc-note').value  = c.note  || '';
+      _pendingPinLat = c.lat; _pendingPinLng = c.lng;
+    }
+  } else {
+    document.getElementById('pc-name').value  = '';
+    document.getElementById('pc-phone').value = '';
+    document.getElementById('pc-type').value  = 'shop';
+    document.getElementById('pc-note').value  = '';
+  }
+  document.getElementById('pin-cust-modal').classList.add('show');
+  setTimeout(() => document.getElementById('pc-name').focus(), 200);
+}
+
+function closePinCustModal() {
+  document.getElementById('pin-cust-modal').classList.remove('show');
+  _editCustId = null;
+}
+
+function savePinCustomer() {
+  const name  = document.getElementById('pc-name').value.trim();
+  const phone = document.getElementById('pc-phone').value.trim();
+  const type  = document.getElementById('pc-type').value;
+  const note  = document.getElementById('pc-note').value.trim();
+  if (!name) { showToast('⚠️ กรุณากรอกชื่อ'); return; }
+  if (_pendingPinLat === null) { showToast('⚠️ ไม่พบตำแหน่ง'); return; }
+
+  const typeIcons = { shop:'🏪', home:'🏠', business:'🏢', other:'📍' };
+
+  if (_editCustId) {
+    // แก้ไข
+    const idx = customers.findIndex(x => x.id === _editCustId);
+    if (idx >= 0) {
+      customers[idx] = { ...customers[idx], name, phone, type, note };
+      // อัปเดต marker
+      if (customerMarkers[_editCustId]) {
+        salesMap.removeLayer(customerMarkers[_editCustId]);
+        delete customerMarkers[_editCustId];
+      }
+      addCustomerMarker(customers[idx]);
+      showToast('✅ แก้ไขลูกค้าแล้ว', 'success');
+    }
+  } else {
+    // เพิ่มใหม่
+    const cust = {
+      id: 'c_' + Date.now(), name, phone, type, note,
+      lat: _pendingPinLat, lng: _pendingPinLng, createdAt: Date.now()
+    };
+    customers.push(cust);
+    addCustomerMarker(cust);
+    showToast('✅ เพิ่มลูกค้าแล้ว', 'success');
+  }
+  localStorage.setItem('sales_customers', JSON.stringify(customers));
+  closePinCustModal();
+}
+
+function deleteCustomer(id) {
+  if (!confirm('ลบลูกค้านี้?')) return;
+  customers = customers.filter(x => x.id !== id);
+  localStorage.setItem('sales_customers', JSON.stringify(customers));
+  if (customerMarkers[id]) { salesMap.removeLayer(customerMarkers[id]); delete customerMarkers[id]; }
+  salesMap.closePopup();
+  showToast('ลบแล้ว');
 }
 
 function toggleAddPin() { setAddPin(!addPinMode); }
@@ -964,6 +1103,33 @@ function clearRoute() {
 // ══════════════════════════════════════════
 //  PAGE NAV
 // ══════════════════════════════════════════
+function setSellMode(mode) {
+  const liff  = document.getElementById('sell-liff');
+  const local = document.getElementById('sell-local');
+  const btnL  = document.getElementById('mode-liff-btn');
+  const btnLo = document.getElementById('mode-local-btn');
+  if (mode === 'liff') {
+    liff.style.display  = 'flex';
+    local.style.display = 'none';
+    btnL.style.background  = 'linear-gradient(120deg,#96281B,#C0392B)';
+    btnL.style.color        = '#fff';
+    btnLo.style.background  = '#f5f5f5';
+    btnLo.style.color        = '#888';
+    // โหลด LIFF พร้อม ref เซล
+    const iframe = document.getElementById('liff-iframe');
+    if (session && !iframe.src) {
+      iframe.src = LIFF_URL + '?ref=' + session.salesId;
+    }
+  } else {
+    liff.style.display  = 'none';
+    local.style.display = 'flex';
+    btnLo.style.background = 'linear-gradient(120deg,#96281B,#C0392B)';
+    btnLo.style.color       = '#fff';
+    btnL.style.background   = '#f5f5f5';
+    btnL.style.color         = '#888';
+  }
+}
+
 function switchPage(name) {
   document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
   document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
@@ -972,6 +1138,7 @@ function switchPage(name) {
   page.style.display = name === 'sell' ? 'flex' : name === 'map' ? 'flex' : 'block';
   document.getElementById('nav-' + name).classList.add('active');
   if (name === 'map' && salesMap) setTimeout(() => salesMap.invalidateSize(), 100);
+  if (name === 'sell') setSellMode('liff');
 }
 
 // ══════════════════════════════════════════
