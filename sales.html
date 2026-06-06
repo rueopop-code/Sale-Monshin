@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>💼 Sales – มนชิน ซัพพลาย</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700\href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap"family=Prompt:wght@600;700;800\href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap"family=IBM+Plex+Sans+Thai:wght@400;500;600\href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap"display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{
+  --bg:#F7F7F7;--bg2:#FFFFFF;--bg3:#FDF0EF;--card:#FFFFFF;
+  --border:rgba(192,57,43,0.12);--border2:rgba(192,57,43,0.25);
+  --text:#1a1a1a;--muted:#888888;
+  --accent:#C0392B;--green:#27ae60;--warn:#e67e22;--danger:#e74c3c;
+  --purple:#8e44ad;--gold:#FFD700;
+  --font:'Sarabun','IBM Plex Sans Thai',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;}
+
+/* ── AUTH ── */
+#auth-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+#auth-screen.hidden{display:none;}
+.auth-wrap{width:100%;max-width:380px;padding:20px 0;}
+.auth-logo{text-align:center;margin-bottom:24px;}
+.auth-logo-icon{font-size:44px;margin-bottom:8px;}
+.auth-logo h1{font-size:20px;font-weight:700;}
+.auth-logo p{font-size:12px;color:var(--muted);margin-top:4px;}
+.auth-card{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:22px;}
+.auth-tabs{display:flex;background:var(--bg3);border-radius:10px;padding:3px;margin-bottom:18px;}
+.auth-tab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-radius:7px;}
+.auth-tab.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4);}
+.auth-form{display:none;}
+.auth-form.active{display:block;}
+.afield{margin-bottom:11px;}
+.afield label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600;}
+.afield input{width:100%;padding:10px 13px;border-radius:10px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:14px;outline:none;}
+.afield input:focus{border-color:var(--accent);}
+.auth-btn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.auth-btn:disabled{background:var(--bg3);color:var(--muted);cursor:not-allowed;}
+.auth-msg{padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:10px;display:none;text-align:center;}
+.auth-msg.err{background:rgba(255,107,107,.12);color:var(--danger);border:1px solid rgba(255,107,107,.3);display:block;}
+.auth-msg.ok{background:rgba(56,217,169,.12);color:var(--green);border:1px solid rgba(56,217,169,.3);display:block;}
+.auth-cfg{margin-top:12px;text-align:center;font-size:12px;color:var(--muted);}
+.auth-cfg a{color:var(--accent);cursor:pointer;text-decoration:underline;}
+
+/* ── APP ── */
+#app{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+#app.show{display:flex;}
+
+/* header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.hdr-left{display:flex;align-items:center;gap:10px;}
+.av{width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;}
+.hdr-name{font-size:13px;font-weight:600;}
+.hdr-code{font-size:11px;color:var(--gold);font-weight:600;}
+.hdr-right{display:flex;gap:6px;}
+.hbtn{background:none;border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:var(--font);}
+.hbtn:hover{color:var(--text);border-color:var(--border2);}
+.hbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* bottom nav */
+.bnav{display:flex;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;}
+.bnav-btn{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;font-family:var(--font);}
+.bnav-btn.active{color:var(--accent);}
+.bnav-icon{font-size:20px;display:block;margin-bottom:2px;}
+
+/* pages */
+.page{flex:1;overflow-y:auto;display:none;}
+.page.active{display:block;}
+
+/* ── PAGE: ID CARD ── */
+.id-card-page{padding:16px;}
+.sales-id-card{
+  background:linear-gradient(135deg,#1a1f2e 0%,#1e2433 100%);
+  border:1px solid rgba(255,212,59,.3);border-radius:20px;
+  padding:24px;margin-bottom:16px;position:relative;overflow:hidden;
+}
+.sales-id-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,212,59,.06);}
+.id-card-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.id-avatar{width:56px;height:56px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;border:3px solid rgba(255,212,59,.4);flex-shrink:0;}
+.id-info h2{font-size:17px;font-weight:700;}
+.id-code{font-size:13px;color:var(--gold);font-weight:700;margin-top:2px;}
+.id-role{font-size:11px;color:var(--muted);margin-top:2px;}
+.id-qr-section{display:flex;gap:16px;align-items:flex-start;}
+.id-qr-box{background:#fff;border-radius:14px;padding:10px;flex-shrink:0;}
+#qr-canvas{display:block;}
+.id-qr-info{flex:1;}
+.id-qr-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;}
+.id-link{font-size:12px;color:var(--accent);word-break:break-all;line-height:1.5;margin-bottom:10px;}
+.id-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;}
+.id-stat{background:var(--bg3);border-radius:10px;padding:10px;text-align:center;}
+.id-stat-val{font-size:18px;font-weight:700;color:var(--accent);}
+.id-stat-val.gold{color:var(--gold);}
+.id-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+.id-actions{display:flex;gap:8px;margin-top:12px;}
+.id-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;text-align:center;}
+.id-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.id-btn.gold{background:rgba(255,212,59,.15);color:var(--gold);border-color:rgba(255,212,59,.4);}
+
+/* ── PAGE: SELL (store copy) ── */
+.sell-page{display:flex;flex-direction:column;height:100%;}
+.sell-search{padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;}
+.sell-search input{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-family:var(--font);font-size:13px;outline:none;}
+.sell-search input:focus{border-color:var(--accent);}
+.product-grid{padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.prod-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;cursor:pointer;transition:border-color .2s;}
+.prod-card:hover{border-color:var(--accent);}
+.prod-emoji{font-size:32px;text-align:center;margin-bottom:8px;}
+.prod-name{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:4px;}
+.prod-price{font-size:14px;font-weight:700;color:var(--green);}
+.prod-stock{font-size:11px;color:var(--muted);}
+.prod-add{width:100%;margin-top:8px;padding:7px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;}
+
+/* cart bar */
+.cart-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:#fff;border-top:2px solid rgba(192,57,43,.2);
+  flex-shrink:0;position:relative;z-index:10;
+}
+.cart-bar-left{display:flex;align-items:center;gap:8px;}
+.cart-badge{background:var(--danger);color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.cart-bar-total{font-size:14px;font-weight:700;color:var(--green);}
+.cart-bar-btn{padding:8px 16px;border-radius:10px;border:none;background:var(--green);color:#0f1117;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;}
+
+/* ── PAGE: MAP ── */
+.map-page{display:flex;flex-direction:column;height:100%;}
+#sales-map{flex:1;min-height:0;}
+.map-bottom{padding:10px 14px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;}
+.map-stats{display:flex;gap:10px;margin-bottom:8px;}
+.mstat{flex:1;background:var(--bg3);border-radius:8px;padding:8px;text-align:center;}
+.mstat-val{font-size:15px;font-weight:700;color:var(--accent);}
+.mstat-lbl{font-size:10px;color:var(--muted);margin-top:1px;}
+.map-btns{display:flex;gap:8px;}
+.mbtn{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;}
+.mbtn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.mbtn.success{background:var(--green);color:#0f1117;border-color:var(--green);}
+
+/* ── MODALS ── */
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:3000;display:none;align-items:flex-end;justify-content:center;}
+.mov.show{display:flex;}
+.mov.center{align-items:center;padding:20px;}
+.mbox{background:var(--bg2);border:1px solid var(--border2);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.mbox.center-box{border-radius:20px;}
+.mhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.mhdr h2{font-size:15px;font-weight:700;}
+.mclose{background:var(--bg3);border:1px solid var(--border2);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+
+/* cart modal */
+.cart-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;}
+.cart-item-name{flex:1;font-size:13px;font-weight:500;}
+.cart-item-price{font-size:13px;font-weight:700;color:var(--green);min-width:60px;text-align:right;}
+.qty-ctrl{display:flex;align-items:center;gap:6px;}
+.qbtn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.qval{font-size:13px;font-weight:700;min-width:18px;text-align:center;}
+.cart-total-row{display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border);font-size:15px;font-weight:700;}
+.cart-total-row span:last-child{color:var(--green);}
+
+/* customer form */
+.cfield{margin-bottom:11px;}
+.cfield label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600;}
+.cfield input,.cfield textarea,.cfield select{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;}
+.cfield input:focus,.cfield textarea:focus{border-color:var(--accent);}
+.cfield textarea{resize:none;height:60px;}
+.pin-hint{display:flex;align-items:center;gap:6px;padding:8px 10px;background:rgba(255,169,77,.1);border:1px solid rgba(255,169,77,.3);border-radius:8px;font-size:12px;color:var(--warn);margin-bottom:10px;}
+.confirm-btn{width:100%;padding:13px;border-radius:12px;border:none;background:var(--green);color:#0f1117;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
+.confirm-btn:disabled{background:var(--bg3);color:var(--muted);cursor:not-allowed;}
+
+/* pin map modal */
+.pin-map-modal{position:fixed;inset:0;z-index:4000;display:none;flex-direction:column;}
+.pin-map-modal.show{display:flex;}
+#pin-map{flex:1;}
+.pin-map-bar{padding:12px 16px;background:var(--bg2);border-top:1px solid var(--border2);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.pin-map-info{flex:1;font-size:13px;}
+.pin-map-coords{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* success modal */
+.success-card{text-align:center;padding:20px 0;}
+.success-icon{font-size:52px;margin-bottom:12px;}
+.success-title{font-size:18px;font-weight:700;color:var(--green);margin-bottom:6px;}
+.success-sub{font-size:13px;color:var(--muted);line-height:1.6;}
+.success-order-id{font-size:20px;font-weight:700;color:var(--accent);margin:12px 0;}
+
+/* cfg modal */
+#cfg-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;display:none;align-items:center;justify-content:center;padding:20px;}
+#cfg-modal.show{display:flex;}
+.cfg-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:22px;width:100%;max-width:360px;}
+.cfg-box h2{font-size:15px;font-weight:700;margin-bottom:14px;}
+.cfg-field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600;}
+.cfg-field input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;margin-bottom:10px;}
+.cfg-btns{display:flex;gap:8px;margin-top:4px;}
+.cfg-btns button{flex:1;padding:10px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);}
+.cfg-save{background:var(--accent);color:#fff;border-color:var(--accent)!important;}
+
+/* toast */
+#toast{position:fixed;top:0;left:50%;transform:translateX(-50%);background:var(--warn);color:#0f1117;padding:10px 20px;border-radius:0 0 16px 16px;font-size:13px;font-weight:700;z-index:9000;display:none;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap;max-width:90vw;text-align:center;}
+#toast.show{display:block;}
+#toast.success{background:var(--green);color:#0f1117;}
+
+/* leaflet */
+.leaflet-control-attribution{display:none;}
+.leaflet-control-zoom a{background:var(--bg2)!important;color:var(--text)!important;border-color:var(--border2)!important;}
+.leaflet-popup-content-wrapper{background:var(--bg2)!important;color:var(--text)!important;border:1px solid var(--border2)!important;border-radius:12px!important;box-shadow:0 4px 16px rgba(0,0,0,.5)!important;}
+.leaflet-popup-tip{background:var(--bg2)!important;}
+
+/* ── Brand override ── */
+.hdr{background:linear-gradient(120deg,#96281B 0%,#C0392B 55%,#E74C3C 100%)!important;color:#fff!important;border-bottom:none!important;box-shadow:0 3px 20px rgba(150,40,27,.35)!important;}
+.hdr-name,.hdr-code{color:#fff!important;}
+.hdr-right .hbtn{background:rgba(255,255,255,.15)!important;border-color:rgba(255,255,255,.3)!important;color:#fff!important;}
+.bnav{background:#fff!important;border-top:2px solid #C0392B!important;}
+.bnav-btn.active{color:#C0392B!important;}
+#auth-screen{background:#F7F7F7!important;}
+.auth-logo h1{color:#C0392B!important;font-family:'Prompt',sans-serif!important;}
+.auth-btn{background:linear-gradient(120deg,#96281B,#C0392B)!important;font-family:'Prompt',sans-serif!important;}
+.auth-card{box-shadow:0 4px 24px rgba(192,57,43,.12)!important;}
+.sales-id-card{background:linear-gradient(135deg,#fff8f8 0%,#fff0ef 100%)!important;border-color:rgba(192,57,43,.3)!important;}
+.id-code{color:#C0392B!important;}
+.id-btn.primary{background:linear-gradient(120deg,#96281B,#C0392B)!important;border-color:#C0392B!important;}
+.id-btn.gold{background:rgba(255,215,0,.15)!important;color:#b8860b!important;border-color:rgba(255,215,0,.5)!important;}
+.id-stat-val{color:#C0392B!important;}
+.prod-add{background:linear-gradient(120deg,#96281B,#C0392B)!important;}
+.cart-bar{background:#fff!important;border-top:1px solid rgba(192,57,43,.2)!important;}
+.cart-bar-btn{background:linear-gradient(120deg,#96281B,#C0392B)!important;color:#fff!important;}
+.cart-bar-total{color:#C0392B!important;}
+.confirm-btn{background:linear-gradient(120deg,#96281B,#C0392B)!important;color:#fff!important;}
+.mbtn.primary{background:linear-gradient(120deg,#96281B,#C0392B)!important;border-color:#C0392B!important;}
+.mbtn.success{background:#27ae60!important;color:#fff!important;border-color:#27ae60!important;}
+.pay-total{color:#C0392B!important;}
+.cfg-save{background:linear-gradient(120deg,#96281B,#C0392B)!important;border-color:#C0392B!important;}
+.success-title{color:#27ae60!important;}
+.success-order-id{color:#C0392B!important;}
+.mstat-val{color:#C0392B!important;}
+.cart-total-row span:last-child{color:#C0392B!important;}
+.id-avatar{background:linear-gradient(120deg,#96281B,#C0392B)!important;}
+.av{background:linear-gradient(120deg,#96281B,#C0392B)!important;}
+
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-wrap">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">💼</div>
+      <h1 style="font-family:Prompt,sans-serif;color:#C0392B">มนชิน ซัพพลาย</h1>
+      <p style="color:#888">ระบบเซล · จังหวัดแพร่</p>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('login',this)">เข้าสู่ระบบ</div>
+        <div class="auth-tab" onclick="switchAuthTab('register',this)">สมัครสมาชิก</div>
+      </div>
+      <!-- Login -->
+      <div class="auth-form active" id="af-login">
+        <div class="auth-msg" id="login-msg"></div>
+        <div class="afield"><label>Username</label><input type="text" id="l-user" placeholder="กรอก username" autocomplete="username"></div>
+        <div class="afield"><label>Password</label><input type="password" id="l-pass" placeholder="รหัสผ่าน" autocomplete="current-password"></div>
+        <button class="auth-btn" id="l-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+      </div>
+      <!-- Register -->
+      <div class="auth-form" id="af-register">
+        <div class="auth-msg" id="reg-msg"></div>
+        <div class="afield"><label>ชื่อ-นามสกุล</label><input type="text" id="r-name" placeholder="เช่น สมชาย ใจดี"></div>
+        <div class="afield"><label>เบอร์โทร</label><input type="tel" id="r-phone" placeholder="0812345678"></div>
+        <div class="afield"><label>Username</label><input type="text" id="r-user" placeholder="ตัวอักษร+ตัวเลข อย่างน้อย 3 ตัว"></div>
+        <div class="afield"><label>Password</label><input type="password" id="r-pass" placeholder="อย่างน้อย 6 ตัว"></div>
+        <div class="afield"><label>ยืนยัน Password</label><input type="password" id="r-pass2" placeholder="กรอกซ้ำ"></div>
+        <button class="auth-btn" id="r-btn" onclick="doRegister()">สมัครและรับรหัสเซล</button>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-left"><div style="display:flex;align-items:center;gap:8px;margin-right:8px;">
+  <div style="width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;">🏪</div>
+</div>
+      <div class="av" id="hdr-av">?</div>
+      <div>
+        <div class="hdr-name" id="hdr-name">—</div>
+        <div class="hdr-code" id="hdr-code">—</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <button class="hbtn" onclick="doLogout()">ออก</button>
+    </div>
+  </div>
+
+  <!-- Pages -->
+  <div class="page active" id="page-id">
+    <div class="id-card-page" id="id-card-content"></div>
+  </div>
+
+  <div class="page" id="page-sell" style="overflow:hidden;display:none;flex-direction:column;">
+    <div class="sell-search">
+      <input type="text" id="prod-search" placeholder="🔍 ค้นหาสินค้า..." oninput="filterProducts()">
+    </div>
+    <div style="flex:1;overflow-y:auto;padding-bottom:70px;">
+      <div class="product-grid" id="product-grid"></div>
+    </div>
+    <div class="cart-bar">
+      <div class="cart-bar-left" onclick="openCart()" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex:1;">
+        <span style="font-size:20px">🛒</span>
+        <span class="cart-badge" id="cart-badge">0</span>
+        <span style="font-size:13px;color:var(--muted)">รายการสินค้า</span>
+        <div class="cart-bar-total" id="cart-bar-total" style="margin-left:auto;padding-right:10px;">฿0</div>
+      </div>
+      <button class="cart-bar-btn" onclick="openCart()">สั่งซื้อ</button>
+    </div>
+  </div>
+
+  <div class="page" id="page-map" style="overflow:hidden;display:none;flex-direction:column;">
+    <div id="sales-map" style="flex:1;"></div>
+    <div class="map-bottom">
+      <div class="map-stats">
+        <div class="mstat"><div class="mstat-val" id="m-dist">0.0</div><div class="mstat-lbl">กม.</div></div>
+        <div class="mstat"><div class="mstat-val" id="m-stops">0</div><div class="mstat-lbl">จุดแวะ</div></div>
+        <div class="mstat"><div class="mstat-val" id="m-cost">0</div><div class="mstat-lbl">บาท (น้ำมัน)</div></div>
+      </div>
+      <div class="map-btns">
+        <button class="mbtn" onclick="toggleAddPin()">📍 ปักหมุด</button>
+        <button class="mbtn primary" onclick="calcRoute()">▶ คำนวณ</button>
+        <button class="mbtn success" onclick="clearRoute()">✕ ล้าง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bnav">
+    <button class="bnav-btn active" id="nav-id" onclick="switchPage('id')">
+      <span class="bnav-icon">🪪</span>บัตรเซล
+    </button>
+    <button class="bnav-btn" id="nav-sell" onclick="switchPage('sell')">
+      <span class="bnav-icon">🛒</span>ขายสินค้า
+    </button>
+    <button class="bnav-btn" id="nav-map" onclick="switchPage('map')">
+      <span class="bnav-icon">🗺️</span>เส้นทาง
+    </button>
+  </div>
+</div>
+
+<!-- SIZE MODAL -->
+<div class="mov" id="size-modal">
+  <div class="mbox">
+    <div class="mhdr">
+      <h2>เลือกขนาด</h2>
+      <div class="mclose" onclick="document.getElementById('size-modal').classList.remove('show')">×</div>
+    </div>
+    <div id="size-modal-body"></div>
+  </div>
+</div>
+
+<!-- CART MODAL -->
+<div class="mov" id="cart-modal">
+  <div class="mbox">
+    <div class="mhdr"><h2>🛒 ตะกร้าสินค้า</h2><div class="mclose" onclick="closeCart()">×</div></div>
+    <div id="cart-items"></div>
+    <div class="cart-total-row"><span>รวม</span><span id="cart-total">฿0</span></div>
+    <button class="confirm-btn" onclick="goToCheckout()">ถัดไป — กรอกข้อมูลลูกค้า →</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="mov" id="checkout-modal">
+  <div class="mbox">
+    <div class="mhdr"><h2>📋 ข้อมูลลูกค้า</h2><div class="mclose" onclick="closeCheckout()">×</div></div>
+    <div class="pin-hint">📍 แตะปุ่มด้านล่างเพื่อปักหมุดที่อยู่บนแผนที่</div>
+    <div class="cfield"><label>ชื่อลูกค้า *</label><input type="text" id="c-name" placeholder="ชื่อ-นามสกุล หรือชื่อร้าน"></div>
+    <div class="cfield"><label>เบอร์โทร</label><input type="tel" id="c-phone" placeholder="0812345678"></div>
+    <div class="cfield"><label>ที่อยู่</label><input type="text" id="c-addr" placeholder="บ้านเลขที่ / หมู่บ้าน / ตำบล"></div>
+    <div class="cfield"><label>หมายเหตุ</label><textarea id="c-note" placeholder="สินค้าที่สนใจ วันนัด ฯลฯ"></textarea></div>
+    <div class="cfield"><label>การชำระเงิน</label>
+      <select id="c-payment">
+        <option value="cod">เงินปลายทาง (COD)</option>
+        <option value="transfer">โอนเงิน</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="mbtn" style="flex:1" onclick="openPinMap()">📍 ปักหมุดที่อยู่</button>
+      <div id="pin-status" style="flex:1;padding:9px;background:var(--bg3);border-radius:10px;font-size:12px;color:var(--muted);text-align:center;">ยังไม่ปักหมุด</div>
+    </div>
+    <button class="confirm-btn" id="submit-btn" onclick="submitOrder()">✅ ยืนยันออเดอร์</button>
+  </div>
+</div>
+
+<!-- PIN MAP MODAL -->
+<div class="pin-map-modal" id="pin-map-modal">
+  <div id="pin-map"></div>
+  <div class="pin-map-bar">
+    <div class="pin-map-info">
+      <div style="font-size:13px;font-weight:600;">แตะแผนที่เพื่อปักหมุดที่อยู่</div>
+      <div class="pin-map-coords" id="pin-coords">ยังไม่ได้เลือก</div>
+    </div>
+    <button class="mbtn primary" onclick="confirmPin()" style="flex:0;padding:9px 16px;">ยืนยัน</button>
+    <button class="mbtn" onclick="closePinMap()" style="flex:0;padding:9px 16px;">ยกเลิก</button>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="mov center" id="success-modal">
+  <div class="mbox center-box">
+    <div class="success-card">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">สั่งซื้อสำเร็จ!</div>
+      <div class="success-sub">ออเดอร์ถูกส่งไปยัง Admin แล้ว</div>
+      <div class="success-order-id" id="success-order-id">—</div>
+      <div class="success-sub" style="margin-top:4px">ออเดอร์นี้อ้างอิงถึงคุณเลย ✅</div>
+    </div>
+    <button class="confirm-btn" onclick="closeSuccess()">กลับหน้าขาย</button>
+  </div>
+</div>
+
+<!-- CFG MODAL -->
+<div id="cfg-modal" style="display:none!important">
+  <div class="cfg-box">
+    <h2>⚙️ ตั้งค่า GAS URL</h2>
+    <div class="cfg-field">
+      <label>GAS Web App URL</label>
+      <input type="url" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="cfg-btns">
+      <button onclick="closeCfg()" style="background:var(--bg3);">ยกเลิก</button>
+      <button class="cfg-save" onclick="saveCfg()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ══════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════
+// GAS URL ฝังตรงนี้เลย
+const SESSION_KEY = 'sales_session';
+const BASE_URL    = window.location.origin + window.location.pathname.replace('sales.html','');
+
+function getGasUrl() { return 'https://script.google.com/macros/s/AKfycbw8PT4PBw0AVXiYiyp9LW4mZexvHxkBiohODVoTkq26Tu4YskhyDsbA821E2MBaLJjl/exec'; }
+async function gasCall(body) {
+  const url = getGasUrl();
+  if (!url) throw new Error('ยังไม่ได้ตั้งค่า GAS URL');
+  const res = await fetch(url, { method:'POST', body:JSON.stringify(body), headers:{'Content-Type':'text/plain'} });
+  return await res.json();
+}
+
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let session = null;
+let cart = {};       // { productId: { name, price, qty } }
+let products = [];
+let customers = JSON.parse(localStorage.getItem('sales_customers')||'[]');
+let routeSelected = [];
+let routeLayer = null, routeTotalKm = 0;
+let addPinMode = false;
+let salesMap = null, pinMap = null;
+let pinLat = null, pinLng = null;
+let pinMarker = null;
+let customerMarkers = {};
+
+// ══════════════════════════════════════════
+//  AUTH TABS
+// ══════════════════════════════════════════
+function switchAuthTab(tab, el) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('af-' + tab).classList.add('active');
+}
+function showMsg(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.className = 'auth-msg ' + type;
+}
+
+// ══════════════════════════════════════════
+//  REGISTER
+// ══════════════════════════════════════════
+async function doRegister() {
+  const name  = document.getElementById('r-name').value.trim();
+  const phone = document.getElementById('r-phone').value.trim();
+  const user  = document.getElementById('r-user').value.trim();
+  const pass  = document.getElementById('r-pass').value;
+  const pass2 = document.getElementById('r-pass2').value;
+  if (!name||!user||!pass) { showMsg('reg-msg','กรุณากรอกข้อมูลให้ครบ','err'); return; }
+  if (pass !== pass2) { showMsg('reg-msg','Password ไม่ตรงกัน','err'); return; }
+  if (pass.length < 6) { showMsg('reg-msg','Password ต้องมีอย่างน้อย 6 ตัว','err'); return; }
+  const btn = document.getElementById('r-btn');
+  btn.disabled = true; btn.textContent = 'กำลังสมัคร...';
+  try {
+    const data = await gasCall({ action:'salesRegister', name, phone, username:user, password:pass });
+    if (data.ok) {
+      showMsg('reg-msg', `✅ สมัครสำเร็จ! รหัสเซลของคุณคือ ${data.salesId}`, 'ok');
+      setTimeout(() => {
+        document.querySelector('.auth-tab').click();
+        document.getElementById('l-user').value = user;
+        document.getElementById('l-pass').focus();
+      }, 2000);
+    } else { showMsg('reg-msg', data.msg||'สมัครไม่สำเร็จ', 'err'); }
+  } catch(e) { showMsg('reg-msg', e.message, 'err'); }
+  btn.disabled = false; btn.textContent = 'สมัครและรับรหัสเซล';
+}
+
+// ══════════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════════
+document.getElementById('l-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+async function doLogin() {
+  const user = document.getElementById('l-user').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  if (!user||!pass) { showMsg('login-msg','กรุณากรอก username และ password','err'); return; }
+  const btn = document.getElementById('l-btn');
+  btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
+  try {
+    const data = await gasCall({ action:'salesLogin', username:user, password:pass });
+    if (data.ok) {
+      const sess = { ...data.sales, token:data.token };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sess));
+      enterApp(sess);
+    } else { showMsg('login-msg', data.msg||'เข้าสู่ระบบไม่สำเร็จ', 'err'); }
+  } catch(e) { showMsg('login-msg', e.message, 'err'); }
+  btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+}
+
+function doLogout() {
+  if (!confirm('ออกจากระบบ?')) return;
+  localStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
+// ══════════════════════════════════════════
+//  ENTER APP
+// ══════════════════════════════════════════
+function enterApp(sess) {
+  session = sess;
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app').classList.add('show');
+  document.getElementById('hdr-av').textContent  = sess.name[0];
+  document.getElementById('hdr-name').textContent = sess.name;
+  document.getElementById('hdr-code').textContent = '🏷️ ' + sess.salesId;
+  renderIdCard();
+  loadProducts();
+  initSalesMap();
+}
+
+// ══════════════════════════════════════════
+//  ID CARD + QR
+// ══════════════════════════════════════════
+function renderIdCard() {
+  const s = session;
+  const refUrl = `${BASE_URL}index.html?ref=${s.salesId}`;
+  const el = document.getElementById('id-card-content');
+  el.innerHTML = `
+    <div class="sales-id-card">
+      <div class="id-card-header">
+        <div class="id-avatar">${s.name[0]}</div>
+        <div class="id-info">
+          <h2>${s.name}</h2>
+          <div class="id-code">รหัสเซล: ${s.salesId}</div>
+          <div class="id-role">💼 พนักงานขาย · Monshin Supply</div>
+        </div>
+      </div>
+      <div class="id-qr-section">
+        <div class="id-qr-box">
+          <div id="qr-canvas"></div>
+        </div>
+        <div class="id-qr-info">
+          <div class="id-qr-label">ลิงก์ส่วนตัว</div>
+          <div class="id-link">${refUrl}</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.6">
+            ลูกค้าสแกน QR หรือกดลิงก์นี้<br>ออเดอร์จะอ้างอิงถึงคุณอัตโนมัติ
+          </div>
+        </div>
+      </div>
+      <div class="id-stats">
+        <div class="id-stat"><div class="id-stat-val gold" id="stat-orders">—</div><div class="id-stat-lbl">ออเดอร์</div></div>
+        <div class="id-stat"><div class="id-stat-val gold" id="stat-revenue">—</div><div class="id-stat-lbl">ยอดขาย (฿)</div></div>
+      </div>
+      <div class="id-actions">
+        <button class="id-btn gold" onclick="shareMyLink()">📤 แชร์ลิงก์</button>
+        <button class="id-btn primary" onclick="copyMyLink()">📋 คัดลอกลิงก์</button>
+      </div>
+    </div>`;
+
+  // สร้าง QR
+  setTimeout(() => {
+    new QRCode(document.getElementById('qr-canvas'), {
+      text: refUrl, width: 120, height: 120,
+      colorDark: '#0f1117', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }, 100);
+
+  // โหลดสถิติ
+  loadSalesStats();
+}
+
+async function loadSalesStats() {
+  try {
+    const data = await gasCall({ action:'getSalesStats', salesId:session.salesId, token:session.token });
+    if (data.ok) {
+      document.getElementById('stat-orders').textContent  = data.orders  || 0;
+      document.getElementById('stat-revenue').textContent = (data.revenue || 0).toLocaleString();
+    }
+  } catch(_) {}
+}
+
+function shareMyLink() {
+  const url = `${BASE_URL}index.html?ref=${session.salesId}`;
+  if (navigator.share) {
+    navigator.share({ title:'Monshin Supply', text:`สั่งสินค้าผ่านลิงก์ของฉัน`, url });
+  } else { copyMyLink(); }
+}
+function copyMyLink() {
+  const url = `${BASE_URL}index.html?ref=${session.salesId}`;
+  navigator.clipboard.writeText(url).then(() => showToast('✅ คัดลอกลิงก์แล้ว','success'));
+}
+
+// ══════════════════════════════════════════
+//  PRODUCTS
+// ══════════════════════════════════════════
+// ── Supabase config (เหมือนหน้าร้าน) ─────────────────────
+const SB_URL  = 'https://ckfzscprxighfxztmgct.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrZnpzY3ByeGlnaGZ4enRtZ2N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTU0NDIsImV4cCI6MjA5MjYzMTQ0Mn0.nQ_LhPz9GsehqRSNx67G5cqxCKHD-cM1gbs2edTqUpw';
+
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SB_URL + '/rest/v1/' + path, {
+    headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON, 'Content-Type': 'application/json', ...opts.headers },
+    ...opts
+  });
+  return res.json();
+}
+
+async function loadProducts() {
+  // โหลดจาก localStorage ก่อน (เหมือนหน้าร้าน)
+  try {
+    const cached = localStorage.getItem('ms_products');
+    if (cached) {
+      products = JSON.parse(cached).map(r => ({
+        id: r.id, name: r.name, price: r.price||0,
+        emoji: r.emoji||'📦', img: r.img||'',
+        cat: r.cat||'', desc: r.description||r.desc||'',
+        sizes: r.sizes||[], stock: r.stock||null
+      }));
+      renderProducts(products);
+    }
+  } catch(_) {}
+
+  // ดึงจาก Supabase (background refresh)
+  try {
+    const data = await sbFetch('products?select=*&order=ts.desc');
+    if (Array.isArray(data) && data.length) {
+      products = data.map(r => ({
+        id: r.id, name: r.name, price: r.price||0,
+        emoji: r.emoji||'📦', img: r.img||'',
+        cat: r.cat||'', desc: r.description||'',
+        sizes: r.sizes||[], stock: r.stock||null
+      }));
+      try { localStorage.setItem('ms_products', JSON.stringify(data)); } catch(_) {}
+      renderProducts(products);
+    }
+  } catch(e) {
+    if (!products.length) showToast('⚠️ โหลดสินค้าไม่สำเร็จ');
+  }
+}
+
+// ── Product Modal (เลือกขนาด) ──────────────────────────────
+let _selProd = null;
+
+function renderProducts(list) {
+  if (!list.length) {
+    document.getElementById('product-grid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#888;font-size:13px;">ไม่พบสินค้า</div>';
+    return;
+  }
+  document.getElementById('product-grid').innerHTML = list.map(p => {
+    const sizes = Array.isArray(p.sizes) ? p.sizes : [];
+    const minPrice = sizes.length ? Math.min(...sizes.map(s => s.p||s.price||0)) : (p.price||0);
+    const priceText = sizes.length > 1 ? '฿' + minPrice.toLocaleString() + '+' : '฿' + minPrice.toLocaleString();
+    const btnLabel = sizes.length > 1 ? '🔍 เลือกขนาด' : '+ ใส่ตะกร้า';
+    const imgHtml = p.img
+      ? '<img src="' + p.img + '" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px 10px 0 0;" loading="lazy" onerror="this.style.display=\'none\'">'
+      : '<div class="prod-emoji">' + (p.emoji||'📦') + '</div>';
+    const pid = String(p.id).replace(/'/g, '');
+    return '<div class="prod-card" onclick="openProductModal(\'' + pid + '\')" style="cursor:pointer">'
+      + imgHtml
+      + '<div style="padding:8px;">'
+      + (p.cat ? '<div style="font-size:10px;color:#C0392B;font-weight:700;margin-bottom:3px">' + p.cat + '</div>' : '')
+      + '<div class="prod-name">' + p.name + '</div>'
+      + '<div class="prod-price">' + priceText + '</div>'
+      + '<button class="prod-add" onclick="event.stopPropagation();openProductModal(\'' + pid + '\')">' + btnLabel + '</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+function openProductModal(id) {
+  const p = products.find(x => String(x.id) === String(id));
+  if (!p) return;
+  _selProd = p;
+  const sizes = Array.isArray(p.sizes) ? p.sizes : [];
+
+  if (sizes.length > 1) {
+    // มีหลายขนาด → เปิด size modal
+    const imgHtml = p.img
+      ? '<img src="' + p.img + '" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;margin-bottom:12px;">'
+      : '<div style="font-size:52px;text-align:center;margin-bottom:12px">' + (p.emoji||'📦') + '</div>';
+    document.getElementById('size-modal-body').innerHTML =
+      imgHtml
+      + '<div style="font-size:15px;font-weight:700;margin-bottom:4px">' + p.name + '</div>'
+      + (p.desc ? '<div style="font-size:12px;color:#888;margin-bottom:12px">' + p.desc + '</div>' : '')
+      + '<div style="font-size:12px;color:#888;font-weight:600;margin-bottom:8px">เลือกขนาด</div>'
+      + sizes.map((s,i) =>
+          '<button onclick="addSizeToCart(' + i + ')" style="width:100%;padding:11px;margin-bottom:8px;border-radius:10px;border:1.5px solid rgba(192,57,43,.3);background:#fff;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">'
+          + '<span>' + (s.n||s.name) + '</span><span style="color:#C0392B;font-weight:700">฿' + (s.p||s.price||0).toLocaleString() + '</span></button>'
+        ).join('');
+    document.getElementById('size-modal').classList.add('show');
+  } else {
+    // ขนาดเดียว → ใส่ตะกร้าทันที
+    const sz = sizes[0] || {n:'มาตรฐาน', p: p.price||0};
+    quickAddToCart(p, sz);
+  }
+}
+
+function addSizeToCart(idx) {
+  if (!_selProd) return;
+  const sz = (_selProd.sizes||[])[idx];
+  if (!sz) return;
+  quickAddToCart(_selProd, sz);
+  document.getElementById('size-modal').classList.remove('show');
+}
+
+function quickAddToCart(p, sz) {
+  const key = p.id + '_' + (sz.n||sz.name||'0');
+  if (!cart[key]) cart[key] = { name: p.name + (sz.n ? ' (' + sz.n + ')' : ''), price: sz.p||sz.price||0, qty: 0, img: p.img||'' };
+  cart[key].qty++;
+  updateCartBar();
+  showToast('✅ เพิ่ม ' + p.name, 'success');
+}
+
+function filterProducts() {
+  const q = document.getElementById('prod-search').value.toLowerCase();
+  renderProducts(products.filter(p => p.name.toLowerCase().includes(q)));
+}
+
+// ══════════════════════════════════════════
+//  CART
+// ══════════════════════════════════════════
+function addToCart(id, name, price) {
+  if (!cart[id]) cart[id] = { name, price, qty: 0 };
+  cart[id].qty++;
+  updateCartBar();
+  showToast('✅ เพิ่ม ' + name, 'success');
+}
+
+function updateCartBar() {
+  const items = Object.values(cart).filter(i => i.qty > 0);
+  const total = items.reduce((s,i) => s + i.price * i.qty, 0);
+  const count = items.reduce((s,i) => s + i.qty, 0);
+  document.getElementById('cart-badge').textContent = count;
+  document.getElementById('cart-bar-total').textContent = '฿' + total.toLocaleString();
+}
+
+function openCart() {
+  const items = Object.entries(cart).filter(([,v]) => v.qty > 0);
+  if (!items.length) { showToast('⚠️ ยังไม่มีสินค้าในตะกร้า'); return; }
+  document.getElementById('cart-items').innerHTML = items.map(([id,v]) => {
+    const imgHtml = v.img
+      ? '<img src="' + v.img + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0;" loading="lazy">'
+      : '<div style="width:40px;height:40px;background:#FDF0EF;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📦</div>';
+    return '<div class="cart-item">'
+      + imgHtml
+      + '<div class="cart-item-name" style="flex:1;margin-left:8px">' + v.name + '</div>'
+      + '<div class="qty-ctrl">'
+      + '<button class="qbtn" onclick="changeQty(\'' + id + '\',-1)">−</button>'
+      + '<span class="qval" id="cq-' + id + '">' + v.qty + '</span>'
+      + '<button class="qbtn" onclick="changeQty(\'' + id + '\',1)">+</button>'
+      + '</div>'
+      + '<div class="cart-item-price">฿' + (v.price * v.qty).toLocaleString() + '</div>'
+      + '</div>';
+  }).join('');
+  const total = items.reduce((s,[,v]) => s + v.price*v.qty, 0);
+  document.getElementById('cart-total').textContent = '฿' + total.toLocaleString();
+  document.getElementById('cart-modal').classList.add('show');
+}
+
+function changeQty(id, delta) {
+  if (!cart[id]) return;
+  cart[id].qty = Math.max(0, cart[id].qty + delta);
+  if (cart[id].qty === 0) delete cart[id];
+  updateCartBar(); openCart();
+  if (!Object.keys(cart).length) closeCart();
+}
+function closeCart() { document.getElementById('cart-modal').classList.remove('show'); }
+
+function goToCheckout() {
+  closeCart();
+  pinLat = null; pinLng = null;
+  document.getElementById('pin-status').textContent = 'ยังไม่ปักหมุด';
+  document.getElementById('pin-status').style.color = 'var(--muted)';
+  document.getElementById('checkout-modal').classList.add('show');
+}
+function closeCheckout() { document.getElementById('checkout-modal').classList.remove('show'); }
+
+// ══════════════════════════════════════════
+//  PIN MAP
+// ══════════════════════════════════════════
+let pinMapObj = null, tempPinMarker = null;
+
+function openPinMap() {
+  document.getElementById('pin-map-modal').classList.add('show');
+  setTimeout(() => {
+    if (!pinMapObj) {
+      pinMapObj = L.map('pin-map', { zoomControl:true, attributionControl:false })
+        .setView([18.145, 100.14], 13);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(pinMapObj);
+      pinMapObj.on('click', e => {
+        pinLat = e.latlng.lat; pinLng = e.latlng.lng;
+        if (tempPinMarker) pinMapObj.removeLayer(tempPinMarker);
+        tempPinMarker = L.marker([pinLat,pinLng], {
+          icon: L.divIcon({ html:`<div style="width:22px;height:22px;border-radius:50%;background:#38d9a9;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>`, iconSize:[22,22], iconAnchor:[11,11], className:'' })
+        }).addTo(pinMapObj);
+        document.getElementById('pin-coords').textContent = `${pinLat.toFixed(5)}, ${pinLng.toFixed(5)}`;
+      });
+    } else { pinMapObj.invalidateSize(); }
+  }, 100);
+}
+function closePinMap() { document.getElementById('pin-map-modal').classList.remove('show'); }
+function confirmPin() {
+  if (!pinLat) { showToast('⚠️ กรุณาแตะตำแหน่งบนแผนที่'); return; }
+  closePinMap();
+  document.getElementById('pin-status').textContent = `✅ ปักหมุดแล้ว (${pinLat.toFixed(4)}, ${pinLng.toFixed(4)})`;
+  document.getElementById('pin-status').style.color = 'var(--green)';
+  // เติม address จาก reverse geocode
+  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pinLat}&lon=${pinLng}&format=json`)
+    .then(r => r.json()).then(d => {
+      if (d.display_name && !document.getElementById('c-addr').value) {
+        document.getElementById('c-addr').value = d.display_name.split(',').slice(0,3).join(',');
+      }
+    }).catch(_=>{});
+}
+
+// ══════════════════════════════════════════
+//  SUBMIT ORDER
+// ══════════════════════════════════════════
+async function submitOrder() {
+  const name    = document.getElementById('c-name').value.trim();
+  const phone   = document.getElementById('c-phone').value.trim();
+  const addr    = document.getElementById('c-addr').value.trim();
+  const note    = document.getElementById('c-note').value.trim();
+  const payment = document.getElementById('c-payment').value;
+  if (!name) { showToast('⚠️ กรุณากรอกชื่อลูกค้า'); return; }
+  const items = Object.values(cart).filter(i => i.qty > 0);
+  if (!items.length) { showToast('⚠️ ไม่มีสินค้าในตะกร้า'); return; }
+  const total = items.reduce((s,i) => s + i.price*i.qty, 0);
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'กำลังส่งออเดอร์...';
+  try {
+    const data = await gasCall({
+      action: 'createOrder',
+      token:  session.token,
+      salesId: session.salesId,
+      customerName: name, phone, address: addr, note, payment,
+      mapLat: pinLat, mapLng: pinLng,
+      items: items.map(i => ({ name:i.name, price:i.price, qty:i.qty })),
+      total
+    });
+    if (data.ok) {
+      // บันทึกลูกค้าใน localStorage สำหรับแผนที่
+      if (pinLat) {
+        const cust = { id:'c_'+Date.now(), name, phone, address:addr, lat:pinLat, lng:pinLng, createdAt:Date.now() };
+        customers.push(cust);
+        localStorage.setItem('sales_customers', JSON.stringify(customers));
+        addCustomerMarker(cust);
+      }
+      cart = {};
+      updateCartBar();
+      closeCheckout();
+      document.getElementById('success-order-id').textContent = data.orderId || 'ORD-' + Date.now().toString().slice(-6);
+      document.getElementById('success-modal').classList.add('show');
+    } else { showToast('⚠️ '+(data.msg||'ส่งออเดอร์ไม่สำเร็จ')); }
+  } catch(e) { showToast('⚠️ '+e.message); }
+  btn.disabled = false; btn.textContent = '✅ ยืนยันออเดอร์';
+}
+
+function closeSuccess() {
+  document.getElementById('success-modal').classList.remove('show');
+  switchPage('sell');
+}
+
+// ══════════════════════════════════════════
+//  SALES MAP
+// ══════════════════════════════════════════
+function initSalesMap() {
+  setTimeout(() => {
+    if (salesMap) return;
+    salesMap = L.map('sales-map', { zoomControl:true, attributionControl:false })
+      .setView([18.145, 100.14], 12);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(salesMap);
+    salesMap.on('click', e => {
+      if (!addPinMode) return;
+      const latlng = e.latlng;
+      const name = prompt('ชื่อลูกค้า/ร้านค้า:');
+      if (!name) return;
+      const cust = { id:'c_'+Date.now(), name, lat:latlng.lat, lng:latlng.lng, createdAt:Date.now() };
+      customers.push(cust);
+      localStorage.setItem('sales_customers', JSON.stringify(customers));
+      addCustomerMarker(cust);
+      setAddPin(false);
+    });
+    customers.forEach(c => addCustomerMarker(c));
+  }, 300);
+}
+
+function addCustomerMarker(c) {
+  if (!salesMap || !c.lat) return;
+  const m = L.marker([c.lat,c.lng], {
+    icon: L.divIcon({ html:`<div style="width:22px;height:22px;border-radius:50%;background:#4f8ef7;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">${c.name[0]}</div>`, iconSize:[22,22], iconAnchor:[11,11], className:'' })
+  }).addTo(salesMap).bindPopup(`<b>${c.name}</b>${c.phone?'<br>📞 '+c.phone:''}`);
+  customerMarkers[c.id] = m;
+}
+
+function toggleAddPin() { setAddPin(!addPinMode); }
+function setAddPin(on) {
+  addPinMode = on;
+  document.getElementById('sales-map').style.cursor = on ? 'crosshair' : '';
+  showToast(on ? '📍 แตะแผนที่เพื่อปักหมุดลูกค้า' : '');
+}
+
+async function calcRoute() {
+  const pts = customers.filter(c => c.lat);
+  if (pts.length < 2) { showToast('⚠️ ต้องมีลูกค้าอย่างน้อย 2 จุด'); return; }
+  const coords = pts.map(c => `${c.lng},${c.lat}`).join(';');
+  try {
+    const data = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`)).json();
+    if (!data.routes?.[0]) return;
+    if (routeLayer) salesMap.removeLayer(routeLayer);
+    routeLayer = L.geoJSON(data.routes[0].geometry, { style:{ color:'#4f8ef7', weight:4, opacity:.85 } }).addTo(salesMap);
+    routeTotalKm = data.routes[0].distance / 1000;
+    salesMap.fitBounds(routeLayer.getBounds(), { padding:[40,40] });
+    document.getElementById('m-dist').textContent   = routeTotalKm.toFixed(1);
+    document.getElementById('m-stops').textContent  = pts.length;
+    const fuelCost = (routeTotalKm / 15 * 40).toFixed(0);
+    document.getElementById('m-cost').textContent   = fuelCost;
+  } catch(e) { showToast('⚠️ คำนวณเส้นทางไม่สำเร็จ'); }
+}
+
+function clearRoute() {
+  if (routeLayer) { salesMap.removeLayer(routeLayer); routeLayer = null; }
+  routeTotalKm = 0;
+  document.getElementById('m-dist').textContent = '0.0';
+  document.getElementById('m-stops').textContent = '0';
+  document.getElementById('m-cost').textContent = '0';
+}
+
+// ══════════════════════════════════════════
+//  PAGE NAV
+// ══════════════════════════════════════════
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  page.classList.add('active');
+  page.style.display = name === 'sell' ? 'flex' : name === 'map' ? 'flex' : 'block';
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'map' && salesMap) setTimeout(() => salesMap.invalidateSize(), 100);
+}
+
+// ══════════════════════════════════════════
+//  CFG
+// ══════════════════════════════════════════
+function openCfg() { document.getElementById('cfg-url').value = getGasUrl(); document.getElementById('cfg-modal').classList.add('show'); }
+function closeCfg() { document.getElementById('cfg-modal').classList.remove('show'); }
+function saveCfg() {
+  const url = document.getElementById('cfg-url').value.trim();
+  if (!url) return;
+  localStorage.setItem(CFG_KEY, JSON.stringify({url})); closeCfg(); showToast('✅ บันทึกแล้ว','success');
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg, type='warn') {
+  if (!msg) { document.getElementById('toast').className = ''; return; }
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = type === 'success' ? 'show success' : 'show';
+  clearTimeout(el._t); el._t = setTimeout(() => el.className = '', 3000);
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+// เช็ค ref code จาก URL (ถ้ามี)
+const urlRef = new URLSearchParams(window.location.search).get('ref');
+if (urlRef) localStorage.setItem('sales_ref', urlRef);
+
+(function init() {
+  const raw = localStorage.getItem(SESSION_KEY);
+  if (raw) { try { enterApp(JSON.parse(raw)); } catch(_) { localStorage.removeItem(SESSION_KEY); } }
+})();
+</script>
+</body>
+</html>
