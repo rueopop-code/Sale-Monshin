@@ -337,17 +337,40 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 
   <div class="page" id="page-map" style="overflow:hidden;display:none;flex-direction:column;">
-    <div id="sales-map" style="flex:1;"></div>
+    <div id="sales-map" style="flex:1;position:relative;"></div>
+    <!-- FAB buttons -->
+    <div style="position:absolute;right:12px;bottom:200px;z-index:500;display:flex;flex-direction:column;gap:8px;">
+      <button onclick="centerGPS()" title="ตำแหน่งของฉัน" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(192,57,43,.3);background:#fff;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);">📡</button>
+      <button onclick="calcRouteFromMe()" title="เส้นทางจากตำแหน่งฉัน" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(192,57,43,.3);background:#fff;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);">🧭</button>
+    </div>
     <div class="map-bottom">
+      <!-- GPS status -->
+      <div id="gps-status" style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:#FDF0EF;border-radius:8px;margin-bottom:8px;font-size:12px;color:#888;">
+        <div id="gps-dot" style="width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;"></div>
+        <span id="gps-text">กำลังหาตำแหน่ง GPS...</span>
+      </div>
       <div class="map-stats">
         <div class="mstat"><div class="mstat-val" id="m-dist">0.0</div><div class="mstat-lbl">กม.</div></div>
         <div class="mstat"><div class="mstat-val" id="m-stops">0</div><div class="mstat-lbl">จุดแวะ</div></div>
         <div class="mstat"><div class="mstat-val" id="m-cost">0</div><div class="mstat-lbl">บาท (น้ำมัน)</div></div>
       </div>
       <div class="map-btns">
-        <button class="mbtn" onclick="toggleAddPin()">📍 ปักหมุด</button>
+        <button class="mbtn" onclick="pinFromGPS()" id="btn-pin-gps" style="background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border-color:#C0392B;">📡 ปักที่นี่</button>
+        <button class="mbtn" onclick="toggleAddPin()" id="btn-pin-manual">📍 ปักเอง</button>
         <button class="mbtn primary" onclick="calcRoute()">▶ คำนวณ</button>
         <button class="mbtn success" onclick="clearRoute()">✕ ล้าง</button>
+      </div>
+      <!-- auto-stop settings -->
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:7px 10px;background:#FDF0EF;border-radius:8px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" id="auto-pin-toggle" onchange="toggleAutoPin(this.checked)" style="accent-color:#C0392B;">
+          <span>🤖 ปักหมุดอัตโนมัติเมื่อหยุดนาน</span>
+        </label>
+        <select id="auto-pin-mins" style="margin-left:auto;padding:3px 6px;border-radius:6px;border:1px solid rgba(192,57,43,.3);font-size:12px;color:#C0392B;font-weight:700;">
+          <option value="5">5 นาที</option>
+          <option value="10" selected>10 นาที</option>
+          <option value="20">20 นาที</option>
+        </select>
       </div>
     </div>
   </div>
@@ -605,14 +628,39 @@ function enterApp(sess) {
 // ══════════════════════════════════════════
 //  ID CARD + QR
 // ══════════════════════════════════════════
+// ── โหลดรูปโปรไฟล์จาก localStorage ─────────────────────
+function getSalesPhoto() {
+  return localStorage.getItem('sales_photo_' + (session?.salesId||'')) || '';
+}
+function setSalesPhoto(url) {
+  localStorage.setItem('sales_photo_' + (session?.salesId||''), url);
+}
+
 function renderIdCard() {
   const s = session;
-  const refUrl = `${BACKEND_URL}/invite/${s.salesId}`;
+  const refUrl   = `${BACKEND_URL}/invite/${s.salesId}`;
+  const photo    = getSalesPhoto();
+  const avatarHtml = photo
+    ? `<div class="id-avatar" style="overflow:hidden;padding:0;">
+         <img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" id="avatar-img">
+       </div>`
+    : `<div class="id-avatar" id="avatar-img-wrap">${s.name[0]}</div>`;
+
   const el = document.getElementById('id-card-content');
   el.innerHTML = `
     <div class="sales-id-card">
       <div class="id-card-header">
-        <div class="id-avatar">${s.name[0]}</div>
+        <!-- รูปโปรไฟล์ + ปุ่มเปลี่ยนรูป -->
+        <div style="position:relative;flex-shrink:0;">
+          ${avatarHtml}
+          <button onclick="document.getElementById('photo-input').click()"
+            style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;
+                   background:#C0392B;border:2px solid #fff;color:#fff;font-size:11px;
+                   cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">
+            📷
+          </button>
+          <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+        </div>
         <div class="id-info">
           <h2>${s.name}</h2>
           <div class="id-code">รหัสเซล: ${s.salesId}</div>
@@ -650,8 +698,33 @@ function renderIdCard() {
     });
   }, 100);
 
-  // โหลดสถิติ
   loadSalesStats();
+}
+
+function uploadPhoto(input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+  if (file.size > 5 * 1024 * 1024) { showToast('⚠️ รูปใหญ่เกิน 5MB'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    // compress ก่อนบันทึก
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 400;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = h*MAX/w; w = MAX; } }
+      else       { if (h > MAX) { w = w*MAX/h; h = MAX; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      setSalesPhoto(dataUrl);
+      renderIdCard();
+      showToast('✅ บันทึกรูปแล้ว', 'success');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 async function loadSalesStats() {
@@ -665,14 +738,31 @@ async function loadSalesStats() {
 }
 
 function shareMyLink() {
-  const url = `${BASE_URL}index.html?ref=${session.salesId}`;
-  if (navigator.share) {
-    navigator.share({ title:'Monshin Supply', text:`สั่งสินค้าผ่านลิงก์ของฉัน`, url });
-  } else { copyMyLink(); }
+  const url = `${BACKEND_URL}/invite/${session.salesId}`;
+  if (navigator.share && location.protocol === 'https:') {
+    navigator.share({ title:'มนชิน ซัพพลาย', text:'สั่งสินค้ามนชิน ซัพพลาย ผ่านลิงก์ของฉัน', url })
+      .catch(() => copyMyLink());
+  } else {
+    copyMyLink();
+  }
 }
 function copyMyLink() {
   const url = `${BACKEND_URL}/invite/${session.salesId}`;
-  navigator.clipboard.writeText(url).then(() => showToast('✅ คัดลอกลิงก์แล้ว','success'));
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => showToast('✅ คัดลอกลิงก์แล้ว','success'))
+      .catch(() => fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+}
+function fallbackCopy(url) {
+  const ta = document.createElement('textarea');
+  ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); showToast('✅ คัดลอกลิงก์แล้ว','success'); }
+  catch(_) { showToast('⚠️ ลิงก์: ' + url); }
+  document.body.removeChild(ta);
 }
 
 // ══════════════════════════════════════════
@@ -963,7 +1053,252 @@ function initSalesMap() {
       setAddPin(false);
     });
     customers.forEach(c => addCustomerMarker(c));
+    startGPS();
   }, 300);
+}
+
+// ── GPS ──────────────────────────────────────────────────
+let myLat = null, myLng = null, myMarker = null, myCircle = null;
+let gpsWatchId = null;
+let _lastPushLat = null, _lastPushLng = null;
+let _gpsInterval = null;
+let myRouteLine = null, myRoutePoints = [];
+
+// ── Push GPS ไป Supabase ──────────────────────────────────
+async function pushGpsToSupabase(lat, lng, acc) {
+  if (!session) return;
+  try {
+    // upsert ตำแหน่งปัจจุบัน
+    await fetch(SB_URL + '/rest/v1/sales_locations', {
+      method: 'POST',
+      headers: {
+        'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ sales_id: session.salesId, lat, lng, accuracy: acc, updated_at: new Date().toISOString() })
+    });
+    // บันทึกเส้นทาง
+    await fetch(SB_URL + '/rest/v1/sales_routes', {
+      method: 'POST',
+      headers: {
+        'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ sales_id: session.salesId, lat, lng, recorded_at: new Date().toISOString() })
+    });
+  } catch(_) {}
+}
+
+function startGPS() {
+  if (!navigator.geolocation) {
+    setGpsStatus(false, 'เบราว์เซอร์ไม่รองรับ GPS');
+    return;
+  }
+  gpsWatchId = navigator.geolocation.watchPosition(
+    pos => {
+      myLat = pos.coords.latitude;
+      myLng = pos.coords.longitude;
+      const acc = Math.round(pos.coords.accuracy);
+      setGpsStatus(true, 'GPS ✓ ความแม่นยำ ~' + acc + ' ม.');
+
+      // อัปเดต marker
+      if (!myMarker) {
+        myMarker = L.marker([myLat, myLng], {
+          icon: L.divIcon({
+            html: '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(120deg,#96281B,#C0392B);border:3px solid #fff;box-shadow:0 0 0 3px rgba(192,57,43,.3),0 3px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:15px;">💼</div>',
+            iconSize:[32,32], iconAnchor:[16,16], className:''
+          }),
+          zIndexOffset: 1000
+        }).addTo(salesMap).bindPopup('<b>ตำแหน่งของคุณ</b><br>' + myLat.toFixed(5) + ', ' + myLng.toFixed(5));
+
+        myCircle = L.circle([myLat, myLng], {
+          radius: acc, color:'#C0392B', fillColor:'#C0392B',
+          fillOpacity:0.08, weight:1
+        }).addTo(salesMap);
+
+        salesMap.flyTo([myLat, myLng], 14, { duration:1 });
+      } else {
+        myMarker.setLatLng([myLat, myLng]);
+        myMarker.setPopupContent('<b>ตำแหน่งของคุณ</b><br>' + myLat.toFixed(5) + ', ' + myLng.toFixed(5));
+        myCircle.setLatLng([myLat, myLng]).setRadius(acc);
+      }
+
+      // วาดเส้นทางในแผนที่เซล
+      myRoutePoints.push([myLat, myLng]);
+      if (myRouteLine) salesMap.removeLayer(myRouteLine);
+      if (myRoutePoints.length >= 2) {
+        myRouteLine = L.polyline(myRoutePoints, {
+          color:'#C0392B', weight:3, opacity:.7, dashArray:'6,3'
+        }).addTo(salesMap);
+      }
+
+      // push ไป Supabase ทุก 30 วิ หรือถ้าขยับ > 20 เมตร
+      const now = Date.now();
+      const dist = (_lastPushLat !== null) ? calcDistM(_lastPushLat, _lastPushLng, myLat, myLng) : 999;
+      if (dist > 20) {
+        _lastPushLat = myLat; _lastPushLng = myLng;
+        pushGpsToSupabase(myLat, myLng, acc);
+      }
+
+      checkAutoStop(myLat, myLng);
+    },
+    err => {
+      const msgs = { 1:'ไม่ได้รับอนุญาต GPS', 2:'ไม่พบสัญญาณ GPS', 3:'GPS หมดเวลา' };
+      setGpsStatus(false, msgs[err.code] || 'GPS error');
+    },
+    { enableHighAccuracy:true, maximumAge:5000, timeout:15000 }
+  );
+
+  // push ทุก 30 วิแม้ไม่ขยับ (keepalive)
+  _gpsInterval = setInterval(() => {
+    if (myLat) pushGpsToSupabase(myLat, myLng, 0);
+  }, 30000);
+}
+
+function setGpsStatus(ok, msg) {
+  const dot  = document.getElementById('gps-dot');
+  const text = document.getElementById('gps-text');
+  if (!dot || !text) return;
+  dot.style.background  = ok ? '#27ae60' : '#e74c3c';
+  dot.style.boxShadow   = ok ? '0 0 6px #27ae60' : 'none';
+  text.textContent = msg;
+  text.style.color = ok ? '#27ae60' : '#e74c3c';
+}
+
+function centerGPS() {
+  if (!myLat) { showToast('⚠️ ยังไม่พบ GPS'); return; }
+  salesMap.flyTo([myLat, myLng], 15, { duration:0.8 });
+}
+
+function calcRouteFromMe() {
+  if (!myLat) { showToast('⚠️ ยังไม่พบ GPS'); return; }
+  const pts = customers.filter(c => c.lat);
+  if (!pts.length) { showToast('⚠️ ยังไม่มีหมุดลูกค้า'); return; }
+  // คำนวณเส้นทางจากตำแหน่งปัจจุบัน → ลูกค้าทุกคน
+  const allPts = [{ lat:myLat, lng:myLng }, ...pts];
+  const coords = allPts.map(p => p.lng + ',' + p.lat).join(';');
+  fetch('https://router.project-osrm.org/route/v1/driving/' + coords + '?overview=full&geometries=geojson')
+    .then(r => r.json()).then(data => {
+      if (!data.routes?.[0]) return;
+      if (routeLayer) salesMap.removeLayer(routeLayer);
+      routeLayer = L.geoJSON(data.routes[0].geometry, {
+        style:{ color:'#C0392B', weight:4, opacity:.85, dashArray:'8,4' }
+      }).addTo(salesMap);
+      const km   = (data.routes[0].distance / 1000).toFixed(1);
+      const cost = Math.round(data.routes[0].distance / 1000 / 15 * 40);
+      document.getElementById('m-dist').textContent  = km;
+      document.getElementById('m-stops').textContent = pts.length;
+      document.getElementById('m-cost').textContent  = cost;
+      salesMap.fitBounds(routeLayer.getBounds(), { padding:[50,50] });
+      showToast('🧭 เส้นทางจากตำแหน่งคุณ ' + km + ' กม.', 'success');
+    }).catch(() => showToast('⚠️ คำนวณเส้นทางไม่สำเร็จ'));
+}
+
+// ── ปักหมุดจาก GPS ทันที ─────────────────────────────────
+function pinFromGPS() {
+  if (!myLat) { showToast('⚠️ ยังไม่พบ GPS กรุณารอสักครู่'); return; }
+  _pendingPinLat = myLat;
+  _pendingPinLng = myLng;
+  openPinCustModal(myLat, myLng, null);
+}
+
+// ── Auto-stop detection ──────────────────────────────────
+let _autoStopTimer   = null;
+let _autoStopLat     = null;
+let _autoStopLng     = null;
+let _autoStopEnabled = false;
+let _stopAlertShown  = false;
+const STOP_RADIUS_M  = 50; // เคลื่อนที่น้อยกว่า 50 เมตร ถือว่าหยุด
+
+function toggleAutoPin(on) {
+  _autoStopEnabled = on;
+  if (!on) {
+    clearTimeout(_autoStopTimer);
+    _autoStopTimer = null;
+    _autoStopLat = null; _autoStopLng = null;
+    _stopAlertShown = false;
+    showToast('ปิดปักหมุดอัตโนมัติ');
+  } else {
+    showToast('✅ เปิดปักหมุดอัตโนมัติแล้ว', 'success');
+  }
+}
+
+function checkAutoStop(lat, lng) {
+  if (!_autoStopEnabled) return;
+  const mins = parseInt(document.getElementById('auto-pin-mins').value) || 10;
+  const ms   = mins * 60 * 1000;
+
+  if (_autoStopLat === null) {
+    // เริ่มจับเวลา
+    _autoStopLat = lat; _autoStopLng = lng; _stopAlertShown = false;
+    _autoStopTimer = setTimeout(() => triggerAutoPin(), ms);
+    return;
+  }
+
+  // เช็คว่าเคลื่อนที่เกิน 50 เมตรไหม
+  const dist = calcDistM(_autoStopLat, _autoStopLng, lat, lng);
+  if (dist > STOP_RADIUS_M) {
+    // เคลื่อนที่แล้ว รีเซ็ตจับเวลา
+    clearTimeout(_autoStopTimer);
+    _autoStopLat = lat; _autoStopLng = lng; _stopAlertShown = false;
+    _autoStopTimer = setTimeout(() => triggerAutoPin(), ms);
+  }
+}
+
+function triggerAutoPin() {
+  if (_stopAlertShown || !_autoStopEnabled) return;
+  _stopAlertShown = true;
+  // แสดง toast พร้อมปุ่มยืนยัน
+  showAutoStopPrompt();
+}
+
+function showAutoStopPrompt() {
+  // สร้าง overlay notification
+  let el = document.getElementById('auto-stop-prompt');
+  if (el) el.remove();
+  el = document.createElement('div');
+  el.id = 'auto-stop-prompt';
+  el.style.cssText = 'position:fixed;bottom:160px;left:50%;transform:translateX(-50%);z-index:4000;' +
+    'background:#fff;border:2px solid #C0392B;border-radius:16px;padding:14px 16px;' +
+    'box-shadow:0 4px 20px rgba(192,57,43,.3);font-family:Sarabun,sans-serif;' +
+    'min-width:260px;max-width:320px;text-align:center;';
+  const mins = document.getElementById('auto-pin-mins').value;
+  el.innerHTML =
+    '<div style="font-size:22px;margin-bottom:6px">📍</div>' +
+    '<div style="font-size:14px;font-weight:700;color:#C0392B;margin-bottom:4px">หยุดอยู่ที่นี่ ' + mins + ' นาทีแล้ว</div>' +
+    '<div style="font-size:12px;color:#888;margin-bottom:12px">ต้องการบันทึกเป็นลูกค้าที่นี่ไหม?</div>' +
+    '<div style="display:flex;gap:8px;">' +
+    '<button onclick="dismissAutoStop()" style="flex:1;padding:8px;border-radius:8px;border:1px solid #ddd;background:#f5f5f5;font-size:13px;cursor:pointer;">ไม่</button>' +
+    '<button onclick="confirmAutoStop()" style="flex:1;padding:8px;border-radius:8px;border:none;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">✅ บันทึก</button>' +
+    '</div>';
+  document.body.appendChild(el);
+  if (navigator.vibrate) navigator.vibrate([200,100,200]);
+}
+
+function confirmAutoStop() {
+  dismissAutoStop();
+  if (!myLat) { showToast('⚠️ ไม่พบ GPS'); return; }
+  _pendingPinLat = myLat; _pendingPinLng = myLng;
+  openPinCustModal(myLat, myLng, null);
+}
+
+function dismissAutoStop() {
+  const el = document.getElementById('auto-stop-prompt');
+  if (el) el.remove();
+  _stopAlertShown = false;
+  // รีเซ็ตจับเวลาใหม่
+  const mins = parseInt(document.getElementById('auto-pin-mins').value) || 10;
+  clearTimeout(_autoStopTimer);
+  _autoStopTimer = setTimeout(() => triggerAutoPin(), mins * 60 * 1000);
+}
+
+function calcDistM(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLng = (lat2-lng1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
 function addCustomerMarker(c) {
@@ -977,16 +1312,28 @@ function addCustomerMarker(c) {
       iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-14], className:''
     })
   }).addTo(salesMap);
-  m.bindPopup(
+  const popupHtml =
     '<div style="font-family:Sarabun,sans-serif;min-width:160px;">'
     + '<div style="font-size:14px;font-weight:700;margin-bottom:4px;">' + (icons[c.type]||'📍') + ' ' + c.name + '</div>'
     + (c.phone ? '<div style="font-size:12px;color:#C0392B;margin-bottom:3px;">📞 ' + c.phone + '</div>' : '')
     + (c.note  ? '<div style="font-size:11px;color:#888;margin-bottom:6px;">' + c.note + '</div>' : '')
-    + '<div style="display:flex;gap:6px;margin-top:6px;">'
-    + '<button onclick="openPinCustModal(null,null,\"" + c.id + "\")" style="flex:1;padding:5px;border-radius:6px;border:1px solid rgba(192,57,43,.3);background:#fff;color:#C0392B;font-size:11px;font-weight:600;cursor:pointer;">✏️ แก้ไข</button>'
-    + '<button onclick="deleteCustomer(\"" + c.id + "\")" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e74c3c;background:#fff;color:#e74c3c;font-size:11px;font-weight:600;cursor:pointer;">🗑️ ลบ</button>'
-    + '</div></div>'
-  );
+    + '<div style="display:flex;gap:6px;margin-top:8px;">'
+    + '<button data-cid="' + c.id + '" data-act="edit" style="flex:1;padding:6px;border-radius:6px;border:1px solid rgba(192,57,43,.3);background:#fff;color:#C0392B;font-size:12px;font-weight:600;cursor:pointer;">✏️ แก้ไข</button>'
+    + '<button data-cid="' + c.id + '" data-act="del" style="flex:1;padding:6px;border-radius:6px;border:1px solid #e74c3c;background:#fff;color:#e74c3c;font-size:12px;font-weight:600;cursor:pointer;">🗑️ ลบ</button>'
+    + '</div></div>';
+  m.bindPopup(popupHtml);
+  m.on('popupopen', function() {
+    const el = m.getPopup().getElement();
+    if (!el) return;
+    el.querySelectorAll('button[data-act]').forEach(function(btn) {
+      btn.onclick = function() {
+        const id  = btn.getAttribute('data-cid');
+        const act = btn.getAttribute('data-act');
+        if (act === 'edit') openPinCustModal(null, null, id);
+        else deleteCustomer(id);
+      };
+    });
+  });
   customerMarkers[c.id] = m;
 }
 
