@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>💼 Sales – มนชิน ซัพพลาย</title>
@@ -18,10 +18,17 @@
   --font:'Sarabun','IBM Plex Sans Thai',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;}
+html,body{
+  height:100%;width:100%;
+  background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;
+  overflow:hidden;
+  position:fixed;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y;
+}
 
 /* ── AUTH ── */
-#auth-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+#auth-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 #auth-screen.hidden{display:none;}
 .auth-wrap{width:100%;max-width:380px;padding:20px 0;}
 .auth-logo{text-align:center;margin-bottom:24px;}
@@ -47,11 +54,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .auth-cfg a{color:var(--accent);cursor:pointer;text-decoration:underline;}
 
 /* ── APP ── */
-#app{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+#app{
+  display:none;flex-direction:column;
+  height:100vh;
+  height:100dvh;
+  width:100vw;
+  overflow:hidden;
+  position:fixed;
+  inset:0;
+}
 #app.show{display:flex;}
 
 /* header */
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
 .hdr-left{display:flex;align-items:center;gap:10px;}
 .av{width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;}
 .hdr-name{font-size:13px;font-weight:600;}
@@ -62,13 +78,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .hbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
 /* bottom nav */
-.bnav{display:flex;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;}
+.bnav{
+  display:flex;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;
+  padding-bottom:env(safe-area-inset-bottom);
+  padding-bottom:constant(safe-area-inset-bottom);
+}
 .bnav-btn{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;font-family:var(--font);}
 .bnav-btn.active{color:var(--accent);}
 .bnav-icon{font-size:20px;display:block;margin-bottom:2px;}
 
 /* pages */
-.page{flex:1;overflow-y:auto;display:none;}
+.page{flex:1;overflow-y:auto;overflow-x:hidden;display:none;-webkit-overflow-scrolling:touch;}
 .page.active{display:block;}
 
 /* ── PAGE: ID CARD ── */
@@ -294,7 +314,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
   <!-- Pages -->
   <div class="page active" id="page-id">
-    <div class="id-card-page" id="id-card-content"></div>
+    <div class="id-card-page" id="id-card-content" style="overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
   </div>
 
   <div class="page" id="page-sell" style="overflow:hidden;display:none;flex-direction:column;">
@@ -686,6 +706,7 @@ function renderIdCard() {
       <div class="id-actions">
         <button class="id-btn gold" onclick="shareMyLink()">📤 แชร์ลิงก์</button>
         <button class="id-btn primary" onclick="copyMyLink()">📋 คัดลอกลิงก์</button>
+        <button class="id-btn" onclick="printSalesCard()" style="background:linear-gradient(120deg,#2c3e50,#34495e);color:#fff;border-color:#2c3e50;">🖨️ พิมพ์บัตร</button>
       </div>
     </div>`;
 
@@ -735,6 +756,144 @@ async function loadSalesStats() {
       document.getElementById('stat-revenue').textContent = (data.revenue || 0).toLocaleString();
     }
   } catch(_) {}
+}
+
+function printSalesCard() {
+  const s       = session;
+  const refUrl  = `${BACKEND_URL}/invite/${s.salesId}`;
+  const photo   = getSalesPhoto();
+
+  // สร้าง QR data URL จาก canvas ที่มีอยู่แล้ว
+  const qrCanvas = document.querySelector('#qr-canvas canvas') || document.querySelector('#qr-canvas img');
+  const qrSrc = qrCanvas
+    ? (qrCanvas.tagName === 'CANVAS' ? qrCanvas.toDataURL() : qrCanvas.src)
+    : '';
+
+  const avatarHtml = photo
+    ? `<img src="${photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #C0392B;">`
+    : `<div style="width:80px;height:80px;border-radius:50%;background:#C0392B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;">${s.name[0]}</div>`;
+
+  const printWin = window.open('', '_blank', 'width=700,height=500');
+  printWin.document.write(`<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>บัตรเซล – ${s.name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&family=Prompt:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#f0f0f0; display:flex; justify-content:center; align-items:center; min-height:100vh; font-family:'Sarabun',sans-serif; padding:20px; }
+  .card-wrap { display:flex; flex-direction:column; gap:16px; align-items:center; }
+  .card {
+    width:340px; background:#fff; border-radius:20px;
+    overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.18);
+    page-break-inside:avoid;
+  }
+  /* ด้านหน้า */
+  .card-front { display:flex; flex-direction:column; }
+  .card-header {
+    background:linear-gradient(135deg,#96281B 0%,#C0392B 50%,#E74C3C 100%);
+    padding:20px; text-align:center; position:relative;
+  }
+  .card-header::after {
+    content:''; position:absolute; bottom:-20px; left:0; right:0;
+    height:40px; background:#fff; border-radius:50% 50% 0 0 / 100% 100% 0 0;
+  }
+  .shop-logo { font-size:28px; margin-bottom:4px; }
+  .shop-name { font-family:'Prompt',sans-serif; font-size:16px; font-weight:800; color:#fff; letter-spacing:.5px; }
+  .shop-sub  { font-size:11px; color:rgba(255,255,255,.75); margin-top:2px; }
+  .card-body { padding:28px 20px 20px; display:flex; gap:16px; align-items:flex-start; }
+  .avatar-wrap { flex-shrink:0; }
+  .info-wrap { flex:1; }
+  .sales-name { font-family:'Prompt',sans-serif; font-size:18px; font-weight:800; color:#1a1a1a; line-height:1.2; }
+  .sales-code { display:inline-block; background:#C0392B; color:#fff; border-radius:20px; padding:3px 12px; font-size:12px; font-weight:700; margin-top:5px; }
+  .sales-role { font-size:11px; color:#888; margin-top:5px; }
+  .sales-phone { font-size:13px; color:#C0392B; font-weight:600; margin-top:4px; }
+  .divider { height:1px; background:linear-gradient(90deg,transparent,#C0392B33,transparent); margin:0 20px; }
+  .card-footer { padding:14px 20px; display:flex; align-items:center; gap:12px; }
+  .qr-box { background:#fff; border:1.5px solid #eee; border-radius:10px; padding:6px; flex-shrink:0; }
+  .qr-box img { display:block; width:70px; height:70px; }
+  .qr-info { flex:1; }
+  .qr-label { font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
+  .qr-url   { font-size:10px; color:#C0392B; word-break:break-all; line-height:1.4; }
+  /* ด้านหลัง */
+  .card-back { padding:20px; background:linear-gradient(160deg,#fff 60%,#FDF0EF); }
+  .back-title { font-family:'Prompt',sans-serif; font-size:13px; font-weight:700; color:#C0392B; margin-bottom:10px; border-bottom:2px solid #C0392B; padding-bottom:6px; }
+  .back-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #f0f0f0; font-size:12px; }
+  .back-row:last-child { border-bottom:none; }
+  .back-label { color:#888; width:70px; flex-shrink:0; }
+  .back-val   { font-weight:600; color:#1a1a1a; flex:1; }
+  .monshin-logo-bottom { text-align:center; margin-top:14px; }
+  .monshin-logo-bottom span { font-family:'Prompt',sans-serif; font-size:13px; font-weight:800; color:#C0392B; }
+  .no-print-label { text-align:center; font-size:12px; color:#888; margin-top:8px; }
+
+  @media print {
+    body { background:#fff; padding:0; }
+    .card { box-shadow:none; }
+    .no-print-label { display:none; }
+    .print-btn { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="card-wrap">
+
+  <!-- ด้านหน้า -->
+  <div class="card card-front">
+    <div class="card-header">
+      <div class="shop-logo">🏪</div>
+      <div class="shop-name">มนชิน ซัพพลาย</div>
+      <div class="shop-sub">Monshin Supply · จังหวัดแพร่</div>
+    </div>
+    <div class="card-body">
+      <div class="avatar-wrap">${avatarHtml}</div>
+      <div class="info-wrap">
+        <div class="sales-name">${s.name}</div>
+        <div><span class="sales-code">💼 ${s.salesId}</span></div>
+        <div class="sales-role">พนักงานขาย · Sales Representative</div>
+        ${s.phone ? `<div class="sales-phone">📞 ${s.phone}</div>` : ''}
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="card-footer">
+      <div class="qr-box">
+        ${qrSrc ? `<img src="${qrSrc}">` : '<div style="width:70px;height:70px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#888">QR</div>'}
+      </div>
+      <div class="qr-info">
+        <div class="qr-label">สแกนเพื่อสั่งสินค้า</div>
+        <div class="qr-url">${refUrl}</div>
+        <div style="font-size:10px;color:#888;margin-top:4px;">ออเดอร์อ้างอิงถึงเซลคนนี้อัตโนมัติ</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ด้านหลัง -->
+  <div class="card card-back">
+    <div class="back-title">📋 ข้อมูลพนักงานขาย</div>
+    <div class="back-row"><span class="back-label">ชื่อ</span><span class="back-val">${s.name}</span></div>
+    <div class="back-row"><span class="back-label">รหัสเซล</span><span class="back-val" style="color:#C0392B;font-family:'Prompt',sans-serif;">${s.salesId}</span></div>
+    ${s.phone ? `<div class="back-row"><span class="back-label">เบอร์โทร</span><span class="back-val">${s.phone}</span></div>` : ''}
+    <div class="back-row"><span class="back-label">LINE OA</span><span class="back-val" style="color:#06C755;">@monshin</span></div>
+    <div class="back-row"><span class="back-label">เว็บไซต์</span><span class="back-val" style="color:#C0392B;font-size:11px;">${refUrl}</span></div>
+    <div class="monshin-logo-bottom">
+      <div style="font-size:24px;margin-bottom:4px;">🏪</div>
+      <span>มนชิน ซัพพลาย</span>
+      <div style="font-size:10px;color:#888;margin-top:2px;">สินค้าคุณภาพ · ราคาโรงงาน · จังหวัดแพร่</div>
+    </div>
+  </div>
+
+  <button onclick="window.print()" class="print-btn"
+    style="padding:12px 32px;background:#C0392B;color:#fff;border:none;border-radius:12px;
+    font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 14px rgba(192,57,43,.4);">
+    🖨️ พิมพ์บัตรเซล
+  </button>
+  <div class="no-print-label">ขนาดบัตร 340px × ~สูงอัตโนมัติ · กด Ctrl+P เพื่อพิมพ์</div>
+
+</div>
+</body>
+</html>`);
+  printWin.document.close();
 }
 
 function shareMyLink() {
