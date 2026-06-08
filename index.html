@@ -549,7 +549,64 @@ async function gasCall(body) {
 let session = null;
 let cart = {};       // { productId: { name, price, qty } }
 let products = [];
-let customers = JSON.parse(localStorage.getItem('sales_customers')||'[]');
+let customers = []; // โหลดจาก Supabase
+
+// ── Supabase pins helpers ─────────────────────────────
+async function loadPinsFromSupabase() {
+  if (!session) return;
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/sales_pins?sales_id=eq.' + session.salesId + '&order=created_at.asc', {
+      headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON }
+    });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      customers = data.map(r => ({
+        id: r.id, name: r.name, phone: r.phone||'',
+        type: r.type||'shop', note: r.note||'',
+        lat: parseFloat(r.lat), lng: parseFloat(r.lng),
+        createdAt: r.created_at
+      }));
+    }
+  } catch(_) {}
+}
+
+async function savePinToSupabase(pin) {
+  const res = await fetch(SB_URL + '/rest/v1/sales_pins', {
+    method: 'POST',
+    headers: {
+      'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON,
+      'Content-Type': 'application/json', 'Prefer': 'return=representation'
+    },
+    body: JSON.stringify({
+      id: pin.id, sales_id: session.salesId,
+      name: pin.name, phone: pin.phone||'',
+      type: pin.type||'shop', note: pin.note||'',
+      lat: pin.lat, lng: pin.lng
+    })
+  });
+  return await res.json();
+}
+
+async function updatePinInSupabase(pin) {
+  await fetch(SB_URL + '/rest/v1/sales_pins?id=eq.' + pin.id, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON,
+      'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({
+      name: pin.name, phone: pin.phone||'',
+      type: pin.type||'shop', note: pin.note||''
+    })
+  });
+}
+
+async function deletePinFromSupabase(id) {
+  await fetch(SB_URL + '/rest/v1/sales_pins?id=eq.' + id, {
+    method: 'DELETE',
+    headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON }
+  });
+}
 let routeSelected = [];
 let routeLayer = null, routeTotalKm = 0;
 let addPinMode = false;
@@ -1175,10 +1232,10 @@ async function submitOrder() {
     if (data.ok) {
       // บันทึกลูกค้าใน localStorage สำหรับแผนที่
       if (pinLat) {
-        const cust = { id:'c_'+Date.now(), name, phone, address:addr, lat:pinLat, lng:pinLng, createdAt:Date.now() };
+        const cust = { id:'sp_'+Date.now(), name, phone, address:addr, type:'shop', note: note||'', lat:pinLat, lng:pinLng, createdAt:new Date().toISOString() };
         customers.push(cust);
-        localStorage.setItem('sales_customers', JSON.stringify(customers));
         addCustomerMarker(cust);
+        savePinToSupabase(cust).catch(()=>{});
       }
       cart = {};
       updateCartBar();
@@ -1211,7 +1268,10 @@ function initSalesMap() {
       openPinCustModal(_pendingPinLat, _pendingPinLng);
       setAddPin(false);
     });
-    customers.forEach(c => addCustomerMarker(c));
+    // โหลด pins จาก Supabase แล้ว render
+    loadPinsFromSupabase().then(() => {
+      customers.forEach(c => addCustomerMarker(c));
+    });
     startGPS();
   }, 300);
 }
@@ -1538,39 +1598,40 @@ function savePinCustomer() {
   const typeIcons = { shop:'🏪', home:'🏠', business:'🏢', other:'📍' };
 
   if (_editCustId) {
-    // แก้ไข
     const idx = customers.findIndex(x => x.id === _editCustId);
     if (idx >= 0) {
       customers[idx] = { ...customers[idx], name, phone, type, note };
-      // อัปเดต marker
       if (customerMarkers[_editCustId]) {
         salesMap.removeLayer(customerMarkers[_editCustId]);
         delete customerMarkers[_editCustId];
       }
       addCustomerMarker(customers[idx]);
-      showToast('✅ แก้ไขลูกค้าแล้ว', 'success');
+      updatePinInSupabase(customers[idx])
+        .then(() => showToast('✅ แก้ไขลูกค้าแล้ว', 'success'))
+        .catch(() => showToast('⚠️ บันทึกไม่สำเร็จ'));
     }
   } else {
-    // เพิ่มใหม่
     const cust = {
-      id: 'c_' + Date.now(), name, phone, type, note,
-      lat: _pendingPinLat, lng: _pendingPinLng, createdAt: Date.now()
+      id: 'sp_' + Date.now(), name, phone, type, note,
+      lat: _pendingPinLat, lng: _pendingPinLng, createdAt: new Date().toISOString()
     };
     customers.push(cust);
     addCustomerMarker(cust);
-    showToast('✅ เพิ่มลูกค้าแล้ว', 'success');
+    savePinToSupabase(cust)
+      .then(() => showToast('✅ เพิ่มลูกค้าแล้ว', 'success'))
+      .catch(() => showToast('⚠️ บันทึกไม่สำเร็จ'));
   }
-  localStorage.setItem('sales_customers', JSON.stringify(customers));
   closePinCustModal();
 }
 
 function deleteCustomer(id) {
   if (!confirm('ลบลูกค้านี้?')) return;
   customers = customers.filter(x => x.id !== id);
-  localStorage.setItem('sales_customers', JSON.stringify(customers));
   if (customerMarkers[id]) { salesMap.removeLayer(customerMarkers[id]); delete customerMarkers[id]; }
   salesMap.closePopup();
-  showToast('ลบแล้ว');
+  deletePinFromSupabase(id)
+    .then(() => showToast('ลบแล้ว'))
+    .catch(() => showToast('⚠️ ลบไม่สำเร็จ'));
 }
 
 function toggleAddPin() { setAddPin(!addPinMode); }
