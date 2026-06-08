@@ -3,6 +3,6 @@
   "target": {
     "namespace": "android_app",
     "package_name": "com.monshin.sales",
-    "sha256_cert_fingerprints": ["97:54:29:B8:31:E3:50:4A:FF:3B:7C:D3:10:30:51:64:68:F4:5D:81:97:6F:3D:95:74:C1:1E:05:F4:E6:2F:E3"]
+    "sha256_cert_fingerprints": ["95:1A:32:50:E0:F2:56:61:6F:5C:E8:B6:97:59:76:17:FF:19:07:13:25:1F:A9:E1:42:1D:1C:4F:CE:70:3E:47"]
   }
 }]
