@@ -57,6 +57,18 @@ jobs:
 
       - name: Capacitor sync
         run: npx cap sync android
+      - name: Set app icon
+        run: |
+          cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+          cp ic_launcher_xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp ic_launcher_xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          cp ic_launcher_xhdpi.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp ic_launcher_xhdpi.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          cp ic_launcher_hdpi.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp ic_launcher_hdpi.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          cp ic_launcher_mdpi.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp ic_launcher_mdpi.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
 
       - name: Add permissions to AndroidManifest
         run: |
