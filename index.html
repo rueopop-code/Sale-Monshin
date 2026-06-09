@@ -1052,6 +1052,7 @@ function printSalesCard() {
     ? `<img src="${photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #C0392B;">`
     : `<div style="width:80px;height:80px;border-radius:50%;background:#C0392B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;">${s.name[0]}</div>`;
 
+  const salesIdForDownload = s.salesId;
   const printWin = window.open('', '_blank', 'width=700,height=500');
   printWin.document.write(`<!DOCTYPE html>
 <html lang="th">
@@ -1179,8 +1180,8 @@ function printSalesCard() {
     โ• เธเธดเธ”เธซเธเนเธฒเธเธตเน
   </button>
   <div class="no-print-label">เธเธเธฒเธ”เธเธฑเธ•เธฃ 340px ร— ~เธชเธนเธเธญเธฑเธ•เนเธเธกเธฑเธ•เธด ยท เธเธ” Ctrl+P เน€เธเธทเนเธญเธเธดเธกเธเน</div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script>
+  <scr"+"ipt src=\"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js\"></scr"+"ipt>
+  <scr"+"ipt>
   document.getElementById('download-btn').addEventListener('click', async function() {
     this.textContent = 'โณ เธเธณเธฅเธฑเธเธชเธฃเนเธฒเธเธฃเธนเธ...';
     this.disabled = true;
@@ -1193,7 +1194,7 @@ function printSalesCard() {
         logging: false
       });
       const link = document.createElement('a');
-      link.download = 'เธเธฑเธ•เธฃเน€เธเธฅ-${s.salesId}.png';
+      link.download = 'เธเธฑเธ•เธฃเน€เธเธฅ-' + salesIdForDownload + '.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch(e) {
@@ -1202,7 +1203,7 @@ function printSalesCard() {
     this.textContent = '๐“ฅ เธ”เธฒเธงเธเนเนเธซเธฅเธ”เธฃเธนเธเธเธฑเธ•เธฃ';
     this.disabled = false;
   });
-  </script>
+  </scr"+"ipt>
 
 </div>
 </body>
