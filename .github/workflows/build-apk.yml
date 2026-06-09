@@ -154,6 +154,43 @@ jobs:
           JAVAEOF
           sed -i 's|</application>|    <service android:name=".LocationService" android:foregroundServiceType="location" android:exported="false" />\n    </application>|' android/app/src/main/AndroidManifest.xml
 
+      - name: Override MainActivity for GPS Bridge
+        run: |
+          cat > android/app/src/main/java/com/monshin/sales/MainActivity.java << 'MAINEOF'
+          package com.monshin.sales;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+            }
+            @Override
+            public boolean onOverrideUrlLoading(android.webkit.WebView view, android.webkit.WebResourceRequest request) {
+              Uri uri = request.getUrl();
+              if (uri != null && "monshin".equals(uri.getScheme())) {
+                String host = uri.getHost();
+                if ("startgps".equals(host)) {
+                  String salesId = uri.getQueryParameter("salesId");
+                  Intent intent = new Intent(this, LocationService.class);
+                  if (salesId != null) intent.putExtra("salesId", salesId);
+                  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(intent);
+                  } else {
+                    startService(intent);
+                  }
+                } else if ("stopgps".equals(host)) {
+                  stopService(new Intent(this, LocationService.class));
+                }
+                return true;
+              }
+              return super.onOverrideUrlLoading(view, request);
+            }
+          }
+          MAINEOF
+
       - name: Add permissions to AndroidManifest
         run: |
           sed -i 's/<\/manifest>/    <uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" \/>\n    <uses-permission android:name="android.permission.CAMERA" \/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" \/>\n    <uses-permission android:name="android.permission.VIBRATE" \/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" \/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" \/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n<\/manifest>/' android/app/src/main/AndroidManifest.xml
