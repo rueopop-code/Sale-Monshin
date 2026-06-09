@@ -22,22 +22,33 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install Capacitor
+      - name: Init npm and install Capacitor
         run: |
+          npm init -y
           npm install @capacitor/core @capacitor/android @capacitor/cli
+
+      - name: Create capacitor.config.json
+        run: |
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.monshin.sales",
+            "appName": "Monshin Sales",
+            "webDir": "www",
+            "server": {
+              "androidScheme": "https"
+            }
+          }
+          EOF
 
       - name: Build web assets
         run: |
           mkdir -p www
           cp index.html www/
-          cp -r css www/ 2>/dev/null || true
-          cp -r js www/ 2>/dev/null || true
-          cp -r assets www/ 2>/dev/null || true
           cp manifest.json www/ 2>/dev/null || true
           cp sw.js www/ 2>/dev/null || true
+
+      - name: Add Android platform
+        run: npx cap add android
 
       - name: Capacitor sync
         run: npx cap sync android
@@ -50,16 +61,6 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-
-      - name: Sign APK
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > monshin.keystore
-          $ANDROID_HOME/build-tools/*/apksigner sign \
-            --ks monshin.keystore \
-            --ks-pass pass:monshin123 \
-            --ks-key-alias monshin \
-            --key-pass pass:monshin123 \
-            android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
