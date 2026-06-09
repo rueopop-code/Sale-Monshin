@@ -62,6 +62,12 @@ jobs:
 
       - name: Set app icon
         run: |
+          # ลบ adaptive icon XML ที่ทับ icon ปกติ
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+          rm -f android/app/src/main/res/drawable/ic_launcher_background.xml
+          rm -f android/app/src/main/res/drawable/ic_launcher_foreground.xml
+
+          # copy icon ทุก resolution
           cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
           cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
           cp ic_launcher_xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
@@ -72,6 +78,10 @@ jobs:
           cp ic_launcher_hdpi.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
           cp ic_launcher_mdpi.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
           cp ic_launcher_mdpi.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          
+          # copy สำหรับ foreground ด้วย (Android 8+)
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png 2>/dev/null || true
 
       - name: Add GPS Background Service
         run: |
