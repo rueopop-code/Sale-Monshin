@@ -83,6 +83,23 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png 2>/dev/null || true
 
+          # แก้ splash screen
+          mkdir -p android/app/src/main/res/drawable
+          cp icon-512.png android/app/src/main/res/drawable/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-land-hdpi/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-land-mdpi/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-land-xhdpi/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-land-xxhdpi/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-land-xxxhdpi/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-port-hdpi/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-port-mdpi/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-port-xhdpi/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-port-xxhdpi/splash.png 2>/dev/null || true
+          cp icon-512.png android/app/src/main/res/drawable-port-xxxhdpi/splash.png 2>/dev/null || true
+
+          # แก้ splash background เป็นสีแดงมนชิน
+          find android/app/src/main/res -name "launch_background.xml" | xargs -I{} sed -i 's/#ffffff/#C0392B/g; s/#FFFFFF/#C0392B/g' {} 2>/dev/null || true
+
       - name: Add GPS Background Service
         run: |
           mkdir -p android/app/src/main/java/com/monshin/sales
