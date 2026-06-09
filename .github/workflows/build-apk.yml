@@ -39,7 +39,8 @@ jobs:
             "appName": "Monshin Sales",
             "webDir": "www",
             "server": {
-              "androidScheme": "https"
+              "url": "https://rueopop-code.github.io/Sale-Monshin/",
+              "cleartext": false
             }
           }
           EOF
