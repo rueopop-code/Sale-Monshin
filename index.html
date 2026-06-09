@@ -69,15 +69,18 @@ html,body{
 
 /* header */
 .hdr{display:flex;align-items:center;justify-content:space-between;
-  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  background:linear-gradient(135deg,#96281B 0%,#C0392B 60%,#E74C3C 100%);
+  flex-shrink:0;box-shadow:0 2px 12px rgba(150,40,27,.4);}
 .hdr-left{display:flex;align-items:center;gap:10px;}
-.av{width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;}
-.hdr-name{font-size:13px;font-weight:600;}
-.hdr-code{font-size:11px;color:var(--gold);font-weight:600;}
+.av{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex-shrink:0;overflow:hidden;}
+.av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.hdr-name{font-size:14px;font-weight:700;color:#fff;}
+.hdr-code{font-size:11px;color:rgba(255,255,255,.8);font-weight:600;margin-top:1px;}
 .hdr-right{display:flex;gap:6px;}
-.hbtn{background:none;border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:var(--font);}
-.hbtn:hover{color:var(--text);border-color:var(--border2);}
-.hbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:var(--font);font-weight:600;}
+.hbtn:hover{background:rgba(255,255,255,.25);}
+.hbtn.active{background:rgba(255,255,255,.3);color:#fff;}
 
 /* bottom nav */
 .bnav{
@@ -259,6 +262,7 @@ html,body{
 .av{background:linear-gradient(120deg,#96281B,#C0392B)!important;}
 
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -300,9 +304,7 @@ html,body{
 <!-- APP -->
 <div id="app">
   <div class="hdr">
-    <div class="hdr-left"><div style="display:flex;align-items:center;gap:8px;margin-right:8px;">
-  <div style="width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;">🏪</div>
-</div>
+    <div class="hdr-left">
       <div class="av" id="hdr-av">?</div>
       <div>
         <div class="hdr-name" id="hdr-name">—</div>
@@ -310,7 +312,7 @@ html,body{
       </div>
     </div>
     <div class="hdr-right">
-      <button class="hbtn" id="refresh-btn" onclick="doRefresh()" title="รีเฟรช">🔄</button>
+      <button class="hbtn" id="refresh-btn" onclick="doRefresh()" title="รีเฟรช">↻</button>
       <button class="hbtn" onclick="doLogout()">ออก</button>
     </div>
   </div>
@@ -769,8 +771,41 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
 }
 
+// ── Background GPS Service (Native Android) ──────────────
+function startBgService() {
+  try {
+    if (window.AndroidBridge && window.AndroidBridge.startLocationService) {
+      window.AndroidBridge.startLocationService(session.salesId);
+    } else if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      // ใช้ Capacitor Intent
+      const intent = {
+        action: 'START_LOCATION_SERVICE',
+        extras: { salesId: session.salesId }
+      };
+      window.Capacitor.Plugins.App.exitApp && console.log('Capacitor ready');
+    }
+    // Fallback: ส่ง message ไปยัง native via URL scheme
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = 'monshin://startgps?salesId=' + encodeURIComponent(session.salesId);
+    document.body.appendChild(iframe);
+    setTimeout(() => iframe.remove(), 500);
+  } catch(e) { console.log('BgService not available:', e); }
+}
+
+function stopBgService() {
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = 'monshin://stopgps';
+    document.body.appendChild(iframe);
+    setTimeout(() => iframe.remove(), 500);
+  } catch(e) {}
+}
+
 function doLogout() {
   if (!confirm('ออกจากระบบ?')) return;
+  stopBgService();
   localStorage.removeItem(SESSION_KEY);
   location.reload();
 }
@@ -858,12 +893,20 @@ function enterApp(sess) {
   session = sess;
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app').classList.add('show');
-  document.getElementById('hdr-av').textContent  = sess.name[0];
+  const hdrAv = document.getElementById('hdr-av');
+  const photo = (sess && sess.photo) || localStorage.getItem('sales_photo_' + (sess?.salesId||'')) || '';
+  if (photo) {
+    hdrAv.innerHTML = '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+  } else {
+    hdrAv.textContent = sess.name[0];
+  }
   document.getElementById('hdr-name').textContent = sess.name;
-  document.getElementById('hdr-code').textContent = '🏷️ ' + sess.salesId;
+  document.getElementById('hdr-code').textContent = sess.salesId;
   renderIdCard();
   loadProducts();
   initSalesMap();
+  // Start background GPS service
+  setTimeout(() => startBgService(), 2000);
 }
 
 // ══════════════════════════════════════════
@@ -875,6 +918,10 @@ const CLOUDINARY_PRESET = 'monshin';
 
 function getSalesPhoto() {
   return (session && session.photo) || localStorage.getItem('sales_photo_' + (session?.salesId||'')) || '';
+}
+function updateHdrPhoto(url) {
+  const hdrAv = document.getElementById('hdr-av');
+  if (hdrAv) hdrAv.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
 }
 function setSalesPhotoLocal(url) {
   localStorage.setItem('sales_photo_' + (session?.salesId||''), url);
@@ -898,6 +945,7 @@ async function uploadPhoto(input) {
     // บันทึกลง GAS Sheet
     await gasCall({ action:'updatePhoto', token:session.token, salesId:session.salesId, photoUrl });
     setSalesPhotoLocal(photoUrl);
+    updateHdrPhoto(photoUrl);
     renderIdCard();
     showToast('✅ บันทึกรูปแล้ว', 'success');
   } catch(e) { showToast('⚠️ ' + e.message); }
@@ -1168,42 +1216,56 @@ function printSalesCard() {
     box-shadow:0 4px 14px rgba(192,57,43,.4);">
     🖨️ พิมพ์บัตรเซล
   </button>
-  <button id="download-btn" class="print-btn"
+  <button id="dl-btn" class="print-btn"
     style="padding:12px 32px;background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;border-radius:12px;
     font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;
     box-shadow:0 4px 14px rgba(39,174,96,.4);">
     📥 ดาวน์โหลดรูปบัตร
   </button>
+  <script>
+  (function(){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = function() {
+      document.getElementById('dl-btn').onclick = function() {
+        var btn = this;
+        btn.textContent = '⏳ กำลังสร้างรูป...';
+        btn.disabled = true;
+        // จับแค่ 2 card เท่านั้น
+        var cards = document.querySelectorAll('.card');
+        var frontCard = cards[0];
+        var backCard = cards[1];
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:inline-flex;flex-direction:column;gap:16px;padding:20px;background:#f0f0f0;';
+        document.body.appendChild(wrapper);
+        wrapper.appendChild(frontCard.cloneNode(true));
+        if(backCard) wrapper.appendChild(backCard.cloneNode(true));
+        html2canvas(wrapper, {scale:2,useCORS:true,backgroundColor:'#f0f0f0',logging:false}).then(function(canvas){
+        document.body.removeChild(wrapper);
+          var a = document.createElement('a');
+          a.download = 'บัตรเซล.png';
+          a.href = canvas.toDataURL('image/png');
+          a.click();
+          btn.textContent = '📥 ดาวน์โหลดรูปบัตร';
+          btn.disabled = false;
+        }).catch(function(){
+          try{document.body.removeChild(wrapper);}catch(e){}
+          alert('ไม่สามารถดาวน์โหลดได้ กรุณาใช้ปุ่มพิมพ์แทน');
+          btn.textContent = '📥 ดาวน์โหลดรูปบัตร';
+          btn.disabled = false;
+        });
+      };
+    };
+    document.head.appendChild(s);
+  })();
+  <\/script>
   <button onclick="window.close()" class="print-btn"
     style="padding:12px 32px;background:#fff;color:#C0392B;border:2px solid #C0392B;border-radius:12px;
     font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
     ✕ ปิดหน้านี้
   </button>
   <div class="no-print-label">ขนาดบัตร 340px × ~สูงอัตโนมัติ · กด Ctrl+P เพื่อพิมพ์</div>
-  <scr"+"ipt src=\"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js\"></scr"+"ipt>
-  <scr"+"ipt>
-  document.getElementById('download-btn').addEventListener('click', async function() {
-    this.textContent = '⏳ กำลังสร้างรูป...';
-    this.disabled = true;
-    try {
-      const cardWrap = document.querySelector('.card-wrap');
-      const canvas = await html2canvas(cardWrap, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#f0f0f0',
-        logging: false
-      });
-      const link = document.createElement('a');
-      link.download = 'บัตรเซล-' + salesIdForDownload + '.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } catch(e) {
-      alert('ไม่สามารถดาวน์โหลดได้ กรุณาใช้ปุ่มพิมพ์แทน');
-    }
-    this.textContent = '📥 ดาวน์โหลดรูปบัตร';
-    this.disabled = false;
-  });
-  </scr"+"ipt>
+
 
 </div>
 </body>
@@ -1517,6 +1579,31 @@ async function saveSettingsPassword() {
   } catch(e) {
     status.textContent = '❌ เปลี่ยนไม่สำเร็จ'; status.style.color='#C0392B';
   }
+}
+
+function downloadCard(btn) {
+  btn.textContent = '⏳ กำลังสร้างรูป...';
+  btn.disabled = true;
+  var salesId = btn.closest('body') ? (document.querySelector('.sales-code') || {textContent:''}).textContent.replace('💼 ','') : '';
+  var cardWrap = document.querySelector('.card-wrap');
+  if (typeof html2canvas === 'undefined') {
+    alert('ไม่สามารถดาวน์โหลดได้ กรุณาใช้ปุ่มพิมพ์แทน');
+    btn.textContent = '📥 ดาวน์โหลดรูปบัตร';
+    btn.disabled = false;
+    return;
+  }
+  html2canvas(cardWrap, { scale:2, useCORS:true, backgroundColor:'#f0f0f0', logging:false }).then(function(canvas) {
+    var link = document.createElement('a');
+    link.download = 'บัตรเซล.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.textContent = '📥 ดาวน์โหลดรูปบัตร';
+    btn.disabled = false;
+  }).catch(function() {
+    alert('ไม่สามารถดาวน์โหลดได้ กรุณาใช้ปุ่มพิมพ์แทน');
+    btn.textContent = '📥 ดาวน์โหลดรูปบัตร';
+    btn.disabled = false;
+  });
 }
 
 function shareMyLink() {
