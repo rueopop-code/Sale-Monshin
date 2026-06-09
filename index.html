@@ -518,7 +518,21 @@ html,body{
       </select>
     </div>
     <div class="cfield"><label>หมายเหตุ</label><textarea id="pc-note" placeholder="สินค้าที่สนใจ, วันนัด, ข้อมูลเพิ่มเติม..." style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(192,57,43,.25);background:#fff;color:#1a1a1a;font-family:var(--font);font-size:13px;outline:none;resize:none;height:70px;"></textarea></div>
-    <button class="confirm-btn" onclick="savePinCustomer()">✅ บันทึกลูกค้า</button>
+    <div class="cfield">
+      <label>📸 รูปสถานที่ <span style="font-size:11px;color:#aaa;font-weight:400;">(ไม่บังคับ)</span></label>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button type="button" onclick="document.getElementById('pc-photo-input').click()" style="flex:1;padding:9px;border-radius:9px;border:1.5px solid rgba(192,57,43,.3);background:#fff8f8;color:#C0392B;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">🖼️ เลือกรูป</button>
+        <button type="button" onclick="document.getElementById('pc-camera-input').click()" style="flex:1;padding:9px;border-radius:9px;border:1.5px solid rgba(192,57,43,.3);background:#fff8f8;color:#C0392B;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">📷 ถ่ายรูป</button>
+      </div>
+      <input type="file" id="pc-photo-input" accept="image/*" style="display:none;" onchange="onPinPhotoSelected(this)">
+      <input type="file" id="pc-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="onPinPhotoSelected(this)">
+      <div id="pc-photo-preview" style="display:none;position:relative;border-radius:10px;overflow:hidden;margin-top:4px;">
+        <img id="pc-photo-img" src="" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;display:block;">
+        <button type="button" onclick="clearPinPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;color:#fff;width:26px;height:26px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+      </div>
+      <div id="pc-photo-status" style="font-size:11px;color:#888;margin-top:4px;display:none;"></div>
+    </div>
+    <button class="confirm-btn" id="pc-save-btn" onclick="savePinCustomer()">✅ บันทึกลูกค้า</button>
   </div>
 </div>
 
@@ -671,7 +685,8 @@ async function savePinToSupabase(pin) {
       id: pin.id, sales_id: session.salesId,
       name: pin.name, phone: pin.phone||'',
       type: pin.type||'shop', note: pin.note||'',
-      lat: pin.lat, lng: pin.lng
+      lat: pin.lat, lng: pin.lng,
+      photo_url: pin.photo_url || null
     })
   });
   return await res.json();
@@ -686,7 +701,8 @@ async function updatePinInSupabase(pin) {
     },
     body: JSON.stringify({
       name: pin.name, phone: pin.phone||'',
-      type: pin.type||'shop', note: pin.note||''
+      type: pin.type||'shop', note: pin.note||'',
+      photo_url: pin.photo_url !== undefined ? (pin.photo_url || null) : undefined
     })
   });
 }
@@ -1382,6 +1398,9 @@ async function loadCustomersList() {
       const orderCount = pinOrderCount[cname] || 0;
       const addedDate = p.created_at ? new Date(p.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : '';
       const typeIcon = p.type === 'shop' ? '🏪' : p.type === 'house' ? '🏠' : '📍';
+      const photoSection = p.photo_url
+        ? `<div style="margin-top:8px;border-radius:10px;overflow:hidden;"><img src="${p.photo_url}" loading="lazy" style="width:100%;max-height:140px;object-fit:cover;display:block;border-radius:10px;" onerror="this.parentElement.style.display='none'"></div>`
+        : '';
       return `<div style="background:#fafafa;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(192,57,43,.08);">
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#96281B,#C0392B);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${i+1}</div>
@@ -1394,6 +1413,7 @@ async function loadCustomersList() {
             🗺️ นำทาง
           </a>
         </div>
+        ${photoSection}
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
           ${p.phone ? `<a href="tel:${p.phone}" style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:20px;font-size:11px;color:#333;text-decoration:none;">📞 ${p.phone}</a>` : ''}
           ${orderCount > 0 ? `<span style="padding:4px 10px;background:#fff8f8;border:1px solid rgba(192,57,43,.2);border-radius:20px;font-size:11px;color:#C0392B;font-weight:600;">🧾 ${orderCount} ออเดอร์</span>` : ''}
@@ -2160,12 +2180,22 @@ function openPinCustModal(lat, lng, editId) {
       document.getElementById('pc-type').value  = c.type  || 'shop';
       document.getElementById('pc-note').value  = c.note  || '';
       _pendingPinLat = c.lat; _pendingPinLng = c.lng;
+      // โหลดรูปเดิม
+      if (c.photo_url) {
+        _pinPhotoUrl = c.photo_url;
+        _pinPhotoFile = null;
+        document.getElementById('pc-photo-img').src = c.photo_url;
+        document.getElementById('pc-photo-preview').style.display = 'block';
+      } else {
+        clearPinPhoto();
+      }
     }
   } else {
     document.getElementById('pc-name').value  = '';
     document.getElementById('pc-phone').value = '';
     document.getElementById('pc-type').value  = 'shop';
     document.getElementById('pc-note').value  = '';
+    clearPinPhoto();
   }
   document.getElementById('pin-cust-modal').classList.add('show');
   setTimeout(() => document.getElementById('pc-name').focus(), 200);
@@ -2174,9 +2204,63 @@ function openPinCustModal(lat, lng, editId) {
 function closePinCustModal() {
   document.getElementById('pin-cust-modal').classList.remove('show');
   _editCustId = null;
+  clearPinPhoto();
 }
 
-function savePinCustomer() {
+// ── Pin photo helpers ──────────────────────────────────
+let _pinPhotoFile = null;
+let _pinPhotoUrl  = null;   // URL ที่อัปแล้วหรือ URL เดิม (กรณี edit)
+
+function onPinPhotoSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  _pinPhotoFile = file;
+  _pinPhotoUrl  = null;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('pc-photo-img').src = e.target.result;
+    document.getElementById('pc-photo-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  // reset input ให้เลือกไฟล์เดิมซ้ำได้
+  input.value = '';
+}
+
+function clearPinPhoto() {
+  _pinPhotoFile = null;
+  _pinPhotoUrl  = null;
+  const preview = document.getElementById('pc-photo-preview');
+  if (preview) { preview.style.display = 'none'; document.getElementById('pc-photo-img').src = ''; }
+  const status = document.getElementById('pc-photo-status');
+  if (status) { status.style.display = 'none'; status.textContent = ''; }
+  const inp1 = document.getElementById('pc-photo-input');
+  const inp2 = document.getElementById('pc-camera-input');
+  if (inp1) inp1.value = '';
+  if (inp2) inp2.value = '';
+}
+
+async function uploadPinPhoto() {
+  if (!_pinPhotoFile) return _pinPhotoUrl || null;
+  const status = document.getElementById('pc-photo-status');
+  if (status) { status.style.display = 'block'; status.textContent = '⏳ กำลังอัปโหลดรูป...'; }
+  try {
+    const fd = new FormData();
+    fd.append('file', _pinPhotoFile);
+    fd.append('upload_preset', 'monshin');
+    const res  = await fetch('https://api.cloudinary.com/v1_1/dwet6be8c/image/upload', { method:'POST', body:fd });
+    const data = await res.json();
+    if (!data.secure_url) throw new Error('Cloudinary error');
+    _pinPhotoUrl  = data.secure_url;
+    _pinPhotoFile = null;
+    if (status) { status.textContent = '✅ อัปโหลดสำเร็จ'; }
+    return _pinPhotoUrl;
+  } catch(e) {
+    if (status) { status.textContent = '⚠️ อัปโหลดรูปไม่สำเร็จ'; }
+    return null;
+  }
+}
+
+async function savePinCustomer() {
   const name  = document.getElementById('pc-name').value.trim();
   const phone = document.getElementById('pc-phone').value.trim();
   const type  = document.getElementById('pc-type').value;
@@ -2184,12 +2268,19 @@ function savePinCustomer() {
   if (!name) { showToast('⚠️ กรุณากรอกชื่อ'); return; }
   if (_pendingPinLat === null) { showToast('⚠️ ไม่พบตำแหน่ง'); return; }
 
+  // disable ปุ่ม save ระหว่างอัปโหลด
+  const saveBtn = document.getElementById('pc-save-btn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ กำลังบันทึก...'; }
+
+  // อัปโหลดรูปก่อน (ถ้ามี)
+  const photoUrl = await uploadPinPhoto();
+
   const typeIcons = { shop:'🏪', home:'🏠', business:'🏢', other:'📍' };
 
   if (_editCustId) {
     const idx = customers.findIndex(x => x.id === _editCustId);
     if (idx >= 0) {
-      customers[idx] = { ...customers[idx], name, phone, type, note };
+      customers[idx] = { ...customers[idx], name, phone, type, note, photo_url: photoUrl || customers[idx].photo_url || null };
       if (customerMarkers[_editCustId]) {
         salesMap.removeLayer(customerMarkers[_editCustId]);
         delete customerMarkers[_editCustId];
@@ -2202,7 +2293,9 @@ function savePinCustomer() {
   } else {
     const cust = {
       id: 'sp_' + Date.now(), name, phone, type, note,
-      lat: _pendingPinLat, lng: _pendingPinLng, createdAt: new Date().toISOString()
+      lat: _pendingPinLat, lng: _pendingPinLng,
+      photo_url: photoUrl || null,
+      createdAt: new Date().toISOString()
     };
     customers.push(cust);
     addCustomerMarker(cust);
@@ -2210,6 +2303,7 @@ function savePinCustomer() {
       .then(() => showToast('✅ เพิ่มลูกค้าแล้ว', 'success'))
       .catch(() => showToast('⚠️ บันทึกไม่สำเร็จ'));
   }
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '✅ บันทึกลูกค้า'; }
   closePinCustModal();
 }
 
