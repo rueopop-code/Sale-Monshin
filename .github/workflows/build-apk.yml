@@ -35,7 +35,7 @@ jobs:
 
       - name: Create capacitor.config.json
         run: |
-          cat > capacitor.config.json << 'EOF'
+          cat > capacitor.config.json << 'CAPEOF'
           {
             "appId": "com.monshin.sales",
             "appName": "Monshin Sales",
@@ -45,7 +45,7 @@ jobs:
               "cleartext": false
             }
           }
-          EOF
+          CAPEOF
 
       - name: Build web assets
         run: |
@@ -59,6 +59,7 @@ jobs:
 
       - name: Capacitor sync
         run: npx cap sync android
+
       - name: Set app icon
         run: |
           cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
@@ -72,13 +73,94 @@ jobs:
           cp ic_launcher_mdpi.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
           cp ic_launcher_mdpi.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
 
+      - name: Add GPS Background Service
+        run: |
+          mkdir -p android/app/src/main/java/com/monshin/sales
+          cat > android/app/src/main/java/com/monshin/sales/LocationService.java << 'JAVAEOF'
+          package com.monshin.sales;
+          import android.app.*;
+          import android.content.*;
+          import android.location.*;
+          import android.os.*;
+          import android.util.Log;
+          import androidx.core.app.NotificationCompat;
+          import java.net.*;
+          import java.io.*;
+          public class LocationService extends Service {
+            private static final String CHANNEL_ID = "monshin_gps";
+            private static final int NOTIF_ID = 1001;
+            private static final String SB_URL = "https://ckfzscprxighfxztmgct.supabase.co";
+            private static final String SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrZnpzY3ByeGlnaGZ4enRtZ2N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTU0NDIsImV4cCI6MjA5MjYzMTQ0Mn0.nQ_LhPz9GsehqRSNx67G5cqxCKHD-cM1gbs2edTqUpw";
+            private LocationManager lm;
+            private String salesId = "";
+            private LocationListener listener;
+            @Override public void onCreate() {
+              super.onCreate();
+              createNotificationChannel();
+              startForeground(NOTIF_ID, buildNotification());
+              lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+            }
+            @Override public int onStartCommand(Intent intent, int flags, int startId) {
+              if (intent != null && intent.hasExtra("salesId")) salesId = intent.getStringExtra("salesId");
+              startTracking();
+              return START_STICKY;
+            }
+            private void startTracking() {
+              listener = loc -> sendLocation(loc.getLatitude(), loc.getLongitude());
+              try {
+                if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                  lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30000, 10, listener);
+                if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+                  lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 10, listener);
+              } catch (SecurityException e) { Log.e("GPS", "No permission", e); }
+            }
+            private void sendLocation(double lat, double lng) {
+              new Thread(() -> { try {
+                URL url = new URL(SB_URL + "/rest/v1/sales_locations");
+                HttpURLConnection c = (HttpURLConnection) url.openConnection();
+                c.setRequestMethod("POST");
+                c.setRequestProperty("apikey", SB_KEY);
+                c.setRequestProperty("Authorization", "Bearer " + SB_KEY);
+                c.setRequestProperty("Content-Type", "application/json");
+                c.setRequestProperty("Prefer", "resolution=merge-duplicates");
+                c.setDoOutput(true);
+                String body = "{\"sales_id\":\""+salesId+"\",\"lat\":"+lat+",\"lng\":"+lng+",\"updated_at\":\""+java.time.Instant.now().toString()+"\"}";
+                c.getOutputStream().write(body.getBytes());
+                c.getResponseCode();
+                c.disconnect();
+              } catch (Exception e) { Log.e("GPS", "Send failed", e); }}).start();
+            }
+            private Notification buildNotification() {
+              return new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("มนชิน ซัพพลาย")
+                .setContentText("กำลังติดตามตำแหน่ง GPS")
+                .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true)
+                .build();
+            }
+            private void createNotificationChannel() {
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel ch = new NotificationChannel(CHANNEL_ID, "GPS Tracking", NotificationManager.IMPORTANCE_LOW);
+                ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch);
+              }
+            }
+            @Override public void onDestroy() {
+              if (lm != null && listener != null) lm.removeUpdates(listener);
+              super.onDestroy();
+            }
+            @Override public IBinder onBind(Intent i) { return null; }
+          }
+          JAVAEOF
+          sed -i 's|</application>|    <service android:name=".LocationService" android:foregroundServiceType="location" android:exported="false" />\n    </application>|' android/app/src/main/AndroidManifest.xml
+
       - name: Add permissions to AndroidManifest
         run: |
-          sed -i 's/<\/manifest>/    <uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" \/>\n    <uses-permission android:name="android.permission.CAMERA" \/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" \/>\n    <uses-permission android:name="android.permission.VIBRATE" \/>\n<\/manifest>/' android/app/src/main/AndroidManifest.xml
+          sed -i 's/<\/manifest>/    <uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" \/>\n    <uses-permission android:name="android.permission.CAMERA" \/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" \/>\n    <uses-permission android:name="android.permission.VIBRATE" \/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" \/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" \/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n<\/manifest>/' android/app/src/main/AndroidManifest.xml
 
       - name: Fix Kotlin duplicate
         run: |
-          cat >> android/app/build.gradle << 'EOF'
+          cat >> android/app/build.gradle << 'GRADLEEOF'
 
           configurations.all {
               resolutionStrategy {
@@ -87,7 +169,7 @@ jobs:
                   force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.0'
               }
           }
-          EOF
+          GRADLEEOF
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
