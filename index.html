@@ -398,6 +398,88 @@ html,body{
     </div>
   </div>
 
+  <!-- Page: Settings -->
+  <div class="page" id="page-settings" style="overflow-y:auto;display:none;-webkit-overflow-scrolling:touch;">
+    <div style="padding:16px;max-width:500px;margin:0 auto;">
+
+      <!-- Header -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:20px;font-weight:800;color:#C0392B;font-family:var(--font);">⚙️ ตั้งค่าบัญชี</div>
+        <div style="font-size:12px;color:#888;margin-top:2px;">แก้ไขข้อมูลส่วนตัวของคุณ</div>
+      </div>
+
+      <!-- รูปโปรไฟล์ -->
+      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
+        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:14px;">📷 รูปโปรไฟล์</div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div id="settings-avatar-preview" style="width:72px;height:72px;border-radius:50%;background:#C0392B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;flex-shrink:0;overflow:hidden;border:3px solid rgba(192,57,43,.3);"></div>
+          <div style="flex:1;">
+            <input type="file" id="settings-photo-input" accept="image/*" style="display:none" onchange="handleSettingsPhotoChange(this)">
+            <button onclick="document.getElementById('settings-photo-input').click()" style="width:100%;padding:10px;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
+              📤 เปลี่ยนรูปโปรไฟล์
+            </button>
+            <div id="settings-photo-status" style="font-size:11px;color:#888;margin-top:6px;text-align:center;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ชื่อ-นามสกุล -->
+      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
+        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:14px;">👤 ชื่อ-นามสกุล</div>
+        <input id="settings-name-input" type="text" placeholder="ชื่อ-นามสกุล" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none;">
+        <button onclick="saveSettingsName()" style="width:100%;padding:11px;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
+          💾 บันทึกชื่อ
+        </button>
+        <div id="settings-name-status" style="font-size:11px;color:#888;margin-top:6px;text-align:center;"></div>
+      </div>
+
+      <!-- เบอร์โทร -->
+      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
+        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:14px;">📞 เบอร์โทรศัพท์</div>
+        <input id="settings-phone-input" type="tel" placeholder="เบอร์โทรศัพท์" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none;">
+        <button onclick="saveSettingsPhone()" style="width:100%;padding:11px;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
+          💾 บันทึกเบอร์โทร
+        </button>
+        <div id="settings-phone-status" style="font-size:11px;color:#888;margin-top:6px;text-align:center;"></div>
+      </div>
+
+      <!-- เปลี่ยนรหัสผ่าน -->
+      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
+        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:14px;">🔐 เปลี่ยนรหัสผ่าน</div>
+        <input id="settings-pass-old" type="password" placeholder="รหัสผ่านเดิม" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:8px;box-sizing:border-box;outline:none;">
+        <input id="settings-pass-new" type="password" placeholder="รหัสผ่านใหม่" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:8px;box-sizing:border-box;outline:none;">
+        <input id="settings-pass-confirm" type="password" placeholder="ยืนยันรหัสผ่านใหม่" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none;">
+        <button onclick="saveSettingsPassword()" style="width:100%;padding:11px;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
+          🔐 เปลี่ยนรหัสผ่าน
+        </button>
+        <div id="settings-pass-status" style="font-size:11px;color:#888;margin-top:6px;text-align:center;"></div>
+      </div>
+
+      <!-- ข้อมูลบัญชี (read-only) -->
+      <div style="background:#fff8f8;border-radius:16px;padding:20px;margin-bottom:14px;border:1px solid rgba(192,57,43,.15);">
+        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:12px;">📋 ข้อมูลบัญชี</div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0e0e0;">
+          <span style="font-size:13px;color:#888;">รหัสเซล</span>
+          <span id="settings-info-salesid" style="font-size:13px;font-weight:700;color:#C0392B;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0e0e0;">
+          <span style="font-size:13px;color:#888;">Username</span>
+          <span id="settings-info-username" style="font-size:13px;font-weight:600;color:#333;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;">
+          <span style="font-size:13px;color:#888;">สถานะ</span>
+          <span style="font-size:13px;font-weight:600;color:#27ae60;">🟢 ใช้งานอยู่</span>
+        </div>
+      </div>
+
+      <!-- ออกจากระบบ -->
+      <button onclick="doLogout()" style="width:100%;padding:14px;background:#fff;color:#C0392B;border:2px solid #C0392B;border-radius:12px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:20px;">
+        🚪 ออกจากระบบ
+      </button>
+
+    </div>
+  </div>
+
   <!-- Bottom Nav -->
   <div class="bnav">
     <button class="bnav-btn active" id="nav-id" onclick="switchPage('id')">
@@ -408,6 +490,9 @@ html,body{
     </button>
     <button class="bnav-btn" id="nav-map" onclick="switchPage('map')">
       <span class="bnav-icon">🗺️</span>เส้นทาง
+    </button>
+    <button class="bnav-btn" id="nav-settings" onclick="switchPage('settings')">
+      <span class="bnav-icon">⚙️</span>ตั้งค่า
     </button>
   </div>
 </div>
@@ -870,6 +955,63 @@ function renderIdCard() {
         <button class="id-btn primary" onclick="copyMyLink()">📋 คัดลอกลิงก์</button>
         <button class="id-btn" onclick="printSalesCard()" style="background:linear-gradient(120deg,#2c3e50,#34495e);color:#fff;border-color:#2c3e50;">🖨️ พิมพ์บัตร</button>
       </div>
+    </div>
+
+    <!-- ══ ยอดขาย Dashboard ══ -->
+    <div style="margin-top:14px;background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
+      <div style="font-size:14px;font-weight:800;color:#C0392B;margin-bottom:12px;">📊 ยอดขายของฉัน</div>
+
+      <!-- แท็บ วันนี้ / เดือนนี้ / ทั้งหมด -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;" id="stats-tab-group">
+        <button onclick="switchStatsTab('today')" id="stab-today"
+          style="flex:1;padding:7px;border-radius:8px;border:none;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#C0392B;color:#fff;">
+          วันนี้
+        </button>
+        <button onclick="switchStatsTab('month')" id="stab-month"
+          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid #C0392B;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:#C0392B;">
+          เดือนนี้
+        </button>
+        <button onclick="switchStatsTab('all')" id="stab-all"
+          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid #C0392B;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:#C0392B;">
+          ทั้งหมด
+        </button>
+      </div>
+
+      <!-- สรุปตัวเลข -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="background:#fff8f8;border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(192,57,43,.15);">
+          <div id="ds-orders" style="font-size:22px;font-weight:800;color:#C0392B;font-family:var(--font);">—</div>
+          <div style="font-size:11px;color:#888;margin-top:2px;">จำนวนออเดอร์</div>
+        </div>
+        <div style="background:#fff8f8;border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(192,57,43,.15);">
+          <div id="ds-revenue" style="font-size:18px;font-weight:800;color:#C0392B;font-family:var(--font);">—</div>
+          <div style="font-size:11px;color:#888;margin-top:2px;">ยอดขาย (฿)</div>
+        </div>
+      </div>
+
+      <!-- กราฟ 7 วันล่าสุด -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">📈 7 วันล่าสุด</div>
+        <div id="sales-chart" style="display:flex;align-items:flex-end;gap:4px;height:70px;background:#fafafa;border-radius:8px;padding:8px;">
+          <div style="color:#bbb;font-size:11px;margin:auto;">⏳ กำลังโหลด...</div>
+        </div>
+        <div id="sales-chart-labels" style="display:flex;gap:4px;margin-top:4px;"></div>
+      </div>
+
+      <!-- รายการออเดอร์ล่าสุด -->
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">🧾 ออเดอร์ล่าสุด</div>
+        <div id="orders-list" style="font-size:12px;color:#888;">⏳ กำลังโหลด...</div>
+      </div>
+    </div>
+
+    <!-- ══ ลูกค้าของฉัน ══ -->
+    <div style="margin-top:14px;background:#fff;border-radius:16px;padding:16px;margin-bottom:80px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:800;color:#C0392B;">📍 ลูกค้าของฉัน</div>
+        <div id="customer-count" style="background:#C0392B;color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;">0 ราย</div>
+      </div>
+      <div id="customers-list" style="font-size:12px;color:#888;">⏳ กำลังโหลด...</div>
     </div>`;
 
   // สร้าง QR
@@ -882,6 +1024,7 @@ function renderIdCard() {
   }, 100);
 
   loadSalesStats();
+  loadDashboard();
 }
 
 async function loadSalesStats() {
@@ -1024,17 +1167,355 @@ function printSalesCard() {
     box-shadow:0 4px 14px rgba(192,57,43,.4);">
     🖨️ พิมพ์บัตรเซล
   </button>
+  <button id="download-btn" class="print-btn"
+    style="padding:12px 32px;background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;border-radius:12px;
+    font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 14px rgba(39,174,96,.4);">
+    📥 ดาวน์โหลดรูปบัตร
+  </button>
   <button onclick="window.close()" class="print-btn"
     style="padding:12px 32px;background:#fff;color:#C0392B;border:2px solid #C0392B;border-radius:12px;
     font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
     ✕ ปิดหน้านี้
   </button>
   <div class="no-print-label">ขนาดบัตร 340px × ~สูงอัตโนมัติ · กด Ctrl+P เพื่อพิมพ์</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+  document.getElementById('download-btn').addEventListener('click', async function() {
+    this.textContent = '⏳ กำลังสร้างรูป...';
+    this.disabled = true;
+    try {
+      const cardWrap = document.querySelector('.card-wrap');
+      const canvas = await html2canvas(cardWrap, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#f0f0f0',
+        logging: false
+      });
+      const link = document.createElement('a');
+      link.download = 'บัตรเซล-${s.salesId}.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch(e) {
+      alert('ไม่สามารถดาวน์โหลดได้ กรุณาใช้ปุ่มพิมพ์แทน');
+    }
+    this.textContent = '📥 ดาวน์โหลดรูปบัตร';
+    this.disabled = false;
+  });
+  </script>
 
 </div>
 </body>
 </html>`);
   printWin.document.close();
+}
+
+// ══════════════════════════════════════════
+//  SALES DASHBOARD
+// ══════════════════════════════════════════
+let currentStatsTab = 'today';
+let allOrders = [];
+
+function switchStatsTab(tab) {
+  currentStatsTab = tab;
+  ['today','month','all'].forEach(t => {
+    const btn = document.getElementById('stab-' + t);
+    if (!btn) return;
+    if (t === tab) {
+      btn.style.background = '#C0392B'; btn.style.color = '#fff'; btn.style.border = 'none';
+    } else {
+      btn.style.background = '#fff'; btn.style.color = '#C0392B'; btn.style.border = '1.5px solid #C0392B';
+    }
+  });
+  renderDashboard();
+}
+
+async function loadDashboard() {
+  if (!session) return;
+  try {
+    const res = await fetch(
+      SB_URL + '/rest/v1/orders?sales_id=eq.' + session.salesId + '&order=created_at.desc&limit=200',
+      { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }
+    );
+    allOrders = await res.json();
+    renderDashboard();
+    renderChart();
+  } catch(e) {
+    const ol = document.getElementById('orders-list');
+    if (ol) ol.innerHTML = '<div style="color:#C0392B;font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
+  }
+  // โหลดลูกค้า (pins)
+  loadCustomersList();
+}
+
+function filterOrders(tab) {
+  const now = new Date();
+  return allOrders.filter(o => {
+    if (!o.created_at) return true;
+    const d = new Date(o.created_at);
+    if (tab === 'today') {
+      return d.toDateString() === now.toDateString();
+    } else if (tab === 'month') {
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }
+    return true;
+  });
+}
+
+function renderDashboard() {
+  const orders = filterOrders(currentStatsTab);
+  const total = orders.reduce((s, o) => s + (parseFloat(o.total_price || o.total || o.amount || 0)), 0);
+
+  const dsO = document.getElementById('ds-orders');
+  const dsR = document.getElementById('ds-revenue');
+  if (dsO) dsO.textContent = orders.length;
+  if (dsR) dsR.textContent = total.toLocaleString('th-TH', {minimumFractionDigits:0});
+
+  // อัปเดต stat-orders, stat-revenue ด้านบนด้วย
+  const so = document.getElementById('stat-orders');
+  const sr = document.getElementById('stat-revenue');
+  if (so) so.textContent = allOrders.length;
+  if (sr) sr.textContent = allOrders.reduce((s,o)=>s+(parseFloat(o.total_price||o.total||o.amount||0)),0).toLocaleString('th-TH',{minimumFractionDigits:0});
+
+  // รายการออเดอร์ล่าสุด
+  const ol = document.getElementById('orders-list');
+  if (!ol) return;
+  if (orders.length === 0) {
+    ol.innerHTML = '<div style="text-align:center;color:#bbb;padding:12px;">ยังไม่มีออเดอร์</div>';
+    return;
+  }
+  ol.innerHTML = orders.slice(0,10).map(o => {
+    const date = o.created_at ? new Date(o.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '-';
+    const amount = parseFloat(o.total_price || o.total || o.amount || 0).toLocaleString('th-TH');
+    const status = o.status || 'pending';
+    const statusColor = status === 'completed' ? '#27ae60' : status === 'cancelled' ? '#e74c3c' : '#e67e22';
+    const statusText = status === 'completed' ? '✅ สำเร็จ' : status === 'cancelled' ? '❌ ยกเลิก' : '⏳ รอดำเนินการ';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
+      <div>
+        <div style="font-weight:600;color:#333;font-size:12px;">${o.customer_name || o.name || 'ลูกค้า'}</div>
+        <div style="color:#888;font-size:11px;">${date}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700;color:#C0392B;font-size:13px;">฿${amount}</div>
+        <div style="font-size:10px;color:${statusColor};font-weight:600;">${statusText}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderChart() {
+  const chart = document.getElementById('sales-chart');
+  const labels = document.getElementById('sales-chart-labels');
+  if (!chart) return;
+
+  // สร้างข้อมูล 7 วันล่าสุด
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d);
+  }
+
+  const dayData = days.map(d => {
+    const orders = allOrders.filter(o => {
+      if (!o.created_at) return false;
+      return new Date(o.created_at).toDateString() === d.toDateString();
+    });
+    return {
+      date: d,
+      total: orders.reduce((s,o) => s + parseFloat(o.total_price||o.total||o.amount||0), 0),
+      count: orders.length
+    };
+  });
+
+  const maxVal = Math.max(...dayData.map(d => d.total), 1);
+
+  chart.innerHTML = dayData.map((d, i) => {
+    const pct = Math.max((d.total / maxVal) * 100, d.count > 0 ? 5 : 0);
+    const isToday = d.date.toDateString() === new Date().toDateString();
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;">
+      <div style="font-size:9px;color:#C0392B;font-weight:700;">${d.count > 0 ? d.count : ''}</div>
+      <div style="flex:1;display:flex;align-items:flex-end;width:100%;">
+        <div title="฿${d.total.toLocaleString()}" style="width:100%;background:${isToday ? '#C0392B' : 'rgba(192,57,43,.3)'};border-radius:4px 4px 0 0;height:${pct}%;min-height:${d.count>0?'4px':'0'};transition:height .3s;"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (labels) {
+    labels.style.display = 'flex';
+    labels.style.gap = '4px';
+    labels.innerHTML = dayData.map(d => {
+      const isToday = d.date.toDateString() === new Date().toDateString();
+      const dayName = d.date.toLocaleDateString('th-TH',{weekday:'short'});
+      return `<div style="flex:1;text-align:center;font-size:9px;color:${isToday?'#C0392B':'#888'};font-weight:${isToday?'700':'400'};">${dayName}</div>`;
+    }).join('');
+  }
+}
+
+async function loadCustomersList() {
+  const cl = document.getElementById('customers-list');
+  const cc = document.getElementById('customer-count');
+  if (!cl || !session) return;
+  try {
+    const res = await fetch(
+      SB_URL + '/rest/v1/sales_pins?sales_id=eq.' + session.salesId + '&order=created_at.desc',
+      { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }
+    );
+    const pins = await res.json();
+    if (cc) cc.textContent = (pins.length || 0) + ' ราย';
+
+    if (!pins || pins.length === 0) {
+      cl.innerHTML = '<div style="text-align:center;color:#bbb;padding:12px;">ยังไม่มีลูกค้า</div>';
+      return;
+    }
+
+    // นับจำนวนออเดอร์ต่อลูกค้า
+    const pinOrderCount = {};
+    if (allOrders && allOrders.length) {
+      allOrders.forEach(o => {
+        const cname = (o.customer_name || o.name || '').toLowerCase().trim();
+        if (cname) pinOrderCount[cname] = (pinOrderCount[cname] || 0) + 1;
+      });
+    }
+
+    cl.innerHTML = pins.map((p, i) => {
+      const cname = (p.name || '').toLowerCase().trim();
+      const orderCount = pinOrderCount[cname] || 0;
+      const addedDate = p.created_at ? new Date(p.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : '';
+      const typeIcon = p.type === 'shop' ? '🏪' : p.type === 'house' ? '🏠' : '📍';
+      return `<div style="background:#fafafa;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(192,57,43,.08);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#96281B,#C0392B);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${i+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;color:#1a1a1a;font-size:13px;">${typeIcon} ${p.name || 'ไม่ระบุชื่อ'}</div>
+            ${p.address ? `<div style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.address}</div>` : ''}
+          </div>
+          <a href="https://maps.google.com/?q=${p.lat},${p.lng}" target="_blank"
+            style="padding:6px 10px;background:#fff;border:1.5px solid rgba(192,57,43,.3);border-radius:8px;font-size:11px;color:#C0392B;text-decoration:none;flex-shrink:0;font-weight:700;">
+            🗺️ นำทาง
+          </a>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+          ${p.phone ? `<a href="tel:${p.phone}" style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:20px;font-size:11px;color:#333;text-decoration:none;">📞 ${p.phone}</a>` : ''}
+          ${orderCount > 0 ? `<span style="padding:4px 10px;background:#fff8f8;border:1px solid rgba(192,57,43,.2);border-radius:20px;font-size:11px;color:#C0392B;font-weight:600;">🧾 ${orderCount} ออเดอร์</span>` : ''}
+          ${addedDate ? `<span style="padding:4px 10px;background:#f5f5f5;border-radius:20px;font-size:11px;color:#888;">📅 เพิ่ม ${addedDate}</span>` : ''}
+          ${p.note ? `<span style="padding:4px 10px;background:#fffbf0;border:1px solid #f0e0a0;border-radius:20px;font-size:11px;color:#888;">📝 ${p.note}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    if (cl) cl.innerHTML = '<div style="color:#C0392B;font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
+  }
+}
+
+// ══════════════════════════════════════════
+//  SETTINGS PAGE
+// ══════════════════════════════════════════
+function initSettingsPage() {
+  if (!session) return;
+  // โหลดข้อมูลปัจจุบัน
+  document.getElementById('settings-name-input').value = session.name || '';
+  document.getElementById('settings-phone-input').value = session.phone || '';
+  document.getElementById('settings-info-salesid').textContent = session.salesId || '-';
+  document.getElementById('settings-info-username').textContent = session.username || '-';
+
+  // แสดงรูปโปรไฟล์
+  const photo = getSalesPhoto();
+  const preview = document.getElementById('settings-avatar-preview');
+  if (photo) {
+    preview.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    preview.textContent = (session.name || 'U')[0].toUpperCase();
+  }
+}
+
+async function handleSettingsPhotoChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById('settings-photo-status');
+  status.textContent = '⏳ กำลังอัปโหลด...';
+  status.style.color = '#888';
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', 'monshin');
+    const res = await fetch('https://api.cloudinary.com/v1_1/dwet6be8c/image/upload', { method:'POST', body:fd });
+    const data = await res.json();
+    if (!data.secure_url) throw new Error('Upload failed');
+    setSalesPhoto(data.secure_url);
+    await gasCall({ action:'updatePhoto', token:session.token, salesId:session.salesId, photoUrl:data.secure_url });
+    // อัปเดต preview
+    const preview = document.getElementById('settings-avatar-preview');
+    preview.innerHTML = `<img src="${data.secure_url}" style="width:100%;height:100%;object-fit:cover;">`;
+    status.textContent = '✅ เปลี่ยนรูปสำเร็จ!';
+    status.style.color = '#27ae60';
+    renderIdCard();
+  } catch(e) {
+    status.textContent = '❌ อัปโหลดไม่สำเร็จ';
+    status.style.color = '#C0392B';
+  }
+}
+
+async function saveSettingsName() {
+  const name = document.getElementById('settings-name-input').value.trim();
+  const status = document.getElementById('settings-name-status');
+  if (!name) { status.textContent = '⚠️ กรุณากรอกชื่อ'; status.style.color='#C0392B'; return; }
+  status.textContent = '⏳ กำลังบันทึก...'; status.style.color='#888';
+  try {
+    const data = await gasCall({ action:'adminUpdateSales', token:session.token, salesId:session.salesId, field:'name', value:name });
+    if (data.success) {
+      session.name = name;
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      status.textContent = '✅ บันทึกชื่อสำเร็จ!'; status.style.color='#27ae60';
+      renderIdCard();
+    } else throw new Error();
+  } catch(e) {
+    status.textContent = '❌ บันทึกไม่สำเร็จ'; status.style.color='#C0392B';
+  }
+}
+
+async function saveSettingsPhone() {
+  const phone = document.getElementById('settings-phone-input').value.trim();
+  const status = document.getElementById('settings-phone-status');
+  if (!phone) { status.textContent = '⚠️ กรุณากรอกเบอร์โทร'; status.style.color='#C0392B'; return; }
+  status.textContent = '⏳ กำลังบันทึก...'; status.style.color='#888';
+  try {
+    const data = await gasCall({ action:'adminUpdateSales', token:session.token, salesId:session.salesId, field:'phone', value:phone });
+    if (data.success) {
+      session.phone = phone;
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      status.textContent = '✅ บันทึกเบอร์โทรสำเร็จ!'; status.style.color='#27ae60';
+      renderIdCard();
+    } else throw new Error();
+  } catch(e) {
+    status.textContent = '❌ บันทึกไม่สำเร็จ'; status.style.color='#C0392B';
+  }
+}
+
+async function saveSettingsPassword() {
+  const oldPass = document.getElementById('settings-pass-old').value;
+  const newPass = document.getElementById('settings-pass-new').value;
+  const confirm = document.getElementById('settings-pass-confirm').value;
+  const status = document.getElementById('settings-pass-status');
+
+  if (!oldPass || !newPass || !confirm) { status.textContent = '⚠️ กรุณากรอกให้ครบ'; status.style.color='#C0392B'; return; }
+  if (newPass !== confirm) { status.textContent = '⚠️ รหัสผ่านใหม่ไม่ตรงกัน'; status.style.color='#C0392B'; return; }
+  if (newPass.length < 4) { status.textContent = '⚠️ รหัสผ่านต้องมีอย่างน้อย 4 ตัว'; status.style.color='#C0392B'; return; }
+
+  status.textContent = '⏳ กำลังเปลี่ยนรหัสผ่าน...'; status.style.color='#888';
+  try {
+    const data = await gasCall({ action:'changePassword', token:session.token, salesId:session.salesId, oldPassword:oldPass, newPassword:newPass });
+    if (data.success) {
+      status.textContent = '✅ เปลี่ยนรหัสผ่านสำเร็จ!'; status.style.color='#27ae60';
+      document.getElementById('settings-pass-old').value = '';
+      document.getElementById('settings-pass-new').value = '';
+      document.getElementById('settings-pass-confirm').value = '';
+    } else {
+      status.textContent = '❌ ' + (data.message || 'รหัสผ่านเดิมไม่ถูกต้อง'); status.style.color='#C0392B';
+    }
+  } catch(e) {
+    status.textContent = '❌ เปลี่ยนไม่สำเร็จ'; status.style.color='#C0392B';
+  }
 }
 
 function shareMyLink() {
@@ -1783,6 +2264,7 @@ function setSellMode(mode) {
 
 function switchPage(name) {
   document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
+  if (name === 'settings') initSettingsPage();
   document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
   const page = document.getElementById('page-' + name);
   page.classList.add('active');
