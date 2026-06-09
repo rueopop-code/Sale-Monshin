@@ -1086,191 +1086,127 @@ async function loadSalesStats() {
 }
 
 function printSalesCard() {
-  const s       = session;
-  const refUrl  = `${BACKEND_URL}/invite/${s.salesId}`;
-  const photo   = getSalesPhoto();
-
-  // สร้าง QR data URL จาก canvas ที่มีอยู่แล้ว
+  const s = session;
+  const refUrl = `${BACKEND_URL}/invite/${s.salesId}`;
+  const photo = getSalesPhoto();
   const qrCanvas = document.querySelector('#qr-canvas canvas') || document.querySelector('#qr-canvas img');
-  const qrSrc = qrCanvas
-    ? (qrCanvas.tagName === 'CANVAS' ? qrCanvas.toDataURL() : qrCanvas.src)
-    : '';
-
+  const qrSrc = qrCanvas ? (qrCanvas.tagName === 'CANVAS' ? qrCanvas.toDataURL() : qrCanvas.src) : '';
   const avatarHtml = photo
     ? `<img src="${photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #C0392B;">`
     : `<div style="width:80px;height:80px;border-radius:50%;background:#C0392B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;">${s.name[0]}</div>`;
 
-  const salesIdForDownload = s.salesId;
-  const printWin = window.open('', '_blank', 'width=700,height=500');
-  printWin.document.write(`<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<title>บัตรเซล – ${s.name}</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&family=Prompt:wght@700;800&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:#f0f0f0; display:flex; justify-content:center; align-items:center; min-height:100vh; font-family:'Sarabun',sans-serif; padding:20px; }
-  .card-wrap { display:flex; flex-direction:column; gap:16px; align-items:center; }
-  .card {
-    width:340px; background:#fff; border-radius:20px;
-    overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.18);
-    page-break-inside:avoid;
-  }
-  /* ด้านหน้า */
-  .card-front { display:flex; flex-direction:column; }
-  .card-header {
-    background:linear-gradient(135deg,#96281B 0%,#C0392B 50%,#E74C3C 100%);
-    padding:20px; text-align:center; position:relative;
-  }
-  .card-header::after {
-    content:''; position:absolute; bottom:-20px; left:0; right:0;
-    height:40px; background:#fff; border-radius:50% 50% 0 0 / 100% 100% 0 0;
-  }
-  .shop-logo { font-size:28px; margin-bottom:4px; }
-  .shop-name { font-family:'Prompt',sans-serif; font-size:16px; font-weight:800; color:#fff; letter-spacing:.5px; }
-  .shop-sub  { font-size:11px; color:rgba(255,255,255,.75); margin-top:2px; }
-  .card-body { padding:28px 20px 20px; display:flex; gap:16px; align-items:flex-start; }
-  .avatar-wrap { flex-shrink:0; }
-  .info-wrap { flex:1; }
-  .sales-name { font-family:'Prompt',sans-serif; font-size:18px; font-weight:800; color:#1a1a1a; line-height:1.2; }
-  .sales-code { display:inline-block; background:#C0392B; color:#fff; border-radius:20px; padding:3px 12px; font-size:12px; font-weight:700; margin-top:5px; }
-  .sales-role { font-size:11px; color:#888; margin-top:5px; }
-  .sales-phone { font-size:13px; color:#C0392B; font-weight:600; margin-top:4px; }
-  .divider { height:1px; background:linear-gradient(90deg,transparent,#C0392B33,transparent); margin:0 20px; }
-  .card-footer { padding:14px 20px; display:flex; align-items:center; gap:12px; }
-  .qr-box { background:#fff; border:1.5px solid #eee; border-radius:10px; padding:6px; flex-shrink:0; }
-  .qr-box img { display:block; width:70px; height:70px; }
-  .qr-info { flex:1; }
-  .qr-label { font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
-  .qr-url   { font-size:10px; color:#C0392B; word-break:break-all; line-height:1.4; }
-  /* ด้านหลัง */
-  .card-back { padding:20px; background:linear-gradient(160deg,#fff 60%,#FDF0EF); }
-  .back-title { font-family:'Prompt',sans-serif; font-size:13px; font-weight:700; color:#C0392B; margin-bottom:10px; border-bottom:2px solid #C0392B; padding-bottom:6px; }
-  .back-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #f0f0f0; font-size:12px; }
-  .back-row:last-child { border-bottom:none; }
-  .back-label { color:#888; width:70px; flex-shrink:0; }
-  .back-val   { font-weight:600; color:#1a1a1a; flex:1; }
-  .monshin-logo-bottom { text-align:center; margin-top:14px; }
-  .monshin-logo-bottom span { font-family:'Prompt',sans-serif; font-size:13px; font-weight:800; color:#C0392B; }
-  .no-print-label { text-align:center; font-size:12px; color:#888; margin-top:8px; }
+  // สร้าง modal overlay แทน popup window
+  const existing = document.getElementById('card-modal-overlay');
+  if (existing) existing.remove();
 
-  @media print {
-    body { background:#fff; padding:0; }
-    .card { box-shadow:none; }
-    .no-print-label { display:none; }
-    .print-btn { display:none; }
-  }
-</style>
-</head>
-<body>
-<div class="card-wrap">
+  const overlay = document.createElement('div');
+  overlay.id = 'card-modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:99999;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:20px;font-family:Sarabun,sans-serif;';
 
-  <!-- ด้านหน้า -->
-  <div class="card card-front">
-    <div class="card-header">
-      <div class="shop-logo">🏪</div>
-      <div class="shop-name">มนชิน ซัพพลาย</div>
-      <div class="shop-sub">Monshin Supply · จังหวัดแพร่</div>
-    </div>
-    <div class="card-body">
-      <div class="avatar-wrap">${avatarHtml}</div>
-      <div class="info-wrap">
-        <div class="sales-name">${s.name}</div>
-        <div><span class="sales-code">💼 ${s.salesId}</span></div>
-        <div class="sales-role">พนักงานขาย · Sales Representative</div>
-        ${s.phone ? `<div class="sales-phone">📞 ${s.phone}</div>` : ''}
+  overlay.innerHTML = `
+    <div id="card-modal-content" style="width:100%;max-width:360px;">
+      <!-- ด้านหน้า -->
+      <div class="print-card" style="background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.18);margin-bottom:16px;">
+        <div style="background:linear-gradient(135deg,#96281B 0%,#C0392B 50%,#E74C3C 100%);padding:20px;text-align:center;position:relative;">
+          <div style="font-size:24px;margin-bottom:4px;">🏪</div>
+          <div style="font-family:Prompt,sans-serif;font-size:16px;font-weight:800;color:#fff;">มนชิน ซัพพลาย</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;">Monshin Supply · จังหวัดแพร่</div>
+          <div style="position:absolute;bottom:-20px;left:0;right:0;height:40px;background:#fff;border-radius:50% 50% 0 0 / 100% 100% 0 0;"></div>
+        </div>
+        <div style="padding:28px 20px 20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;">${avatarHtml}</div>
+          <div style="flex:1;">
+            <div style="font-family:Prompt,sans-serif;font-size:18px;font-weight:800;color:#1a1a1a;">${s.name}</div>
+            <span style="display:inline-block;background:#C0392B;color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-top:5px;">💼 ${s.salesId}</span>
+            <div style="font-size:11px;color:#888;margin-top:5px;">พนักงานขาย · Sales Representative</div>
+            ${s.phone ? `<div style="font-size:13px;color:#C0392B;font-weight:600;margin-top:4px;">📞 ${s.phone}</div>` : ''}
+          </div>
+        </div>
+        <div style="height:1px;background:linear-gradient(90deg,transparent,#C0392B33,transparent);margin:0 20px;"></div>
+        <div style="padding:14px 20px;display:flex;align-items:center;gap:12px;">
+          <div style="background:#fff;border:1.5px solid #eee;border-radius:10px;padding:6px;flex-shrink:0;">
+            ${qrSrc ? `<img src="${qrSrc}" style="display:block;width:70px;height:70px;">` : '<div style="width:70px;height:70px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#888">QR</div>'}
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">สแกนเพื่อสั่งสินค้า</div>
+            <div style="font-size:10px;color:#C0392B;word-break:break-all;line-height:1.4;">${refUrl}</div>
+            <div style="font-size:10px;color:#888;margin-top:4px;">ออเดอร์อ้างอิงถึงเซลคนนี้อัตโนมัติ</div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="divider"></div>
-    <div class="card-footer">
-      <div class="qr-box">
-        ${qrSrc ? `<img src="${qrSrc}">` : '<div style="width:70px;height:70px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#888">QR</div>'}
-      </div>
-      <div class="qr-info">
-        <div class="qr-label">สแกนเพื่อสั่งสินค้า</div>
-        <div class="qr-url">${refUrl}</div>
-        <div style="font-size:10px;color:#888;margin-top:4px;">ออเดอร์อ้างอิงถึงเซลคนนี้อัตโนมัติ</div>
-      </div>
-    </div>
-  </div>
 
-  <!-- ด้านหลัง -->
-  <div class="card card-back">
-    <div class="back-title">📋 ข้อมูลพนักงานขาย</div>
-    <div class="back-row"><span class="back-label">ชื่อ</span><span class="back-val">${s.name}</span></div>
-    <div class="back-row"><span class="back-label">รหัสเซล</span><span class="back-val" style="color:#C0392B;font-family:'Prompt',sans-serif;">${s.salesId}</span></div>
-    ${s.phone ? `<div class="back-row"><span class="back-label">เบอร์โทร</span><span class="back-val">${s.phone}</span></div>` : ''}
-    <div class="back-row"><span class="back-label">LINE OA</span><span class="back-val" style="color:#06C755;">@monshin</span></div>
-    <div class="back-row"><span class="back-label">เว็บไซต์</span><span class="back-val" style="color:#C0392B;font-size:11px;">${refUrl}</span></div>
-    <div class="monshin-logo-bottom">
-      <div style="font-size:24px;margin-bottom:4px;">🏪</div>
-      <span>มนชิน ซัพพลาย</span>
-      <div style="font-size:10px;color:#888;margin-top:2px;">สินค้าคุณภาพ · ราคาโรงงาน · จังหวัดแพร่</div>
-    </div>
-  </div>
+      <!-- ด้านหลัง -->
+      <div class="print-card" style="background:linear-gradient(160deg,#fff 60%,#FDF0EF);border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.18);margin-bottom:16px;">
+        <div style="font-family:Prompt,sans-serif;font-size:13px;font-weight:700;color:#C0392B;margin-bottom:10px;border-bottom:2px solid #C0392B;padding-bottom:6px;">📋 ข้อมูลพนักงานขาย</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">ชื่อ</span><span style="font-weight:600;color:#1a1a1a;">${s.name}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">รหัสเซล</span><span style="font-weight:600;color:#C0392B;font-family:Prompt,sans-serif;">${s.salesId}</span></div>
+        ${s.phone ? `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เบอร์โทร</span><span style="font-weight:600;color:#1a1a1a;">${s.phone}</span></div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">LINE OA</span><span style="font-weight:600;color:#06C755;">@monshin</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เว็บไซต์</span><span style="font-weight:600;color:#C0392B;font-size:11px;">${refUrl}</span></div>
+        <div style="text-align:center;margin-top:14px;">
+          <div style="font-size:24px;margin-bottom:4px;">🏪</div>
+          <div style="font-family:Prompt,sans-serif;font-size:13px;font-weight:800;color:#C0392B;">มนชิน ซัพพลาย</div>
+          <div style="font-size:10px;color:#888;margin-top:2px;">สินค้าคุณภาพ · ราคาโรงงาน · จังหวัดแพร่</div>
+        </div>
+      </div>
 
-  <button onclick="window.print()" class="print-btn"
-    style="padding:12px 32px;background:#C0392B;color:#fff;border:none;border-radius:12px;
-    font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;
-    box-shadow:0 4px 14px rgba(192,57,43,.4);">
-    🖨️ พิมพ์บัตรเซล
-  </button>
-  <button id="dl-btn" class="print-btn"
-    style="padding:12px 32px;background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;border-radius:12px;
-    font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;
-    box-shadow:0 4px 14px rgba(39,174,96,.4);">
-    📥 ดาวน์โหลดรูปบัตร
-  </button>
-  <script>
-  (function(){
-    var s = document.createElement('script');
+      <!-- ปุ่ม -->
+      <button onclick="downloadCardModal()" style="width:100%;padding:14px;background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;border-radius:12px;font-family:Sarabun,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 14px rgba(39,174,96,.4);" id="modal-dl-btn">
+        📥 ดาวน์โหลดรูปบัตร
+      </button>
+      <button onclick="closeCardModal()" style="width:100%;padding:14px;background:#fff;color:#C0392B;border:2px solid #C0392B;border-radius:12px;font-family:Sarabun,sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
+        ✕ ปิด
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
+function closeCardModal() {
+  const el = document.getElementById('card-modal-overlay');
+  if (el) el.remove();
+}
+
+function downloadCardModal() {
+  const btn = document.getElementById('modal-dl-btn');
+  if (btn) { btn.textContent = '⏳ กำลังสร้างรูป...'; btn.disabled = true; }
+  const content = document.getElementById('card-modal-content');
+  const cards = content.querySelectorAll('.print-card');
+  if (!cards.length) { alert('ไม่พบบัตร'); return; }
+
+  // สร้าง wrapper ชั่วคราว
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;display:flex;flex-direction:column;gap:16px;padding:20px;background:#f0f0f0;font-family:Sarabun,sans-serif;';
+  cards.forEach(c => wrapper.appendChild(c.cloneNode(true)));
+  document.body.appendChild(wrapper);
+
+  // โหลด html2canvas
+  if (typeof html2canvas === 'undefined') {
+    const s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload = function() {
-      document.getElementById('dl-btn').onclick = function() {
-        var btn = this;
-        btn.textContent = '⏳ กำลังสร้างรูป...';
-        btn.disabled = true;
-        // จับแค่ 2 card เท่านั้น
-        var cards = document.querySelectorAll('.card');
-        var frontCard = cards[0];
-        var backCard = cards[1];
-        var wrapper = document.createElement('div');
-        wrapper.style.cssText = 'display:inline-flex;flex-direction:column;gap:16px;padding:20px;background:#f0f0f0;';
-        document.body.appendChild(wrapper);
-        wrapper.appendChild(frontCard.cloneNode(true));
-        if(backCard) wrapper.appendChild(backCard.cloneNode(true));
-        html2canvas(wrapper, {scale:2,useCORS:true,backgroundColor:'#f0f0f0',logging:false}).then(function(canvas){
-        document.body.removeChild(wrapper);
-          var a = document.createElement('a');
-          a.download = 'บัตรเซล.png';
-          a.href = canvas.toDataURL('image/png');
-          a.click();
-          btn.textContent = '📥 ดาวน์โหลดรูปบัตร';
-          btn.disabled = false;
-        }).catch(function(){
-          try{document.body.removeChild(wrapper);}catch(e){}
-          alert('ไม่สามารถดาวน์โหลดได้ กรุณาใช้ปุ่มพิมพ์แทน');
-          btn.textContent = '📥 ดาวน์โหลดรูปบัตร';
-          btn.disabled = false;
-        });
-      };
-    };
+    s.onload = () => doCapture(wrapper, btn);
     document.head.appendChild(s);
-  })();
-  <\/script>
-  <button onclick="window.close()" class="print-btn"
-    style="padding:12px 32px;background:#fff;color:#C0392B;border:2px solid #C0392B;border-radius:12px;
-    font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
-    ✕ ปิดหน้านี้
-  </button>
-  <div class="no-print-label">ขนาดบัตร 340px × ~สูงอัตโนมัติ · กด Ctrl+P เพื่อพิมพ์</div>
+  } else {
+    doCapture(wrapper, btn);
+  }
+}
 
-
-</div>
-</body>
-</html>`);
-  printWin.document.close();
+function doCapture(wrapper, btn) {
+  html2canvas(wrapper, { scale:2, useCORS:true, backgroundColor:'#f0f0f0', logging:false })
+    .then(canvas => {
+      document.body.removeChild(wrapper);
+      const a = document.createElement('a');
+      a.download = 'บัตรเซล-' + (session ? session.salesId : '') + '.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
+    })
+    .catch(() => {
+      try { document.body.removeChild(wrapper); } catch(e) {}
+      alert('ไม่สามารถดาวน์โหลดได้');
+      if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
+    });
 }
 
 // ══════════════════════════════════════════
