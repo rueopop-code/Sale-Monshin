@@ -970,7 +970,7 @@ async function uploadPhoto(input) {
 
 function renderIdCard() {
   const s = session;
-  const refUrl   = `${BACKEND_URL}/invite/${s.salesId}`;
+  const refUrl   = `${BACKEND_URL}/sales/${s.salesId}`;
   const photo    = getSalesPhoto();
   const avatarHtml = photo
     ? `<div class="id-avatar" style="overflow:hidden;padding:0;">
@@ -1114,7 +1114,7 @@ async function loadSalesStats() {
 
 function printSalesCard() {
   const s = session;
-  const refUrl = `${BACKEND_URL}/invite/${s.salesId}`;
+  const refUrl = `${BACKEND_URL}/sales/${s.salesId}`;
   const photo = getSalesPhoto();
   const qrCanvas = document.querySelector('#qr-canvas canvas') || document.querySelector('#qr-canvas img');
   const qrSrc = qrCanvas ? (qrCanvas.tagName === 'CANVAS' ? qrCanvas.toDataURL() : qrCanvas.src) : '';
@@ -1741,7 +1741,7 @@ function downloadCard(btn) {
 }
 
 function shareMyLink() {
-  const url = `${BACKEND_URL}/invite/${session.salesId}`;
+  const url = `${BACKEND_URL}/sales/${session.salesId}`;
   if (navigator.share && location.protocol === 'https:') {
     navigator.share({ title:'มนชิน ซัพพลาย', text:'สั่งสินค้ามนชิน ซัพพลาย ผ่านลิงก์ของฉัน', url })
       .catch(() => copyMyLink());
@@ -1750,7 +1750,7 @@ function shareMyLink() {
   }
 }
 function copyMyLink() {
-  const url = `${BACKEND_URL}/invite/${session.salesId}`;
+  const url = `${BACKEND_URL}/sales/${session.salesId}`;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url)
       .then(() => showToast('✅ คัดลอกลิงก์แล้ว','success'))
