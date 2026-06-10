@@ -1094,11 +1094,21 @@ function renderIdCard() {
 
 async function loadSalesStats() {
   try {
-    const data = await gasCall({ action:'getSalesStats', salesId:session.salesId, token:session.token });
-    if (data.ok) {
-      document.getElementById('stat-orders').textContent  = data.orders  || 0;
-      document.getElementById('stat-revenue').textContent = (data.revenue || 0).toLocaleString();
-    }
+    // ดึงจาก Supabase ทั้ง sales_id และ ref_code กรอง cancelled ออก
+    const [resSales, resRef] = await Promise.all([
+      fetch(SB_URL + '/rest/v1/orders?sales_id=eq.' + session.salesId + '&status=neq.cancelled&select=order_id,total,total_price,amount',
+        { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }),
+      fetch(SB_URL + '/rest/v1/orders?ref_code=eq.' + session.salesId + '&status=neq.cancelled&select=order_id,total,total_price,amount',
+        { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } })
+    ]);
+    const s1 = await resSales.json();
+    const s2 = await resRef.json();
+    const seen = new Set();
+    const merged = [...(Array.isArray(s1)?s1:[]), ...(Array.isArray(s2)?s2:[])]
+      .filter(o => { if (!o.order_id || seen.has(o.order_id)) return false; seen.add(o.order_id); return true; });
+    const totalRevenue = merged.reduce((s,o) => s + parseFloat(o.total_price||o.total||o.amount||0), 0);
+    document.getElementById('stat-orders').textContent  = merged.length;
+    document.getElementById('stat-revenue').textContent = totalRevenue.toLocaleString('th-TH', {minimumFractionDigits:0});
   } catch(_) {}
 }
 
@@ -1213,12 +1223,13 @@ function doCapture(wrapper, btn) {
   html2canvas(wrapper, { scale:2, useCORS:true, backgroundColor:'#f0f0f0', logging:false })
     .then(canvas => {
       document.body.removeChild(wrapper);
-      const dataUrl = canvas.toDataURL('image/png');
       const filename = 'บัตรเซล-' + (session ? session.salesId : '') + '.png';
 
-      // วิธีที่ 1: Capacitor/Android — แปลงเป็น blob แล้ว share ผ่าน Web Share API
-      if (navigator.share && navigator.canShare) {
-        canvas.toBlob(async (blob) => {
+      canvas.toBlob(async (blob) => {
+        if (!blob) { showToast('ไม่สามารถสร้างรูปได้', 'warn'); return; }
+
+        // วิธีที่ 1: Web Share API + files (Android share sheet → "บันทึกรูปภาพ")
+        if (navigator.share && navigator.canShare) {
           try {
             const file = new File([blob], filename, { type:'image/png' });
             if (navigator.canShare({ files:[file] })) {
@@ -1226,38 +1237,46 @@ function doCapture(wrapper, btn) {
               if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
               return;
             }
-          } catch(_) {}
-          // fallback ถ้า share ไม่ได้
-          _downloadFallback(dataUrl, filename, btn);
-        }, 'image/png');
-      } else {
-        _downloadFallback(dataUrl, filename, btn);
-      }
+          } catch(e) {
+            if (e.name !== 'AbortError') { /* user ยกเลิก share → fallback */ }
+            else { if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; } return; }
+          }
+        }
+
+        // วิธีที่ 2: Blob URL + a.click() — ทำงานได้ใน Capacitor WebView
+        try {
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = filename;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+          showToast('✅ บันทึกรูปแล้ว', 'success');
+          if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
+          return;
+        } catch(_) {}
+
+        // วิธีที่ 3: เปิดรูปใน tab ใหม่ (fallback สุดท้าย)
+        const dataUrl = canvas.toDataURL('image/png');
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.write(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>บัตรเซล</title></head><body style="margin:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:16px;box-sizing:border-box;">
+            <p style="color:#fff;font-family:sans-serif;font-size:14px;margin:0;">📥 กดค้างที่รูปแล้วเลือก "บันทึกรูปภาพ"</p>
+            <img src="${dataUrl}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
+          </body></html>`);
+          win.document.close();
+        }
+        if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
+      }, 'image/png');
     })
     .catch(() => {
       try { document.body.removeChild(wrapper); } catch(e) {}
       showToast('ไม่สามารถสร้างรูปได้', 'warn');
       if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
     });
-}
-
-function _downloadFallback(dataUrl, filename, btn) {
-  // เปิดรูปใน tab ใหม่ — ให้ user กด "บันทึกภาพ" เอง (แก้ปัญหา Android block a.click)
-  const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>บัตรเซล</title></head><body style="margin:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:16px;box-sizing:border-box;">
-      <p style="color:#fff;font-family:sans-serif;font-size:14px;margin:0;">📥 กดค้างที่รูปเพื่อบันทึกลง Gallery</p>
-      <img src="${dataUrl}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
-    </body></html>`);
-    win.document.close();
-  } else {
-    // fallback สุดท้าย
-    const a = document.createElement('a');
-    a.download = filename;
-    a.href = dataUrl;
-    a.click();
-  }
-  if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
 }
 
 // ══════════════════════════════════════════
