@@ -192,10 +192,15 @@ jobs:
           import android.webkit.WebViewClient;
           import com.getcapacitor.BridgeActivity;
           public class MainActivity extends BridgeActivity {
+            private ImageSavePlugin imageSavePlugin;
             @Override
             protected void onCreate(Bundle savedInstanceState) {
               super.onCreate(savedInstanceState);
-              getBridge().getWebView().setWebViewClient(new WebViewClient() {
+              WebView wv = getBridge().getWebView();
+              // register ImageSave JS interface
+              imageSavePlugin = new ImageSavePlugin(this, wv);
+              wv.addJavascriptInterface(imageSavePlugin, "AndroidImageSave");
+              wv.setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
                   Uri uri = request.getUrl();
@@ -212,6 +217,21 @@ jobs:
                       }
                     } else if ("stopgps".equals(host)) {
                       stopService(new Intent(MainActivity.this, LocationService.class));
+                    } else if ("saveimage".equals(host)) {
+                      // รับ base64 จาก localStorage แล้วเซฟ
+                      String filename = uri.getQueryParameter("filename");
+                      if (filename == null) filename = "บัตรเซล.png";
+                      final String fn = filename;
+                      wv.evaluateJavascript(
+                        "(function(){ return localStorage.getItem('_pending_save_img') || ''; })()",
+                        value -> {
+                          if (value != null && value.length() > 2) {
+                            // ลบ quotes รอบ JSON string
+                            String b64 = value.substring(1, value.length() - 1).replace("\\n","").replace("\\r","");
+                            imageSavePlugin.saveBase64Image(b64, fn);
+                          }
+                        }
+                      );
                     }
                     return true;
                   }
@@ -222,9 +242,84 @@ jobs:
           }
           MAINEOF
 
+      - name: Add ImageSave Plugin (save to Gallery via MediaStore)
+        run: |
+          mkdir -p android/app/src/main/java/com/monshin/sales
+          cat > android/app/src/main/java/com/monshin/sales/ImageSavePlugin.java << 'IMGEOF'
+          package com.monshin.sales;
+          import android.content.ContentValues;
+          import android.graphics.Bitmap;
+          import android.graphics.BitmapFactory;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Environment;
+          import android.provider.MediaStore;
+          import android.util.Base64;
+          import android.util.Log;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebView;
+          import java.io.*;
+          import java.nio.file.*;
+
+          public class ImageSavePlugin {
+            private final android.content.Context ctx;
+            private final WebView webView;
+
+            public ImageSavePlugin(android.content.Context ctx, WebView webView) {
+              this.ctx = ctx;
+              this.webView = webView;
+            }
+
+            @JavascriptInterface
+            public void saveBase64Image(String base64, String filename) {
+              try {
+                byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                if (bmp == null) { notifyResult("error"); return; }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                  // Android 10+ ใช้ MediaStore
+                  ContentValues cv = new ContentValues();
+                  cv.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
+                  cv.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+                  cv.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Monshin");
+                  cv.put(MediaStore.Images.Media.IS_PENDING, 1);
+                  Uri uri = ctx.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv);
+                  if (uri == null) { notifyResult("error"); return; }
+                  try (OutputStream os = ctx.getContentResolver().openOutputStream(uri)) {
+                    bmp.compress(Bitmap.CompressFormat.PNG, 100, os);
+                  }
+                  cv.clear();
+                  cv.put(MediaStore.Images.Media.IS_PENDING, 0);
+                  ctx.getContentResolver().update(uri, cv, null, null);
+                } else {
+                  // Android 9 and below
+                  File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Monshin");
+                  if (!dir.exists()) dir.mkdirs();
+                  File file = new File(dir, filename);
+                  try (FileOutputStream fos = new FileOutputStream(file)) {
+                    bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                  }
+                  // scan ให้ Gallery รู้
+                  android.media.MediaScannerConnection.scanFile(ctx, new String[]{file.getAbsolutePath()}, null, null);
+                }
+                notifyResult("ok");
+              } catch (Exception e) {
+                Log.e("ImageSave", "Failed", e);
+                notifyResult("error");
+              }
+            }
+
+            private void notifyResult(String result) {
+              webView.post(() -> webView.evaluateJavascript(
+                "localStorage.setItem('_save_img_result','" + result + "');", null));
+            }
+          }
+          IMGEOF
+
       - name: Add permissions to AndroidManifest
         run: |
-          sed -i 's/<\/manifest>/    <uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" \/>\n    <uses-permission android:name="android.permission.CAMERA" \/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" \/>\n    <uses-permission android:name="android.permission.VIBRATE" \/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" \/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" \/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n<\/manifest>/' android/app/src/main/AndroidManifest.xml
+          sed -i 's/<\/manifest>/    <uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" \/>\n    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" \/>\n    <uses-permission android:name="android.permission.CAMERA" \/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" \/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" \/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" \/>\n    <uses-permission android:name="android.permission.VIBRATE" \/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" \/>\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" \/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n<\/manifest>/' android/app/src/main/AndroidManifest.xml
 
       - name: Fix Kotlin duplicate
         run: |
