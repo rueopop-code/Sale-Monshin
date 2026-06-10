@@ -1242,47 +1242,66 @@ function doCapture(wrapper, btn) {
       canvas.toBlob(async (blob) => {
         if (!blob) { showToast('ไม่สามารถสร้างรูปได้', 'warn'); if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; } return; }
 
-        // วิธีที่ 1: Web Share API (Android share sheet → "บันทึกรูปภาพ")
-        if (navigator.share && navigator.canShare) {
-          try {
-            const file = new File([blob], filename, { type:'image/png' });
-            if (navigator.canShare({ files:[file] })) {
-              await navigator.share({ files:[file], title:'บัตรเซล' });
-              if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
-              return;
-            }
-          } catch(e) {
-            if (e.name === 'AbortError') { if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; } return; }
-          }
-        }
+        // แปลง blob → base64
+        const toBase64 = (b) => new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result.split(',')[1]);
+          r.onerror = rej;
+          r.readAsDataURL(b);
+        });
 
-        // วิธีที่ 2: อัปโหลด Cloudinary แล้วเปิด URL (Android WebView download ได้)
-        if (btn) { btn.textContent = '⏳ กำลังเตรียมไฟล์...'; }
+        // วิธีที่ 1: Capacitor Filesystem API (save ลง Pictures/Gallery โดยตรง)
         try {
-          const fd = new FormData();
-          fd.append('file', blob, filename);
-          fd.append('upload_preset', 'monshin');
-          const res  = await fetch('https://api.cloudinary.com/v1_1/dwet6be8c/image/upload', { method:'POST', body:fd });
-          const data = await res.json();
-          if (data.secure_url) {
-            // เปิด URL ตรงๆ — Android browser/WebView จะ download อัตโนมัติ
-            window.open(data.secure_url, '_blank');
-            showToast('✅ กดค้างที่รูปแล้วเลือก "บันทึก" ครับ', 'success');
+          const { Filesystem, Capacitor } = window;
+          if (Filesystem && Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
+            const base64 = await toBase64(blob);
+            // ขอ permission ก่อน
+            await Filesystem.requestPermissions().catch(()=>{});
+            await Filesystem.writeFile({
+              path: filename,
+              data: base64,
+              directory: 'DOCUMENTS',
+              recursive: true
+            });
+            // copy ไปยัง MediaStore (Gallery)
+            if (window.CameraRoll) {
+              await window.CameraRoll.saveImageWithTag(filename);
+            }
+            showToast('✅ บันทึกรูปลง Gallery แล้ว', 'success');
             if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
             return;
           }
-        } catch(_) {}
+        } catch(e) { console.log('Filesystem failed:', e); }
 
-        // วิธีที่ 3: Blob URL fallback
+        // วิธีที่ 2: ใช้ monshin:// bridge → Java เซฟผ่าน MediaStore โดยตรง
         try {
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = blobUrl; a.download = filename;
-          document.body.appendChild(a); a.click(); document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
-          showToast('✅ บันทึกรูปแล้ว', 'success');
-        } catch(_) { showToast('⚠️ ไม่สามารถบันทึกได้ ลองใหม่', 'warn'); }
-        if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
+          const base64 = await toBase64(blob);
+          // ส่ง base64 ไปให้ Java bridge ผ่าน localStorage แล้ว trigger ด้วย custom URL
+          localStorage.setItem('_pending_save_img', base64);
+          localStorage.setItem('_pending_save_name', filename);
+          window.location.href = 'monshin://saveimage?filename=' + encodeURIComponent(filename);
+          // รอ Java process แล้วเช็ค result
+          let tries = 0;
+          const check = setInterval(() => {
+            tries++;
+            const result = localStorage.getItem('_save_img_result');
+            if (result === 'ok') {
+              localStorage.removeItem('_save_img_result');
+              localStorage.removeItem('_pending_save_img');
+              showToast('✅ บันทึกรูปลง Gallery แล้ว', 'success');
+              clearInterval(check);
+            } else if (tries > 10) {
+              clearInterval(check);
+              _saveFallback(blob, filename, btn);
+              return;
+            }
+          }, 300);
+          if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
+          return;
+        } catch(e) {}
+
+        // วิธีที่ 3: Web Share → Blob URL → fallback
+        _saveFallback(blob, filename, btn);
       }, 'image/png');
     })
     .catch(() => {
@@ -1290,6 +1309,32 @@ function doCapture(wrapper, btn) {
       showToast('ไม่สามารถสร้างรูปได้', 'warn');
       if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
     });
+}
+
+async function _saveFallback(blob, filename, btn) {
+  // Web Share API
+  if (navigator.share && navigator.canShare) {
+    try {
+      const file = new File([blob], filename, { type:'image/png' });
+      if (navigator.canShare({ files:[file] })) {
+        await navigator.share({ files:[file], title:'บัตรเซล' });
+        if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
+        return;
+      }
+    } catch(e) {
+      if (e.name === 'AbortError') { if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; } return; }
+    }
+  }
+  // Blob URL
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    showToast('✅ บันทึกรูปแล้ว', 'success');
+  } catch(_) { showToast('⚠️ ไม่สามารถบันทึกได้', 'warn'); }
+  if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
 }
 
 // ══════════════════════════════════════════
