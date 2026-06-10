@@ -585,7 +585,7 @@ html,body{
   <div id="pin-map"></div>
   <div class="pin-map-bar">
     <div class="pin-map-info">
-      <div style="font-size:13px;font-weight:600;">แตะแผนที่เพื่อปักหมุดที่อยู่</div>
+      <div style="font-size:13px;font-weight:600;">📍 ปักหมุด ณ ตำแหน่งปัจจุบัน — ลากหมุดหรือแตะแผนที่เพื่อปรับ</div>
       <div class="pin-map-coords" id="pin-coords">ยังไม่ได้เลือก</div>
     </div>
     <button class="mbtn primary" onclick="confirmPin()" style="flex:0;padding:9px 16px;">ยืนยัน</button>
@@ -1283,11 +1283,28 @@ function switchStatsTab(tab) {
 async function loadDashboard() {
   if (!session) return;
   try {
-    const res = await fetch(
-      SB_URL + '/rest/v1/orders?sales_id=eq.' + session.salesId + '&order=created_at.desc&limit=200',
-      { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }
-    );
-    allOrders = await res.json();
+    // ดึงออเดอร์ทั้งจาก sales_id และ ref_code (สั่งแทนลูกค้า)
+    const [resSales, resRef] = await Promise.all([
+      fetch(
+        SB_URL + '/rest/v1/orders?sales_id=eq.' + session.salesId + '&status=neq.cancelled&order=created_at.desc&limit=200',
+        { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }
+      ),
+      fetch(
+        SB_URL + '/rest/v1/orders?ref_code=eq.' + session.salesId + '&status=neq.cancelled&order=created_at.desc&limit=200',
+        { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }
+      )
+    ]);
+    const salesOrders = await resSales.json();
+    const refOrders   = await resRef.json();
+    // รวมและ dedup ด้วย order_id
+    const seen = new Set();
+    allOrders = [...(Array.isArray(salesOrders)?salesOrders:[]), ...(Array.isArray(refOrders)?refOrders:[])]
+      .filter(o => {
+        if (!o.order_id) return false;
+        if (seen.has(o.order_id)) return false;
+        seen.add(o.order_id);
+        return true;
+      });
     renderDashboard();
     renderChart();
   } catch(e) {
@@ -1443,10 +1460,10 @@ async function loadCustomersList() {
             <div style="font-weight:700;color:#1a1a1a;font-size:13px;">${typeIcon} ${p.name || 'ไม่ระบุชื่อ'}</div>
             ${p.address ? `<div style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.address}</div>` : ''}
           </div>
-          <a href="https://maps.google.com/?q=${p.lat},${p.lng}" target="_blank"
-            style="padding:6px 10px;background:#fff;border:1.5px solid rgba(192,57,43,.3);border-radius:8px;font-size:11px;color:#C0392B;text-decoration:none;flex-shrink:0;font-weight:700;">
+          <button onclick="openNavigation(${p.lat},${p.lng})"
+            style="padding:6px 10px;background:#fff;border:1.5px solid rgba(192,57,43,.3);border-radius:8px;font-size:11px;color:#C0392B;flex-shrink:0;font-weight:700;cursor:pointer;">
             🗺️ นำทาง
-          </a>
+          </button>
         </div>
         ${photoSection}
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
@@ -1867,20 +1884,54 @@ let pinMapObj = null, tempPinMarker = null;
 function openPinMap() {
   document.getElementById('pin-map-modal').classList.add('show');
   setTimeout(() => {
+    const initCenter = (myLat && myLng) ? [myLat, myLng] : [18.145, 100.14];
+    const initZoom   = (myLat && myLng) ? 17 : 13;
+
     if (!pinMapObj) {
       pinMapObj = L.map('pin-map', { zoomControl:true, attributionControl:false })
-        .setView([18.145, 100.14], 13);
+        .setView(initCenter, initZoom);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(pinMapObj);
       pinMapObj.on('click', e => {
         pinLat = e.latlng.lat; pinLng = e.latlng.lng;
-        if (tempPinMarker) pinMapObj.removeLayer(tempPinMarker);
-        tempPinMarker = L.marker([pinLat,pinLng], {
-          icon: L.divIcon({ html:`<div style="width:22px;height:22px;border-radius:50%;background:#38d9a9;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>`, iconSize:[22,22], iconAnchor:[11,11], className:'' })
-        }).addTo(pinMapObj);
-        document.getElementById('pin-coords').textContent = `${pinLat.toFixed(5)}, ${pinLng.toFixed(5)}`;
+        _updateTempPin(pinLat, pinLng);
       });
-    } else { pinMapObj.invalidateSize(); }
+    } else {
+      pinMapObj.invalidateSize();
+      if (myLat && myLng) pinMapObj.flyTo([myLat, myLng], 17, { duration:0.8 });
+    }
+
+    // auto-pin ตำแหน่ง GPS ปัจจุบันทันที (แบบ LINE MAN)
+    if (myLat && myLng) {
+      pinLat = myLat; pinLng = myLng;
+      _updateTempPin(pinLat, pinLng);
+    }
+
+    // dot สีน้ำเงิน = ตำแหน่งตัวเอง
+    if (myLat && myLng && !pinMapObj._myDot) {
+      pinMapObj._myDot = L.circleMarker([myLat, myLng], {
+        radius:7, color:'#4f8ef7', fillColor:'#4f8ef7',
+        fillOpacity:0.9, weight:2
+      }).addTo(pinMapObj).bindTooltip('ตำแหน่งของคุณ', { permanent:false });
+    }
   }, 100);
+}
+
+function _updateTempPin(lat, lng) {
+  if (tempPinMarker) pinMapObj.removeLayer(tempPinMarker);
+  tempPinMarker = L.marker([lat, lng], {
+    icon: L.divIcon({
+      html: `<div style="width:28px;height:28px;border-radius:50%;background:#C0392B;border:3px solid #fff;box-shadow:0 2px 12px rgba(192,57,43,.5);"></div>`,
+      iconSize:[28,28], iconAnchor:[14,14], className:''
+    }),
+    draggable: true
+  }).addTo(pinMapObj);
+  // ลากปรับตำแหน่งได้เลย
+  tempPinMarker.on('drag', e => {
+    pinLat = e.target.getLatLng().lat;
+    pinLng = e.target.getLatLng().lng;
+    document.getElementById('pin-coords').textContent = `${pinLat.toFixed(5)}, ${pinLng.toFixed(5)}`;
+  });
+  document.getElementById('pin-coords').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 }
 function closePinMap() { document.getElementById('pin-map-modal').classList.remove('show'); }
 function confirmPin() {
@@ -2295,6 +2346,25 @@ async function drawRoadRouteFromPins(map, pins, color, key) {
   } catch(_) {}
 }
 // ─────────────────────────────────────────────────────────────────
+
+function openNavigation(lat, lng) {
+  if (!lat || !lng || isNaN(lat) || isNaN(lng)) { showToast('⚠️ ไม่มีพิกัด'); return; }
+  // Capacitor/Android: ใช้ geo: URI เปิด Google Maps app โดยตรง
+  const geoUrl   = `geo:${lat},${lng}?q=${lat},${lng}`;
+  const mapsUrl  = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  // ลองเปิด geo: ก่อน ถ้า WebView handle ไม่ได้ fallback https
+  try {
+    const a = document.createElement('a');
+    a.href = mapsUrl;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch(_) {
+    window.open(mapsUrl, '_blank');
+  }
+}
 
 function calcDistM(lat1, lng1, lat2, lng2) {
   const R = 6371000;
