@@ -1213,17 +1213,51 @@ function doCapture(wrapper, btn) {
   html2canvas(wrapper, { scale:2, useCORS:true, backgroundColor:'#f0f0f0', logging:false })
     .then(canvas => {
       document.body.removeChild(wrapper);
-      const a = document.createElement('a');
-      a.download = 'บัตรเซล-' + (session ? session.salesId : '') + '.png';
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-      if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
+      const dataUrl = canvas.toDataURL('image/png');
+      const filename = 'บัตรเซล-' + (session ? session.salesId : '') + '.png';
+
+      // วิธีที่ 1: Capacitor/Android — แปลงเป็น blob แล้ว share ผ่าน Web Share API
+      if (navigator.share && navigator.canShare) {
+        canvas.toBlob(async (blob) => {
+          try {
+            const file = new File([blob], filename, { type:'image/png' });
+            if (navigator.canShare({ files:[file] })) {
+              await navigator.share({ files:[file], title:'บัตรเซล' });
+              if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
+              return;
+            }
+          } catch(_) {}
+          // fallback ถ้า share ไม่ได้
+          _downloadFallback(dataUrl, filename, btn);
+        }, 'image/png');
+      } else {
+        _downloadFallback(dataUrl, filename, btn);
+      }
     })
     .catch(() => {
       try { document.body.removeChild(wrapper); } catch(e) {}
-      alert('ไม่สามารถดาวน์โหลดได้');
+      showToast('ไม่สามารถสร้างรูปได้', 'warn');
       if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
     });
+}
+
+function _downloadFallback(dataUrl, filename, btn) {
+  // เปิดรูปใน tab ใหม่ — ให้ user กด "บันทึกภาพ" เอง (แก้ปัญหา Android block a.click)
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>บัตรเซล</title></head><body style="margin:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:16px;box-sizing:border-box;">
+      <p style="color:#fff;font-family:sans-serif;font-size:14px;margin:0;">📥 กดค้างที่รูปเพื่อบันทึกลง Gallery</p>
+      <img src="${dataUrl}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
+    </body></html>`);
+    win.document.close();
+  } else {
+    // fallback สุดท้าย
+    const a = document.createElement('a');
+    a.download = filename;
+    a.href = dataUrl;
+    a.click();
+  }
+  if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
 }
 
 // ══════════════════════════════════════════
@@ -1452,28 +1486,77 @@ function initSettingsPage() {
 async function handleSettingsPhotoChange(input) {
   const file = input.files[0];
   if (!file) return;
+  input.value = ''; // reset ให้เลือกซ้ำได้
   const status = document.getElementById('settings-photo-status');
   status.textContent = '⏳ กำลังอัปโหลด...';
   status.style.color = '#888';
+
+  // compress รูปก่อน upload (ลด timeout บน WebView)
+  let uploadFile = file;
+  try {
+    uploadFile = await compressImage(file, 800, 0.82);
+  } catch(_) { uploadFile = file; }
+
   try {
     const fd = new FormData();
-    fd.append('file', file);
+    fd.append('file', uploadFile);
     fd.append('upload_preset', 'monshin');
-    const res = await fetch('https://api.cloudinary.com/v1_1/dwet6be8c/image/upload', { method:'POST', body:fd });
+    const res = await fetch('https://api.cloudinary.com/v1_1/dwet6be8c/image/upload', {
+      method: 'POST', body: fd
+    });
     const data = await res.json();
-    if (!data.secure_url) throw new Error('Upload failed');
-    setSalesPhoto(data.secure_url);
-    await gasCall({ action:'updatePhoto', token:session.token, salesId:session.salesId, photoUrl:data.secure_url });
-    // อัปเดต preview
+    if (!data.secure_url) throw new Error('Cloudinary: ' + (data.error?.message || 'no url'));
+
+    // บันทึก local ก่อน (ถ้า GAS fail ยังใช้งานได้)
+    setSalesPhotoLocal(data.secure_url);
     const preview = document.getElementById('settings-avatar-preview');
-    preview.innerHTML = `<img src="${data.secure_url}" style="width:100%;height:100%;object-fit:cover;">`;
+    if (preview) preview.innerHTML = `<img src="${data.secure_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+
+    // อัปเดต header avatar ด้วย
+    const hdrAvatar = document.getElementById('hdr-av');
+    if (hdrAvatar) hdrAvatar.innerHTML = `<img src="${data.secure_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+
     status.textContent = '✅ เปลี่ยนรูปสำเร็จ!';
     status.style.color = '#27ae60';
     renderIdCard();
+
+    // sync GAS (background — ไม่ block UI)
+    gasCall({ action:'updatePhoto', token:session.token, salesId:session.salesId, photoUrl:data.secure_url })
+      .catch(() => {}); // ไม่แสดง error ถ้า GAS fail เพราะรูปบันทึก local แล้ว
+
   } catch(e) {
-    status.textContent = '❌ อัปโหลดไม่สำเร็จ';
+    status.textContent = '❌ อัปโหลดไม่สำเร็จ ลองใหม่อีกครั้ง';
     status.style.color = '#C0392B';
+    console.error('Photo upload error:', e);
   }
+}
+
+// ── compress image ก่อน upload ──────────────────────────────────
+function compressImage(file, maxSize, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+          else { w = Math.round(w * maxSize / h); h = maxSize; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          if (blob) resolve(new File([blob], file.name, { type:'image/jpeg' }));
+          else reject(new Error('compress failed'));
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 async function saveSettingsName() {
@@ -1829,31 +1912,69 @@ async function submitOrder() {
   const total = items.reduce((s,i) => s + i.price*i.qty, 0);
   const btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.textContent = 'กำลังส่งออเดอร์...';
+
   try {
-    const data = await gasCall({
-      action: 'createOrder',
-      token:  session.token,
-      salesId: session.salesId,
-      customerName: name, phone, address: addr, note, payment,
-      mapLat: pinLat, mapLng: pinLng,
-      items: items.map(i => ({ name:i.name, price:i.price, qty:i.qty })),
-      total
+    // สร้าง customerId แบบ unique สำหรับออเดอร์นี้
+    const customerId = 'SALES-' + session.salesId + '-' + Date.now();
+
+    const payload = {
+      customerId,
+      customerName: name,
+      lineName: name,
+      phone:   phone || null,
+      address: addr  || null,
+      note:    note  || null,
+      items:   items.map(i => ({ name:i.name, price:i.price, qty:i.qty, emoji: i.emoji || '' })),
+      total,
+      orderType: payment === 'cod' ? 'delivery' : 'pickup',
+      mapLat: pinLat || null,
+      mapLng: pinLng || null,
+      refCode: session.salesId   // ใช้ salesId เป็น refCode เพื่อให้ admin รู้ว่าเซลคนไหนสั่ง
+    };
+
+    const res  = await fetch(BACKEND_URL + '/send-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-    if (data.ok) {
-      // บันทึกลูกค้าใน localStorage สำหรับแผนที่
+    const data = await res.json();
+
+    if (data.order_id || data.ok || data.success || res.ok) {
+      const orderId = data.order_id || data.orderId || ('SO_' + Date.now());
+
+      // อัปเดต sales_id ใน Supabase โดยตรง (background)
+      fetch(SB_URL + '/rest/v1/orders?order_id=eq.' + encodeURIComponent(orderId), {
+        method: 'PATCH',
+        headers: {
+          'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON,
+          'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ sales_id: session.salesId })
+      }).catch(() => {});
+
+      // บันทึก pin ลูกค้า ถ้ามีพิกัด
       if (pinLat) {
-        const cust = { id:'sp_'+Date.now(), name, phone, address:addr, type:'shop', note: note||'', lat:pinLat, lng:pinLng, createdAt:new Date().toISOString() };
+        const cust = {
+          id: 'sp_'+Date.now(), name, phone: phone||'',
+          address: addr, type:'shop', note: note||'',
+          lat: pinLat, lng: pinLng, createdAt: new Date().toISOString()
+        };
         customers.push(cust);
         addCustomerMarker(cust);
-        savePinToSupabase(cust).catch(()=>{});
+        savePinToSupabase(cust).catch(() => {});
       }
+
       cart = {};
       updateCartBar();
       closeCheckout();
-      document.getElementById('success-order-id').textContent = data.orderId || 'ORD-' + Date.now().toString().slice(-6);
+      document.getElementById('success-order-id').textContent = orderId;
       document.getElementById('success-modal').classList.add('show');
-    } else { showToast('⚠️ '+(data.msg||'ส่งออเดอร์ไม่สำเร็จ')); }
-  } catch(e) { showToast('⚠️ '+e.message); }
+    } else {
+      showToast('⚠️ ' + (data.error || data.msg || 'ส่งออเดอร์ไม่สำเร็จ'));
+    }
+  } catch(e) {
+    showToast('⚠️ ' + e.message);
+  }
   btn.disabled = false; btn.textContent = '✅ ยืนยันออเดอร์';
 }
 
@@ -1957,13 +2078,17 @@ function startGPS() {
         myCircle.setLatLng([myLat, myLng]).setRadius(acc);
       }
 
-      // วาดเส้นทางในแผนที่เซล
+      // วาดเส้นทางในแผนที่เซล (เส้นตรง GPS จริง — road route วาดแยกต่างหาก)
       myRoutePoints.push([myLat, myLng]);
       if (myRouteLine) salesMap.removeLayer(myRouteLine);
       if (myRoutePoints.length >= 2) {
         myRouteLine = L.polyline(myRoutePoints, {
-          color:'#C0392B', weight:3, opacity:.7, dashArray:'6,3'
+          color:'#C0392B', weight:3, opacity:.45, dashArray:'4,4'
         }).addTo(salesMap);
+      }
+      // อัปเดต road route ทุก 5 จุด เพื่อไม่ spam OSRM
+      if (myRoutePoints.length >= 2 && myRoutePoints.length % 5 === 0) {
+        drawRoadRoute(salesMap, myRoutePoints, '#C0392B', '_myRoadRoute');
       }
 
       // push ไป Supabase ทุก 30 วิ หรือถ้าขยับ > 20 เมตร
@@ -2126,6 +2251,51 @@ function dismissAutoStop() {
   _autoStopTimer = setTimeout(() => triggerAutoPin(), mins * 60 * 1000);
 }
 
+// ── Road routing via OSRM ─────────────────────────────────────────
+// roadLayers เก็บ layer ตาม key เพื่อลบก่อนวาดใหม่
+const _roadLayers = {};
+
+async function drawRoadRoute(map, points, color, key) {
+  // sample max 25 จุด เพื่อไม่ให้ URL ยาวเกิน
+  const sampled = samplePoints(points, 25);
+  const coords  = sampled.map(p => p[1] + ',' + p[0]).join(';');
+  try {
+    const res  = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
+    const data = await res.json();
+    if (!data.routes || !data.routes[0]) return;
+    const geom = data.routes[0].geometry;
+    if (_roadLayers[key]) { try { map.removeLayer(_roadLayers[key]); } catch(_){} }
+    _roadLayers[key] = L.geoJSON(geom, {
+      style: { color, weight: 4, opacity: .85, dashArray: null }
+    }).addTo(map);
+  } catch(_) { /* ถ้า OSRM ล้มเหลวแสดง polyline เดิมก็ได้ */ }
+}
+
+function samplePoints(pts, max) {
+  if (pts.length <= max) return pts;
+  const step = (pts.length - 1) / (max - 1);
+  const out = [];
+  for (let i = 0; i < max; i++) out.push(pts[Math.round(i * step)]);
+  return out;
+}
+
+async function drawRoadRouteFromPins(map, pins, color, key) {
+  if (pins.length < 2) return;
+  const sampled = samplePoints(pins.map(p => [p.lat, p.lng]), 25);
+  const coords  = sampled.map(p => p[1] + ',' + p[0]).join(';');
+  try {
+    const res  = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
+    const data = await res.json();
+    if (!data.routes || !data.routes[0]) return;
+    const geom = data.routes[0].geometry;
+    if (_roadLayers[key]) { try { map.removeLayer(_roadLayers[key]); } catch(_){} }
+    _roadLayers[key] = L.geoJSON(geom, {
+      style: { color, weight: 4, opacity: .85 }
+    }).addTo(map);
+  } catch(_) {}
+}
+// ─────────────────────────────────────────────────────────────────
+
 function calcDistM(lat1, lng1, lat2, lng2) {
   const R = 6371000;
   const dLat = (lat2-lat1) * Math.PI/180;
@@ -2135,7 +2305,7 @@ function calcDistM(lat1, lng1, lat2, lng2) {
 }
 
 function addCustomerMarker(c) {
-  if (!salesMap || !c.lat) return;
+  if (!salesMap || !c.lat || !c.lng || isNaN(c.lat) || isNaN(c.lng)) return;
   const colors = { shop:'#C0392B', home:'#4f8ef7', business:'#e67e22', other:'#8e44ad' };
   const icons  = { shop:'🏪', home:'🏠', business:'🏢', other:'📍' };
   const bg = colors[c.type] || colors.shop;
@@ -2383,6 +2553,8 @@ function setSellMode(mode) {
     btnLo.style.color       = '#fff';
     btnL.style.background   = '#f5f5f5';
     btnL.style.color         = '#888';
+    // โหลด/refresh สินค้า real-time ทุกครั้งที่ switch มา local mode
+    loadProducts();
   }
 }
 
