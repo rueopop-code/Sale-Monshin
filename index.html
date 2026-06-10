@@ -1202,80 +1202,93 @@ function downloadCardModal() {
   const cards = content.querySelectorAll('.print-card');
   if (!cards.length) { alert('ไม่พบบัตร'); return; }
 
-  // สร้าง wrapper ชั่วคราว
+  // สร้าง wrapper ชั่วคราว — ใช้ absolute ไม่ใช่ fixed เพื่อให้ html2canvas จับได้ถูก
   const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;display:flex;flex-direction:column;gap:16px;padding:20px;background:#f0f0f0;font-family:Sarabun,sans-serif;';
-  cards.forEach(c => wrapper.appendChild(c.cloneNode(true)));
+  wrapper.style.cssText = 'position:absolute;left:-9999px;top:0;width:360px;display:flex;flex-direction:column;gap:16px;padding:20px;background:#f5f5f5;font-family:Sarabun,sans-serif;z-index:-1;';
+  cards.forEach(c => {
+    const clone = c.cloneNode(true);
+    clone.style.width = '320px';
+    // แทนที่รูปโปรไฟล์ที่อาจจับผิด ด้วย img src ตรงๆ
+    const imgWrap = clone.querySelector('.av, [id*="avatar"]');
+    if (imgWrap) {
+      const photo = getSalesPhoto();
+      if (photo) {
+        imgWrap.innerHTML = `<img src="${photo}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      }
+    }
+    wrapper.appendChild(clone);
+  });
   document.body.appendChild(wrapper);
 
-  // โหลด html2canvas
-  if (typeof html2canvas === 'undefined') {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload = () => doCapture(wrapper, btn);
-    document.head.appendChild(s);
-  } else {
-    doCapture(wrapper, btn);
-  }
+  // รอ render ก่อน capture
+  setTimeout(() => {
+    if (typeof html2canvas === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = () => doCapture(wrapper, btn);
+      document.head.appendChild(s);
+    } else {
+      doCapture(wrapper, btn);
+    }
+  }, 200);
 }
 
 function doCapture(wrapper, btn) {
-  html2canvas(wrapper, { scale:2, useCORS:true, backgroundColor:'#f0f0f0', logging:false })
+  html2canvas(wrapper, { scale:2, useCORS:true, backgroundColor:'#ffffff', logging:false })
     .then(canvas => {
       document.body.removeChild(wrapper);
       const filename = 'บัตรเซล-' + (session ? session.salesId : '') + '.png';
 
       canvas.toBlob(async (blob) => {
-        if (!blob) { showToast('ไม่สามารถสร้างรูปได้', 'warn'); return; }
+        if (!blob) { showToast('ไม่สามารถสร้างรูปได้', 'warn'); if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; } return; }
 
-        // วิธีที่ 1: Web Share API + files (Android share sheet → "บันทึกรูปภาพ")
+        // วิธีที่ 1: Web Share API (Android share sheet → "บันทึกรูปภาพ")
         if (navigator.share && navigator.canShare) {
           try {
             const file = new File([blob], filename, { type:'image/png' });
             if (navigator.canShare({ files:[file] })) {
               await navigator.share({ files:[file], title:'บัตรเซล' });
-              if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
+              if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
               return;
             }
           } catch(e) {
-            if (e.name !== 'AbortError') { /* user ยกเลิก share → fallback */ }
-            else { if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; } return; }
+            if (e.name === 'AbortError') { if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; } return; }
           }
         }
 
-        // วิธีที่ 2: Blob URL + a.click() — ทำงานได้ใน Capacitor WebView
+        // วิธีที่ 2: อัปโหลด Cloudinary แล้วเปิด URL (Android WebView download ได้)
+        if (btn) { btn.textContent = '⏳ กำลังเตรียมไฟล์...'; }
+        try {
+          const fd = new FormData();
+          fd.append('file', blob, filename);
+          fd.append('upload_preset', 'monshin');
+          const res  = await fetch('https://api.cloudinary.com/v1_1/dwet6be8c/image/upload', { method:'POST', body:fd });
+          const data = await res.json();
+          if (data.secure_url) {
+            // เปิด URL ตรงๆ — Android browser/WebView จะ download อัตโนมัติ
+            window.open(data.secure_url, '_blank');
+            showToast('✅ กดค้างที่รูปแล้วเลือก "บันทึก" ครับ', 'success');
+            if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
+            return;
+          }
+        } catch(_) {}
+
+        // วิธีที่ 3: Blob URL fallback
         try {
           const blobUrl = URL.createObjectURL(blob);
           const a = document.createElement('a');
-          a.href = blobUrl;
-          a.download = filename;
-          a.style.display = 'none';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+          a.href = blobUrl; a.download = filename;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
           setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
           showToast('✅ บันทึกรูปแล้ว', 'success');
-          if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
-          return;
-        } catch(_) {}
-
-        // วิธีที่ 3: เปิดรูปใน tab ใหม่ (fallback สุดท้าย)
-        const dataUrl = canvas.toDataURL('image/png');
-        const win = window.open('', '_blank');
-        if (win) {
-          win.document.write(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>บัตรเซล</title></head><body style="margin:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:16px;box-sizing:border-box;">
-            <p style="color:#fff;font-family:sans-serif;font-size:14px;margin:0;">📥 กดค้างที่รูปแล้วเลือก "บันทึกรูปภาพ"</p>
-            <img src="${dataUrl}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.5);">
-          </body></html>`);
-          win.document.close();
-        }
-        if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
+        } catch(_) { showToast('⚠️ ไม่สามารถบันทึกได้ ลองใหม่', 'warn'); }
+        if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
       }, 'image/png');
     })
     .catch(() => {
       try { document.body.removeChild(wrapper); } catch(e) {}
       showToast('ไม่สามารถสร้างรูปได้', 'warn');
-      if (btn) { btn.textContent = '📥 ดาวน์โหลดรูปบัตร'; btn.disabled = false; }
+      if (btn) { btn.textContent='📥 ดาวน์โหลดรูปบัตร'; btn.disabled=false; }
     });
 }
 
