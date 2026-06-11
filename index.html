@@ -6,273 +6,961 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>💼 Sales – มนชิน ซัพพลาย</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700\href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap"family=Prompt:wght@600;700;800\href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap"family=IBM+Plex+Sans+Thai:wght@400;500;600\href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap"display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Prompt:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#C0392B">
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/Sale-Monshin/sw.js');}</script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-:root{
-  --bg:#F7F7F7;--bg2:#FFFFFF;--bg3:#FDF0EF;--card:#FFFFFF;
-  --border:rgba(192,57,43,0.12);--border2:rgba(192,57,43,0.25);
-  --text:#1a1a1a;--muted:#888888;
-  --accent:#C0392B;--green:#27ae60;--warn:#e67e22;--danger:#e74c3c;
-  --purple:#8e44ad;--gold:#FFD700;
-  --font:'Sarabun','IBM Plex Sans Thai',sans-serif;
+/* ══════════════════════════════════════
+   MONSHIN SUPPLY — PROFESSIONAL RED THEME
+   ══════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Prompt:wght@600;700;800&display=swap');
+
+:root {
+  /* ── Core Palette ── */
+  --red-950: #1A0505;
+  --red-900: #3D0A0A;
+  --red-800: #6B1212;
+  --red-700: #8B1A1A;
+  --red-600: #A91E1E;
+  --red-500: #C0392B;
+  --red-400: #D64C3A;
+  --red-300: #E8705F;
+  --red-200: #F4A99D;
+  --red-100: #FAD8D4;
+  --red-50:  #FEF3F2;
+
+  /* ── Neutrals ── */
+  --gray-950: #0D0D0D;
+  --gray-900: #171717;
+  --gray-800: #262626;
+  --gray-700: #404040;
+  --gray-600: #525252;
+  --gray-500: #737373;
+  --gray-400: #A3A3A3;
+  --gray-300: #D4D4D4;
+  --gray-200: #E5E5E5;
+  --gray-100: #F5F5F5;
+  --gray-50:  #FAFAFA;
+
+  /* ── Semantic ── */
+  --green:  #16A34A;
+  --green-bg: #F0FDF4;
+  --green-text: #14532D;
+  --amber:  #D97706;
+  --amber-bg: #FFFBEB;
+  --danger: #DC2626;
+  --gold:   #F59E0B;
+
+  /* ── Surfaces ── */
+  --bg:      #F7F6F5;
+  --surface: #FFFFFF;
+  --surface2: #FAFAFA;
+  --surface3: var(--red-50);
+
+  /* ── Text ── */
+  --text:    #111111;
+  --text-2:  #444444;
+  --text-3:  #777777;
+  --text-4:  #AAAAAA;
+
+  /* ── Borders ── */
+  --border:  rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.12);
+  --border-red: rgba(192,57,43,0.18);
+  --border-red2: rgba(192,57,43,0.32);
+
+  /* ── Typography ── */
+  --font: 'IBM Plex Sans Thai', 'Sarabun', sans-serif;
+  --font-display: 'Prompt', 'IBM Plex Sans Thai', sans-serif;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow:    0 4px 12px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-red: 0 4px 16px rgba(192,57,43,0.22);
+
+  /* ── Radius ── */
+  --r-sm:  8px;
+  --r-md:  12px;
+  --r-lg:  16px;
+  --r-xl:  20px;
+  --r-2xl: 24px;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{
-  height:100%;width:100%;
-  background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;
-  overflow:hidden;
-  -webkit-overflow-scrolling:touch;
-  touch-action:pan-x pan-y;
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── AUTH ── */
-#auth-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-#auth-screen.hidden{display:none;}
-.auth-wrap{width:100%;max-width:380px;padding:20px 0;}
-.auth-logo{text-align:center;margin-bottom:24px;}
-.auth-logo-icon{font-size:44px;margin-bottom:8px;}
-.auth-logo h1{font-size:20px;font-weight:700;}
-.auth-logo p{font-size:12px;color:var(--muted);margin-top:4px;}
-.auth-card{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:22px;}
-.auth-tabs{display:flex;background:var(--bg3);border-radius:10px;padding:3px;margin-bottom:18px;}
-.auth-tab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-radius:7px;}
-.auth-tab.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4);}
-.auth-form{display:none;}
-.auth-form.active{display:block;}
-.afield{margin-bottom:11px;}
-.afield label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600;}
-.afield input{width:100%;padding:10px 13px;border-radius:10px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:14px;outline:none;}
-.afield input:focus{border-color:var(--accent);}
-.auth-btn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
-.auth-btn:disabled{background:var(--bg3);color:var(--muted);cursor:not-allowed;}
-.auth-msg{padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:10px;display:none;text-align:center;}
-.auth-msg.err{background:rgba(255,107,107,.12);color:var(--danger);border:1px solid rgba(255,107,107,.3);display:block;}
-.auth-msg.ok{background:rgba(56,217,169,.12);color:var(--green);border:1px solid rgba(56,217,169,.3);display:block;}
-.auth-cfg{margin-top:12px;text-align:center;font-size:12px;color:var(--muted);}
-.auth-cfg a{color:var(--accent);cursor:pointer;text-decoration:underline;}
-
-/* ── APP ── */
-#app{
-  display:none;flex-direction:column;
-  height:100vh;
-  height:100dvh;
-  width:100vw;
-  overflow:hidden;
-  position:fixed;
-  inset:0;
+/* ══ AUTH SCREEN ══ */
+#auth-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
-#app.show{display:flex;}
+#auth-screen.hidden { display: none; }
 
-/* header */
-.hdr{display:flex;align-items:center;justify-content:space-between;
-  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
-  background:linear-gradient(135deg,#96281B 0%,#C0392B 60%,#E74C3C 100%);
-  flex-shrink:0;box-shadow:0 2px 12px rgba(150,40,27,.4);}
-.hdr-left{display:flex;align-items:center;gap:10px;}
-.av{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex-shrink:0;overflow:hidden;}
-.av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-.hdr-name{font-size:14px;font-weight:700;color:#fff;}
-.hdr-code{font-size:11px;color:rgba(255,255,255,.8);font-weight:600;margin-top:1px;}
-.hdr-right{display:flex;gap:6px;}
-.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:var(--font);font-weight:600;}
-.hbtn:hover{background:rgba(255,255,255,.25);}
-.hbtn.active{background:rgba(255,255,255,.3);color:#fff;}
+.auth-wrap { width: 100%; max-width: 380px; padding: 20px 0; }
 
-/* bottom nav */
-.bnav{
-  display:flex;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;
-  padding-bottom:env(safe-area-inset-bottom);
-  padding-bottom:constant(safe-area-inset-bottom);
+.auth-logo { text-align: center; margin-bottom: 28px; }
+.auth-logo-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: linear-gradient(145deg, var(--red-600), var(--red-500));
+  box-shadow: var(--shadow-red);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin: 0 auto 14px;
 }
-.bnav-btn{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;font-family:var(--font);}
-.bnav-btn.active{color:var(--accent);}
-.bnav-icon{font-size:20px;display:block;margin-bottom:2px;}
-
-/* pages */
-.page{flex:1;overflow-y:auto;overflow-x:hidden;display:none;-webkit-overflow-scrolling:touch;}
-.page.active{display:block;}
-
-/* ── PAGE: ID CARD ── */
-.id-card-page{padding:16px;}
-.sales-id-card{
-  background:linear-gradient(135deg,#1a1f2e 0%,#1e2433 100%);
-  border:1px solid rgba(255,212,59,.3);border-radius:20px;
-  padding:24px;margin-bottom:16px;position:relative;overflow:hidden;
+.auth-logo h1 {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 700;
+  color: var(--red-500);
+  letter-spacing: -0.3px;
 }
-.sales-id-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,212,59,.06);}
-.id-card-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
-.id-avatar{width:56px;height:56px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;border:3px solid rgba(255,212,59,.4);flex-shrink:0;}
-.id-info h2{font-size:17px;font-weight:700;}
-.id-code{font-size:13px;color:var(--gold);font-weight:700;margin-top:2px;}
-.id-role{font-size:11px;color:var(--muted);margin-top:2px;}
-.id-qr-section{display:flex;gap:16px;align-items:flex-start;}
-.id-qr-box{background:#fff;border-radius:14px;padding:10px;flex-shrink:0;}
-#qr-canvas{display:block;}
-.id-qr-info{flex:1;}
-.id-qr-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;}
-.id-link{font-size:12px;color:var(--accent);word-break:break-all;line-height:1.5;margin-bottom:10px;}
-.id-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;}
-.id-stat{background:var(--bg3);border-radius:10px;padding:10px;text-align:center;}
-.id-stat-val{font-size:18px;font-weight:700;color:var(--accent);}
-.id-stat-val.gold{color:var(--gold);}
-.id-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
-.id-actions{display:flex;gap:8px;margin-top:12px;}
-.id-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;text-align:center;}
-.id-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
-.id-btn.gold{background:rgba(255,212,59,.15);color:var(--gold);border-color:rgba(255,212,59,.4);}
+.auth-logo p { font-size: 12px; color: var(--text-3); margin-top: 4px; }
 
-/* ── PAGE: SELL (store copy) ── */
-.sell-page{display:flex;flex-direction:column;height:100%;}
-.sell-search{padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;}
-.sell-search input{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-family:var(--font);font-size:13px;outline:none;}
-.sell-search input:focus{border-color:var(--accent);}
-.product-grid{padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.prod-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;cursor:pointer;transition:border-color .2s;}
-.prod-card:hover{border-color:var(--accent);}
-.prod-emoji{font-size:32px;text-align:center;margin-bottom:8px;}
-.prod-name{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:4px;}
-.prod-price{font-size:14px;font-weight:700;color:var(--green);}
-.prod-stock{font-size:11px;color:var(--muted);}
-.prod-add{width:100%;margin-top:8px;padding:7px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;}
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-2xl);
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+}
+.auth-tabs {
+  display: flex; background: var(--gray-100);
+  border-radius: var(--r-md); padding: 3px; margin-bottom: 20px;
+}
+.auth-tab {
+  flex: 1; padding: 9px; text-align: center;
+  font-size: 13px; font-weight: 600; color: var(--text-3);
+  cursor: pointer; border-radius: 10px; transition: all 0.2s;
+}
+.auth-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+.auth-form { display: none; }
+.auth-form.active { display: block; }
+
+.afield { margin-bottom: 12px; }
+.afield label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--text-3); text-transform: uppercase;
+  letter-spacing: 0.6px; margin-bottom: 5px;
+}
+.afield input {
+  width: 100%; padding: 11px 14px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border2);
+  background: var(--gray-50);
+  color: var(--text); font-family: var(--font); font-size: 14px;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.afield input:focus {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+  background: var(--surface);
+}
+
+.auth-btn {
+  width: 100%; padding: 13px;
+  border-radius: var(--r-md); border: none;
+  background: linear-gradient(135deg, var(--red-700), var(--red-500));
+  color: #fff; font-family: var(--font-display);
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; margin-top: 4px;
+  box-shadow: var(--shadow-red);
+  transition: opacity 0.2s, transform 0.1s;
+}
+.auth-btn:hover { opacity: 0.92; }
+.auth-btn:active { transform: scale(0.99); }
+.auth-btn:disabled {
+  background: var(--gray-200); color: var(--text-3);
+  cursor: not-allowed; box-shadow: none;
+}
+
+.auth-msg {
+  padding: 9px 13px; border-radius: var(--r-sm);
+  font-size: 13px; margin-bottom: 12px;
+  display: none; text-align: center; line-height: 1.5;
+}
+.auth-msg.err {
+  background: #FEF2F2; color: #991B1B;
+  border: 1px solid #FECACA; display: block;
+}
+.auth-msg.ok {
+  background: #F0FDF4; color: #14532D;
+  border: 1px solid #BBF7D0; display: block;
+}
+.auth-cfg { margin-top: 14px; text-align: center; font-size: 12px; color: var(--text-3); }
+.auth-cfg a { color: var(--red-500); cursor: pointer; text-decoration: underline; }
+
+/* ══ APP SHELL ══ */
+#app {
+  display: none; flex-direction: column;
+  height: 100vh; height: 100dvh;
+  width: 100vw;
+  overflow: hidden; position: fixed; inset: 0;
+}
+#app.show { display: flex; }
+
+/* ── Header ── */
+.hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background: linear-gradient(135deg, var(--red-800) 0%, var(--red-600) 55%, var(--red-500) 100%);
+  flex-shrink: 0;
+  box-shadow: 0 2px 16px rgba(139,26,26,0.4);
+}
+.hdr-left { display: flex; align-items: center; gap: 11px; }
+.av {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.22);
+  border: 2px solid rgba(255,255,255,0.45);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; color: #fff;
+  flex-shrink: 0; overflow: hidden;
+}
+.av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.hdr-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.3; }
+.hdr-code { font-size: 11px; color: rgba(255,255,255,0.75); font-weight: 500; }
+.hdr-right { display: flex; gap: 7px; }
+.hbtn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: #fff; border-radius: var(--r-sm);
+  padding: 7px 13px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: var(--font);
+  transition: background 0.2s;
+}
+.hbtn:hover { background: rgba(255,255,255,0.25); }
+.hbtn.active { background: rgba(255,255,255,0.28); }
+
+/* ── Bottom Nav ── */
+.bnav {
+  display: flex; background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: constant(safe-area-inset-bottom);
+  box-shadow: 0 -1px 0 rgba(0,0,0,0.06);
+}
+.bnav-btn {
+  flex: 1; padding: 10px 4px; text-align: center;
+  font-size: 10px; font-weight: 600; color: var(--text-3);
+  cursor: pointer; border: none; background: none;
+  font-family: var(--font); transition: color 0.15s;
+}
+.bnav-btn.active { color: var(--red-500); }
+.bnav-icon { font-size: 20px; display: block; margin-bottom: 3px; }
+
+/* ── Pages ── */
+.page {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  display: none; -webkit-overflow-scrolling: touch;
+}
+.page.active { display: block; }
+
+/* ══ PAGE: ID CARD ══ */
+.id-card-page { padding: 16px; }
+
+.sales-id-card {
+  background: linear-gradient(145deg, #FFFFFF 0%, var(--red-50) 100%);
+  border: 1px solid var(--border-red2);
+  border-radius: var(--r-2xl);
+  padding: 22px; margin-bottom: 16px;
+  position: relative; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.sales-id-card::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 140px; height: 140px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(192,57,43,0.06) 0%, transparent 70%);
+}
+.sales-id-card::after {
+  content: '';
+  position: absolute; bottom: -20px; left: -20px;
+  width: 100px; height: 100px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(192,57,43,0.04) 0%, transparent 70%);
+}
+
+.id-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.id-avatar {
+  width: 58px; height: 58px; border-radius: 16px;
+  background: linear-gradient(145deg, var(--red-700), var(--red-500));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 700; color: #fff;
+  border: 2px solid var(--red-200);
+  flex-shrink: 0; box-shadow: var(--shadow-red);
+}
+.id-info h2 { font-size: 17px; font-weight: 700; color: var(--text); }
+.id-code {
+  font-size: 12px; color: var(--red-600); font-weight: 700;
+  margin-top: 3px; letter-spacing: 0.5px;
+}
+.id-role { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+
+.id-qr-section { display: flex; gap: 16px; align-items: flex-start; }
+.id-qr-box {
+  background: #fff; border-radius: var(--r-lg);
+  padding: 10px; flex-shrink: 0;
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+#qr-canvas { display: block; }
+.id-qr-info { flex: 1; }
+.id-qr-label {
+  font-size: 10px; color: var(--text-3); text-transform: uppercase;
+  letter-spacing: 0.6px; font-weight: 600; margin-bottom: 5px;
+}
+.id-link { font-size: 12px; color: var(--red-600); word-break: break-all; line-height: 1.5; margin-bottom: 10px; }
+
+.id-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 16px; }
+.id-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 11px; text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.id-stat-val { font-size: 20px; font-weight: 700; color: var(--red-500); }
+.id-stat-val.gold { color: var(--gold); }
+.id-stat-lbl { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+.id-actions { display: flex; gap: 8px; margin-top: 14px; }
+.id-btn {
+  flex: 1; padding: 11px; border-radius: var(--r-md);
+  border: 1.5px solid var(--border2);
+  background: var(--gray-50); color: var(--text);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.id-btn:hover { background: var(--gray-100); }
+.id-btn.primary {
+  background: linear-gradient(135deg, var(--red-700), var(--red-500));
+  color: #fff; border-color: transparent;
+  box-shadow: var(--shadow-red);
+}
+.id-btn.gold {
+  background: rgba(245,158,11,0.1);
+  color: #92400E; border-color: rgba(245,158,11,0.4);
+}
+
+/* ══ PAGE: SELL ══ */
+.sell-page { display: flex; flex-direction: column; height: 100%; }
+.sell-search {
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sell-search input {
+  width: 100%; padding: 10px 14px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border2);
+  background: var(--gray-50);
+  color: var(--text); font-family: var(--font); font-size: 13px; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.sell-search input:focus {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.08);
+  background: var(--surface);
+}
+
+.product-grid { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.prod-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  box-shadow: var(--shadow-sm);
+}
+.prod-card:hover {
+  border-color: var(--border-red2);
+  box-shadow: 0 4px 14px rgba(192,57,43,0.12);
+  transform: translateY(-1px);
+}
+.prod-card:active { transform: scale(0.98); }
+.prod-emoji { font-size: 32px; text-align: center; margin-bottom: 8px; }
+.prod-name { font-size: 13px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; color: var(--text); }
+.prod-price { font-size: 14px; font-weight: 700; color: var(--green); }
+.prod-stock { font-size: 11px; color: var(--text-4); margin-top: 2px; }
+.prod-add {
+  width: 100%; margin-top: 9px; padding: 8px;
+  border-radius: var(--r-sm); border: none;
+  background: linear-gradient(135deg, var(--red-700), var(--red-500));
+  color: #fff; font-family: var(--font);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(192,57,43,0.28);
+  transition: opacity 0.15s;
+}
+.prod-add:hover { opacity: 0.9; }
 
 /* cart bar */
-.cart-bar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 14px;background:#fff;border-top:2px solid rgba(192,57,43,.2);
-  flex-shrink:0;position:relative;z-index:10;
+.cart-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: var(--surface);
+  border-top: 1.5px solid var(--border-red);
+  flex-shrink: 0; position: relative; z-index: 10;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
 }
-.cart-bar-left{display:flex;align-items:center;gap:8px;}
-.cart-badge{background:var(--danger);color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
-.cart-bar-total{font-size:14px;font-weight:700;color:var(--green);}
-.cart-bar-btn{padding:8px 16px;border-radius:10px;border:none;background:var(--green);color:#0f1117;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;}
+.cart-bar-left { display: flex; align-items: center; gap: 8px; }
+.cart-badge {
+  background: var(--danger); color: #fff;
+  border-radius: 50%; width: 20px; height: 20px;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.cart-bar-total { font-size: 15px; font-weight: 700; color: var(--red-500); }
+.cart-bar-btn {
+  padding: 9px 18px; border-radius: var(--r-md); border: none;
+  background: linear-gradient(135deg, var(--red-700), var(--red-500));
+  color: #fff; font-family: var(--font);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  box-shadow: var(--shadow-red);
+}
 
-/* ── PAGE: MAP ── */
-.map-page{display:flex;flex-direction:column;height:100%;}
-#sales-map{flex:1;min-height:0;}
-.map-bottom{padding:10px 14px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;}
-.map-stats{display:flex;gap:10px;margin-bottom:8px;}
-.mstat{flex:1;background:var(--bg3);border-radius:8px;padding:8px;text-align:center;}
-.mstat-val{font-size:15px;font-weight:700;color:var(--accent);}
-.mstat-lbl{font-size:10px;color:var(--muted);margin-top:1px;}
-.map-btns{display:flex;gap:8px;}
-.mbtn{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;}
-.mbtn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
-.mbtn.success{background:var(--green);color:#0f1117;border-color:var(--green);}
+/* ══ PAGE: MAP ══ */
+.map-page { display: flex; flex-direction: column; height: 100%; }
+#sales-map { flex: 1; min-height: 0; }
 
-/* ── MODALS ── */
-.mov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:3000;display:none;align-items:flex-end;justify-content:center;}
-.mov.show{display:flex;}
-.mov.center{align-items:center;padding:20px;}
-.mbox{background:var(--bg2);border:1px solid var(--border2);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
-.mbox.center-box{border-radius:20px;}
-.mhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.mhdr h2{font-size:15px;font-weight:700;}
-.mclose{background:var(--bg3);border:1px solid var(--border2);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.map-bottom {
+  padding: 12px 14px; background: var(--surface);
+  border-top: 1px solid var(--border); flex-shrink: 0;
+}
+.map-stats { display: flex; gap: 8px; margin-bottom: 9px; }
+.mstat {
+  flex: 1; background: var(--gray-50);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 9px; text-align: center;
+}
+.mstat-val { font-size: 16px; font-weight: 700; color: var(--red-500); }
+.mstat-lbl { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+.map-btns { display: flex; gap: 7px; }
+.mbtn {
+  flex: 1; padding: 9px 6px; border-radius: var(--r-md);
+  border: 1.5px solid var(--border2);
+  background: var(--gray-50); color: var(--text);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.mbtn:hover { background: var(--gray-100); }
+.mbtn.primary {
+  background: linear-gradient(135deg, var(--red-700), var(--red-500));
+  color: #fff; border-color: transparent;
+  box-shadow: var(--shadow-red);
+}
+.mbtn.success {
+  background: var(--green-bg); color: var(--green-text);
+  border-color: rgba(22,163,74,0.3);
+}
+
+/* ══ MODALS ══ */
+.mov {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 3000; display: none;
+  align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.mov.show { display: flex; }
+.mov.center { align-items: center; padding: 20px; }
+
+.mbox {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+  padding: 20px; width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.15);
+}
+.mbox.center-box { border-radius: var(--r-2xl); }
+.mhdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.mhdr h2 { font-size: 15px; font-weight: 700; color: var(--text); }
+.mclose {
+  background: var(--gray-100); border: 1px solid var(--border);
+  width: 30px; height: 30px; border-radius: 50%;
+  cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); transition: background 0.15s;
+}
+.mclose:hover { background: var(--gray-200); }
 
 /* cart modal */
-.cart-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;}
-.cart-item-name{flex:1;font-size:13px;font-weight:500;}
-.cart-item-price{font-size:13px;font-weight:700;color:var(--green);min-width:60px;text-align:right;}
-.qty-ctrl{display:flex;align-items:center;gap:6px;}
-.qbtn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.qval{font-size:13px;font-weight:700;min-width:18px;text-align:center;}
-.cart-total-row{display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border);font-size:15px;font-weight:700;}
-.cart-total-row span:last-child{color:var(--green);}
+.cart-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px; background: var(--gray-50);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md); margin-bottom: 8px;
+}
+.cart-item-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.cart-item-price { font-size: 13px; font-weight: 700; color: var(--green); min-width: 60px; text-align: right; }
+.qty-ctrl { display: flex; align-items: center; gap: 6px; }
+.qbtn {
+  width: 27px; height: 27px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--border2);
+  background: var(--surface); color: var(--text);
+  font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.qbtn:hover { background: var(--gray-100); }
+.qval { font-size: 13px; font-weight: 700; min-width: 18px; text-align: center; }
 
-/* customer form */
-.cfield{margin-bottom:11px;}
-.cfield label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600;}
-.cfield input,.cfield textarea,.cfield select{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;}
-.cfield input:focus,.cfield textarea:focus{border-color:var(--accent);}
-.cfield textarea{resize:none;height:60px;}
-.pin-hint{display:flex;align-items:center;gap:6px;padding:8px 10px;background:rgba(255,169,77,.1);border:1px solid rgba(255,169,77,.3);border-radius:8px;font-size:12px;color:var(--warn);margin-bottom:10px;}
-.confirm-btn{width:100%;padding:13px;border-radius:12px;border:none;background:var(--green);color:#0f1117;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
-.confirm-btn:disabled{background:var(--bg3);color:var(--muted);cursor:not-allowed;}
+.cart-total-row {
+  display: flex; justify-content: space-between;
+  padding: 13px 0; border-top: 1.5px solid var(--border);
+  font-size: 15px; font-weight: 700;
+  margin-top: 4px;
+}
+.cart-total-row span:last-child { color: var(--red-500); }
+
+/* customer / checkout form */
+.cfield { margin-bottom: 12px; }
+.cfield label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--text-3); text-transform: uppercase;
+  letter-spacing: 0.6px; margin-bottom: 5px;
+}
+.cfield input,
+.cfield textarea,
+.cfield select {
+  width: 100%; padding: 10px 13px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border2);
+  background: var(--gray-50);
+  color: var(--text); font-family: var(--font); font-size: 13px; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cfield input:focus,
+.cfield textarea:focus {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.08);
+  background: var(--surface);
+}
+.cfield textarea { resize: none; height: 62px; }
+
+.pin-hint {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 12px;
+  background: var(--amber-bg);
+  border: 1px solid rgba(217,119,6,0.25);
+  border-radius: var(--r-md); font-size: 12px; color: #92400E;
+  margin-bottom: 12px;
+}
+
+.confirm-btn {
+  width: 100%; padding: 14px; border-radius: var(--r-md); border: none;
+  background: linear-gradient(135deg, var(--red-700), var(--red-500));
+  color: #fff; font-family: var(--font-display);
+  font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 6px;
+  box-shadow: var(--shadow-red);
+  transition: opacity 0.15s, transform 0.1s;
+}
+.confirm-btn:hover { opacity: 0.92; }
+.confirm-btn:active { transform: scale(0.99); }
+.confirm-btn:disabled {
+  background: var(--gray-200); color: var(--text-3);
+  cursor: not-allowed; box-shadow: none;
+}
 
 /* pin map modal */
-.pin-map-modal{position:fixed;inset:0;z-index:4000;display:none;flex-direction:column;}
-.pin-map-modal.show{display:flex;}
-#pin-map{flex:1;}
-.pin-map-bar{padding:12px 16px;background:var(--bg2);border-top:1px solid var(--border2);display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.pin-map-info{flex:1;font-size:13px;}
-.pin-map-coords{font-size:11px;color:var(--muted);margin-top:2px;}
+.pin-map-modal { position: fixed; inset: 0; z-index: 4000; display: none; flex-direction: column; }
+.pin-map-modal.show { display: flex; }
+#pin-map { flex: 1; }
+.pin-map-bar {
+  padding: 13px 16px; background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+}
+.pin-map-info { flex: 1; font-size: 13px; }
+.pin-map-coords { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 
 /* success modal */
-.success-card{text-align:center;padding:20px 0;}
-.success-icon{font-size:52px;margin-bottom:12px;}
-.success-title{font-size:18px;font-weight:700;color:var(--green);margin-bottom:6px;}
-.success-sub{font-size:13px;color:var(--muted);line-height:1.6;}
-.success-order-id{font-size:20px;font-weight:700;color:var(--accent);margin:12px 0;}
+.success-card { text-align: center; padding: 20px 0; }
+.success-icon { font-size: 52px; margin-bottom: 14px; }
+.success-title { font-size: 18px; font-weight: 700; color: var(--green); margin-bottom: 6px; }
+.success-sub { font-size: 13px; color: var(--text-3); line-height: 1.6; }
+.success-order-id {
+  font-size: 22px; font-weight: 700;
+  color: var(--red-500); margin: 14px 0;
+  font-family: var(--font-display);
+}
 
 /* cfg modal */
-#cfg-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;display:none;align-items:center;justify-content:center;padding:20px;}
-#cfg-modal.show{display:flex;}
-.cfg-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:22px;width:100%;max-width:360px;}
-.cfg-box h2{font-size:15px;font-weight:700;margin-bottom:14px;}
-.cfg-field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600;}
-.cfg-field input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;outline:none;margin-bottom:10px;}
-.cfg-btns{display:flex;gap:8px;margin-top:4px;}
-.cfg-btns button{flex:1;padding:10px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);}
-.cfg-save{background:var(--accent);color:#fff;border-color:var(--accent)!important;}
+#cfg-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 5000;
+  display: none; align-items: center; justify-content: center; padding: 20px;
+  backdrop-filter: blur(2px);
+}
+#cfg-modal.show { display: flex; }
+.cfg-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-2xl); padding: 24px;
+  width: 100%; max-width: 360px;
+  box-shadow: var(--shadow-lg);
+}
+.cfg-box h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+.cfg-field label {
+  display: block; font-size: 11px; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.6px;
+  margin-bottom: 5px; font-weight: 600;
+}
+.cfg-field input {
+  width: 100%; padding: 10px 13px; border-radius: var(--r-md);
+  border: 1.5px solid var(--border2); background: var(--gray-50);
+  color: var(--text); font-family: var(--font); font-size: 13px;
+  outline: none; margin-bottom: 12px;
+}
+.cfg-btns { display: flex; gap: 8px; margin-top: 4px; }
+.cfg-btns button {
+  flex: 1; padding: 11px; border-radius: var(--r-md);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--border2);
+  background: var(--gray-50); color: var(--text);
+  transition: background 0.15s;
+}
+.cfg-btns button:hover { background: var(--gray-100); }
+.cfg-save {
+  background: linear-gradient(135deg, var(--red-700), var(--red-500)) !important;
+  color: #fff !important; border-color: transparent !important;
+  box-shadow: var(--shadow-red);
+}
 
 /* toast */
-#toast{position:fixed;top:0;left:50%;transform:translateX(-50%);background:var(--warn);color:#0f1117;padding:10px 20px;border-radius:0 0 16px 16px;font-size:13px;font-weight:700;z-index:9000;display:none;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap;max-width:90vw;text-align:center;}
-#toast.show{display:block;}
-#toast.success{background:var(--green);color:#0f1117;}
+#toast {
+  position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+  background: var(--amber); color: #1c1917;
+  padding: 11px 22px;
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  font-size: 13px; font-weight: 700; z-index: 9000;
+  display: none;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.2);
+  white-space: nowrap; max-width: 90vw; text-align: center;
+}
+#toast.show { display: block; }
+#toast.success { background: var(--green); color: #fff; }
 
-/* leaflet */
-.leaflet-control-attribution{display:none;}
-.leaflet-control-zoom a{background:var(--bg2)!important;color:var(--text)!important;border-color:var(--border2)!important;}
-.leaflet-popup-content-wrapper{background:var(--bg2)!important;color:var(--text)!important;border:1px solid var(--border2)!important;border-radius:12px!important;box-shadow:0 4px 16px rgba(0,0,0,.5)!important;}
-.leaflet-popup-tip{background:var(--bg2)!important;}
+/* leaflet overrides */
+.leaflet-control-attribution { display: none; }
+.leaflet-control-zoom a {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border2) !important;
+}
+.leaflet-popup-content-wrapper {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border2) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+.leaflet-popup-tip { background: var(--surface) !important; }
 
-/* ── Brand override ── */
-.hdr{background:linear-gradient(120deg,#96281B 0%,#C0392B 55%,#E74C3C 100%)!important;color:#fff!important;border-bottom:none!important;box-shadow:0 3px 20px rgba(150,40,27,.35)!important;}
-.hdr-name,.hdr-code{color:#fff!important;}
-.hdr-right .hbtn{background:rgba(255,255,255,.15)!important;border-color:rgba(255,255,255,.3)!important;color:#fff!important;}
-.bnav{background:#fff!important;border-top:2px solid #C0392B!important;}
-.bnav-btn.active{color:#C0392B!important;}
-#auth-screen{background:#F7F7F7!important;}
-.auth-logo h1{color:#C0392B!important;font-family:'Prompt',sans-serif!important;}
-.auth-btn{background:linear-gradient(120deg,#96281B,#C0392B)!important;font-family:'Prompt',sans-serif!important;}
-.auth-card{box-shadow:0 4px 24px rgba(192,57,43,.12)!important;}
-.sales-id-card{background:linear-gradient(135deg,#fff8f8 0%,#fff0ef 100%)!important;border-color:rgba(192,57,43,.3)!important;}
-.id-code{color:#C0392B!important;}
-.id-btn.primary{background:linear-gradient(120deg,#96281B,#C0392B)!important;border-color:#C0392B!important;}
-.id-btn.gold{background:rgba(255,215,0,.15)!important;color:#b8860b!important;border-color:rgba(255,215,0,.5)!important;}
-.id-stat-val{color:#C0392B!important;}
-.prod-add{background:linear-gradient(120deg,#96281B,#C0392B)!important;}
-.cart-bar{background:#fff!important;border-top:1px solid rgba(192,57,43,.2)!important;}
-.cart-bar-btn{background:linear-gradient(120deg,#96281B,#C0392B)!important;color:#fff!important;}
-.cart-bar-total{color:#C0392B!important;}
-.confirm-btn{background:linear-gradient(120deg,#96281B,#C0392B)!important;color:#fff!important;}
-.mbtn.primary{background:linear-gradient(120deg,#96281B,#C0392B)!important;border-color:#C0392B!important;}
-.mbtn.success{background:#27ae60!important;color:#fff!important;border-color:#27ae60!important;}
-.pay-total{color:#C0392B!important;}
-.cfg-save{background:linear-gradient(120deg,#96281B,#C0392B)!important;border-color:#C0392B!important;}
-.success-title{color:#27ae60!important;}
-.success-order-id{color:#C0392B!important;}
-.mstat-val{color:#C0392B!important;}
-.cart-total-row span:last-child{color:#C0392B!important;}
-.id-avatar{background:linear-gradient(120deg,#96281B,#C0392B)!important;}
-.av{background:linear-gradient(120deg,#96281B,#C0392B)!important;}
+/* ── Settings page card overrides ── */
+.settings-section-card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+.settings-section-title {
+  font-size: 13px; font-weight: 700;
+  color: var(--red-600); margin-bottom: 14px;
+}
 
+/* ── Mode toggle ── */
+.mode-toggle-bar {
+  display: flex; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.mode-btn {
+  flex: 1; padding: 11px; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.mode-btn.active {
+  background: linear-gradient(135deg, var(--red-700), var(--red-500));
+  color: #fff;
+}
+.mode-btn.inactive {
+  background: var(--gray-100); color: var(--text-3);
+}
+
+/* ── GPS status pill ── */
+.gps-pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 11px;
+  background: var(--red-50);
+  border: 1px solid var(--border-red);
+  border-radius: var(--r-md);
+  margin-bottom: 9px; font-size: 12px; color: var(--text-3);
+}
+
+/* ── Utility classes ── */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.chip-red { background: var(--red-50); color: var(--red-700); border: 1px solid var(--border-red); }
+.chip-green { background: var(--green-bg); color: var(--green-text); border: 1px solid rgba(22,163,74,0.2); }
+
+/* section divider */
+.sec-label {
+  font-size: 11px; font-weight: 700; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.7px;
+  padding: 10px 16px 6px;
+}
+
+/* ── Pay label ── */
+.pay-total { color: var(--red-500) !important; }
+
+/* ── FAB buttons ── */
+.fab-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 1px solid var(--border-red);
+  background: var(--surface); cursor: pointer;
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--red-600);
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.fab-btn:hover { box-shadow: var(--shadow-lg); transform: scale(1.05); }
+
+/* ── Input with icon ── */
+.input-icon-wrap { position: relative; }
+.input-icon-wrap input { padding-left: 38px !important; }
+.input-icon {
+  position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-4); pointer-events: none;
+}
+
+/* ── Search wrap ── */
+.search-wrap { position: relative; }
+.search-wrap input { padding-left: 38px !important; }
+.search-icon {
+  position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-4); pointer-events: none;
+}
+
+/* ── Info banner ── */
+.info-banner {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 14px;
+  background: var(--red-50);
+  border-bottom: 1px solid var(--border-red);
+  font-size: 12px; color: var(--text-3); flex-shrink: 0;
+}
+
+/* ── Bottom nav icon sizing ── */
+.bnav-icon { display: flex; align-items: center; justify-content: center; margin-bottom: 3px; color: inherit; }
+.bnav-btn svg { color: inherit; }
+
+/* ── Page title row ── */
+.page-title-row { margin-bottom: 20px; }
+.page-title { font-size: 20px; font-weight: 800; color: var(--red-500); font-family: var(--font-display); }
+.page-subtitle { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+
+/* ── Settings components ── */
+.settings-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(145deg, var(--red-700), var(--red-500));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; flex-shrink: 0; overflow: hidden;
+  border: 3px solid var(--border-red2); box-shadow: var(--shadow-red);
+}
+.settings-input {
+  width: 100%; padding: 11px 13px; border: 1.5px solid var(--border2);
+  border-radius: var(--r-md); font-family: var(--font); font-size: 14px;
+  margin-bottom: 10px; outline: none; background: var(--gray-50); color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.settings-input:focus {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.08);
+  background: var(--surface);
+}
+.btn-primary-full {
+  width: 100%; padding: 11px; border: none; border-radius: var(--r-md);
+  background: linear-gradient(135deg, var(--red-700), var(--red-500));
+  color: #fff; font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; box-shadow: var(--shadow-red);
+  transition: opacity 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-primary-full:hover { opacity: 0.9; }
+.status-text { font-size: 11px; color: var(--text-3); margin-top: 6px; text-align: center; }
+
+/* ── Account info card ── */
+.account-info-card { background: var(--red-50) !important; }
+.account-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid var(--border-red);
+}
+.account-label { font-size: 13px; color: var(--text-3); }
+.account-val { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; }
+.account-val.red { color: var(--red-500); font-weight: 700; }
+.account-val.green { color: var(--green); }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.green-dot { background: var(--green); }
+
+/* ── Logout button ── */
+.btn-logout {
+  width: 100%; padding: 14px; background: var(--surface);
+  color: var(--red-500); border: 1.5px solid var(--red-500);
+  border-radius: var(--r-md); font-family: var(--font);
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  margin-bottom: 20px; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.btn-logout:hover { background: var(--red-50); }
+
+/* ── Header button with icon+text ── */
+.hbtn { display: flex; align-items: center; gap: 5px; }
+
+/* ── cselect ── */
+.cselect {
+  width: 100%; padding: 10px 13px; border-radius: var(--r-md);
+  border: 1.5px solid var(--border2); background: var(--gray-50);
+  color: var(--text); font-family: var(--font); font-size: 13px; outline: none;
+}
+
+/* ── Coords badge ── */
+.coords-badge {
+  font-size: 11px; color: var(--text-3); margin-bottom: 12px;
+  padding: 6px 10px; background: var(--red-50);
+  border: 1px solid var(--border-red); border-radius: var(--r-sm);
+}
+
+/* ── Pin status box ── */
+.pin-status-box {
+  flex: 1; padding: 9px; background: var(--gray-50);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  font-size: 12px; color: var(--text-3); text-align: center;
+}
+
+/* ── btn-outline-red ── */
+.btn-outline-red {
+  flex: 1; padding: 9px; border-radius: var(--r-md);
+  border: 1.5px solid var(--border-red2); background: var(--red-50);
+  color: var(--red-600); font-family: var(--font);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.btn-outline-red:hover { background: var(--red-100); }
+
+/* ── photo-clear-btn ── */
+.photo-clear-btn {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(0,0,0,0.55); border: none; color: #fff;
+  width: 26px; height: 26px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+/* ── label-optional ── */
+.label-optional { font-size: 11px; color: var(--text-4); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+/* ── Success icon wrap ── */
+.success-icon-wrap {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--green), #22c55e);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; box-shadow: 0 4px 16px rgba(22,163,74,0.3);
+}
+
+/* ── Auto pin row ── */
+.auto-pin-row {
+  display: flex; align-items: center; gap: 8px; margin-top: 8px;
+  padding: 8px 10px; background: var(--red-50);
+  border: 1px solid var(--border-red); border-radius: var(--r-md);
+}
+.auto-pin-select {
+  margin-left: auto; padding: 4px 8px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-red2);
+  font-size: 12px; color: var(--red-600); font-weight: 700;
+  background: var(--surface); outline: none;
+}
 </style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
-<!-- AUTH -->
+<!-- ══════════════════════════════════════
+     SVG ICON DEFINITIONS (inline sprite)
+     ══════════════════════════════════════ -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="ic-id"       viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/><path d="M12 12v1h2"/><line x1="2" y1="10" x2="7" y2="10"/><line x1="2" y1="14" x2="7" y2="14"/></symbol>
+  <symbol id="ic-cart"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+  <symbol id="ic-map"      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></symbol>
+  <symbol id="ic-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="ic-refresh"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+  <symbol id="ic-logout"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+  <symbol id="ic-user"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="ic-pin"      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="ic-phone"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+  <symbol id="ic-lock"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="ic-camera"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+  <symbol id="ic-image"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+  <symbol id="ic-check"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="ic-close"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="ic-arrow-r"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="ic-gps"      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></symbol>
+  <symbol id="ic-route"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M6 17V8l6-4 6 3v8l-6 4-6-3z"/></symbol>
+  <symbol id="ic-play"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+  <symbol id="ic-trash"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
+  <symbol id="ic-info"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
+  <symbol id="ic-line"     viewBox="0 0 24 24" fill="currentColor"><path d="M19.952 12.475c0-4.394-4.406-7.973-9.822-7.973S.307 8.08.307 12.475c0 3.94 3.49 7.239 8.203 7.864.319.069.755.21.865.483.099.248.065.636.032.887l-.14.839c-.043.248-.197.972.851.53s5.657-3.33 7.715-5.699c1.423-1.562 2.119-3.147 2.119-4.904z"/></svg></symbol>
+  <symbol id="ic-qr"       viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="14" y1="20" x2="17" y2="20"/><line x1="20" y1="14" x2="20" y2="17"/></symbol>
+  <symbol id="ic-share"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
+  <symbol id="ic-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="ic-robot"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V5"/><circle cx="12" cy="4" r="1"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/><path d="M8 19h8"/></symbol>
+  <symbol id="ic-warning"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="ic-save"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+  <symbol id="ic-shop"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-7h16l1 7"/><path d="M3 9a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0 3 3"/><path d="M5 21V12h4v9"/><path d="M15 21v-5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v5"/><line x1="3" y1="21" x2="21" y2="21"/></symbol>
+  <symbol id="ic-success"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+  <symbol id="ic-clipboard"viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></symbol>
+  <symbol id="ic-transfer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></symbol>
+</svg>
+
+<!-- AUTH SCREEN -->
 <div id="auth-screen">
   <div class="auth-wrap">
     <div class="auth-logo">
-      <div class="auth-logo-icon">💼</div>
-      <h1 style="font-family:Prompt,sans-serif;color:#C0392B">มนชิน ซัพพลาย</h1>
-      <p style="color:#888">ระบบเซล · จังหวัดแพร่</p>
+      <div class="auth-logo-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+      </div>
+      <h1>มนชิน ซัพพลาย</h1>
+      <p>ระบบเซล · จังหวัดแพร่</p>
     </div>
     <div class="auth-card">
       <div class="auth-tabs">
@@ -282,27 +970,69 @@ html,body{
       <!-- Login -->
       <div class="auth-form active" id="af-login">
         <div class="auth-msg" id="login-msg"></div>
-        <div class="afield"><label>Username</label><input type="text" id="l-user" placeholder="กรอก username" autocomplete="username"></div>
-        <div class="afield"><label>Password</label><input type="password" id="l-pass" placeholder="รหัสผ่าน" autocomplete="current-password"></div>
+        <div class="afield">
+          <label>Username</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16"><use href="#ic-user"/></svg>
+            <input type="text" id="l-user" placeholder="กรอก username" autocomplete="username">
+          </div>
+        </div>
+        <div class="afield">
+          <label>Password</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16"><use href="#ic-lock"/></svg>
+            <input type="password" id="l-pass" placeholder="รหัสผ่าน" autocomplete="current-password">
+          </div>
+        </div>
         <button class="auth-btn" id="l-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
       </div>
       <!-- Register -->
       <div class="auth-form" id="af-register">
         <div class="auth-msg" id="reg-msg"></div>
-        <div class="afield"><label>ชื่อ-นามสกุล</label><input type="text" id="r-name" placeholder="เช่น สมชาย ใจดี"></div>
-        <div class="afield"><label>เบอร์โทร</label><input type="tel" id="r-phone" placeholder="0812345678"></div>
-        <div class="afield"><label>Username</label><input type="text" id="r-user" placeholder="ตัวอักษร+ตัวเลข อย่างน้อย 3 ตัว"></div>
-        <div class="afield"><label>Password</label><input type="password" id="r-pass" placeholder="อย่างน้อย 6 ตัว"></div>
-        <div class="afield"><label>ยืนยัน Password</label><input type="password" id="r-pass2" placeholder="กรอกซ้ำ"></div>
+        <div class="afield">
+          <label>ชื่อ-นามสกุล</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16"><use href="#ic-user"/></svg>
+            <input type="text" id="r-name" placeholder="เช่น สมชาย ใจดี">
+          </div>
+        </div>
+        <div class="afield">
+          <label>เบอร์โทร</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16"><use href="#ic-phone"/></svg>
+            <input type="tel" id="r-phone" placeholder="0812345678">
+          </div>
+        </div>
+        <div class="afield">
+          <label>Username</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16"><use href="#ic-user"/></svg>
+            <input type="text" id="r-user" placeholder="ตัวอักษร+ตัวเลข อย่างน้อย 3 ตัว">
+          </div>
+        </div>
+        <div class="afield">
+          <label>Password</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16"><use href="#ic-lock"/></svg>
+            <input type="password" id="r-pass" placeholder="อย่างน้อย 6 ตัว">
+          </div>
+        </div>
+        <div class="afield">
+          <label>ยืนยัน Password</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16"><use href="#ic-lock"/></svg>
+            <input type="password" id="r-pass2" placeholder="กรอกซ้ำ">
+          </div>
+        </div>
         <button class="auth-btn" id="r-btn" onclick="doRegister()">สมัครและรับรหัสเซล</button>
       </div>
-      
     </div>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app">
+  <!-- Header -->
   <div class="hdr">
     <div class="hdr-left">
       <div class="av" id="hdr-av">?</div>
@@ -312,8 +1042,13 @@ html,body{
       </div>
     </div>
     <div class="hdr-right">
-      <button class="hbtn" id="refresh-btn" onclick="doRefresh()" title="รีเฟรช">↻</button>
-      <button class="hbtn" onclick="doLogout()">ออก</button>
+      <button class="hbtn" id="refresh-btn" onclick="doRefresh()" title="รีเฟรช">
+        <svg width="15" height="15"><use href="#ic-refresh"/></svg>
+      </button>
+      <button class="hbtn" onclick="doLogout()">
+        <svg width="15" height="15"><use href="#ic-logout"/></svg>
+        <span>ออก</span>
+      </button>
     </div>
   </div>
 
@@ -324,74 +1059,89 @@ html,body{
 
   <div class="page" id="page-sell" style="overflow:hidden;display:none;flex-direction:column;">
     <!-- mode toggle -->
-    <div style="display:flex;background:#fff;border-bottom:2px solid rgba(192,57,43,.15);flex-shrink:0;">
-      <button id="mode-liff-btn" onclick="setSellMode('liff')" style="flex:1;padding:10px;border:none;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
-        📱 สั่งผ่าน LINE OA
+    <div class="mode-toggle-bar">
+      <button id="mode-liff-btn" onclick="setSellMode('liff')" class="mode-btn active">
+        <svg width="16" height="16" style="margin-right:6px;vertical-align:-3px"><use href="#ic-line"/></svg>สั่งผ่าน LINE OA
       </button>
-      <button id="mode-local-btn" onclick="setSellMode('local')" style="flex:1;padding:10px;border:none;background:#f5f5f5;color:#888;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;">
-        🛒 สั่งแทนลูกค้า
+      <button id="mode-local-btn" onclick="setSellMode('local')" class="mode-btn inactive">
+        <svg width="16" height="16" style="margin-right:6px;vertical-align:-3px"><use href="#ic-shop"/></svg>สั่งแทนลูกค้า
       </button>
     </div>
-
     <!-- LIFF iframe mode -->
     <div id="sell-liff" style="flex:1;display:flex;flex-direction:column;">
-      <div style="padding:10px 14px;background:#FDF0EF;border-bottom:1px solid rgba(192,57,43,.15);font-size:12px;color:#888;flex-shrink:0;">
-        💡 ลูกค้าสั่งผ่านหน้าร้าน LINE OA — ระบบจะรู้ว่าคุณเป็นผู้แนะนำ
+      <div class="info-banner">
+        <svg width="14" height="14" style="flex-shrink:0;opacity:.7"><use href="#ic-info"/></svg>
+        ลูกค้าสั่งผ่านหน้าร้าน LINE OA — ระบบจะรู้ว่าคุณเป็นผู้แนะนำ
       </div>
       <iframe id="liff-iframe" src="" style="flex:1;border:none;width:100%;" allow="camera;microphone;geolocation"></iframe>
     </div>
-
     <!-- Local product mode -->
     <div id="sell-local" style="flex:1;overflow:hidden;display:none;flex-direction:column;">
       <div class="sell-search">
-        <input type="text" id="prod-search" placeholder="🔍 ค้นหาสินค้า..." oninput="filterProducts()">
+        <div class="search-wrap">
+          <svg class="search-icon" width="16" height="16"><use href="#ic-shop"/></svg>
+          <input type="text" id="prod-search" placeholder="ค้นหาสินค้า..." oninput="filterProducts()">
+        </div>
       </div>
       <div style="flex:1;overflow-y:auto;padding-bottom:70px;">
         <div class="product-grid" id="product-grid"></div>
       </div>
       <div class="cart-bar">
         <div class="cart-bar-left" onclick="openCart()" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex:1;">
-          <span style="font-size:20px">🛒</span>
+          <svg width="20" height="20" style="color:var(--text-3)"><use href="#ic-cart"/></svg>
           <span class="cart-badge" id="cart-badge">0</span>
-          <span style="font-size:13px;color:var(--muted)">รายการสินค้า</span>
+          <span style="font-size:13px;color:var(--text-3)">รายการสินค้า</span>
           <div class="cart-bar-total" id="cart-bar-total" style="margin-left:auto;padding-right:10px;">฿0</div>
         </div>
-        <button class="cart-bar-btn" onclick="openCart()">สั่งซื้อ</button>
+        <button class="cart-bar-btn" onclick="openCart()">
+          <svg width="14" height="14" style="margin-right:5px;vertical-align:-2px"><use href="#ic-cart"/></svg>สั่งซื้อ
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Map page -->
   <div class="page" id="page-map" style="overflow:hidden;display:none;flex-direction:column;">
     <div id="sales-map" style="flex:1;position:relative;"></div>
-    <!-- FAB buttons -->
     <div style="position:absolute;right:12px;bottom:200px;z-index:500;display:flex;flex-direction:column;gap:8px;">
-      <button onclick="centerGPS()" title="ตำแหน่งของฉัน" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(192,57,43,.3);background:#fff;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);">📡</button>
-      <button onclick="calcRouteFromMe()" title="เส้นทางจากตำแหน่งฉัน" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(192,57,43,.3);background:#fff;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);">🧭</button>
+      <button onclick="centerGPS()" title="ตำแหน่งของฉัน" class="fab-btn">
+        <svg width="18" height="18"><use href="#ic-gps"/></svg>
+      </button>
+      <button onclick="calcRouteFromMe()" title="เส้นทางจากตำแหน่งฉัน" class="fab-btn">
+        <svg width="18" height="18"><use href="#ic-route"/></svg>
+      </button>
     </div>
     <div class="map-bottom">
-      <!-- GPS status -->
-      <div id="gps-status" style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:#FDF0EF;border-radius:8px;margin-bottom:8px;font-size:12px;color:#888;">
-        <div id="gps-dot" style="width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;"></div>
+      <div id="gps-status" class="gps-pill">
+        <div id="gps-dot" style="width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;"></div>
         <span id="gps-text">กำลังหาตำแหน่ง GPS...</span>
       </div>
       <div class="map-stats">
-        <div class="mstat"><div class="mstat-val" id="m-dist">0.0</div><div class="mstat-lbl">กม.</div></div>
+        <div class="mstat"><div class="mstat-val" id="m-dist">0.0</div><div class="mstat-lbl">กิโลเมตร</div></div>
         <div class="mstat"><div class="mstat-val" id="m-stops">0</div><div class="mstat-lbl">จุดแวะ</div></div>
         <div class="mstat"><div class="mstat-val" id="m-cost">0</div><div class="mstat-lbl">บาท (น้ำมัน)</div></div>
       </div>
       <div class="map-btns">
-        <button class="mbtn" onclick="pinFromGPS()" id="btn-pin-gps" style="background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border-color:#C0392B;">📡 ปักที่นี่</button>
-        <button class="mbtn" onclick="toggleAddPin()" id="btn-pin-manual">📍 ปักเอง</button>
-        <button class="mbtn primary" onclick="calcRoute()">▶ คำนวณ</button>
-        <button class="mbtn success" onclick="clearRoute()">✕ ล้าง</button>
+        <button class="mbtn primary" onclick="pinFromGPS()" id="btn-pin-gps">
+          <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px"><use href="#ic-gps"/></svg>ปักที่นี่
+        </button>
+        <button class="mbtn" onclick="toggleAddPin()" id="btn-pin-manual">
+          <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px"><use href="#ic-pin"/></svg>ปักเอง
+        </button>
+        <button class="mbtn primary" onclick="calcRoute()">
+          <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px"><use href="#ic-play"/></svg>คำนวณ
+        </button>
+        <button class="mbtn success" onclick="clearRoute()">
+          <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px"><use href="#ic-close"/></svg>ล้าง
+        </button>
       </div>
-      <!-- auto-stop settings -->
-      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:7px 10px;background:#FDF0EF;border-radius:8px;">
+      <div class="auto-pin-row">
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
-          <input type="checkbox" id="auto-pin-toggle" onchange="toggleAutoPin(this.checked)" style="accent-color:#C0392B;">
-          <span>🤖 ปักหมุดอัตโนมัติเมื่อหยุดนาน</span>
+          <input type="checkbox" id="auto-pin-toggle" onchange="toggleAutoPin(this.checked)" style="accent-color:var(--red-500);">
+          <svg width="14" height="14" style="color:var(--text-3)"><use href="#ic-robot"/></svg>
+          <span>ปักหมุดอัตโนมัติเมื่อหยุดนาน</span>
         </label>
-        <select id="auto-pin-mins" style="margin-left:auto;padding:3px 6px;border-radius:6px;border:1px solid rgba(192,57,43,.3);font-size:12px;color:#C0392B;font-weight:700;">
+        <select id="auto-pin-mins" class="auto-pin-select">
           <option value="5">5 นาที</option>
           <option value="10" selected>10 นาที</option>
           <option value="20">20 นาที</option>
@@ -400,83 +1150,93 @@ html,body{
     </div>
   </div>
 
-  <!-- Page: Settings -->
+  <!-- Settings page -->
   <div class="page" id="page-settings" style="overflow-y:auto;display:none;-webkit-overflow-scrolling:touch;">
     <div style="padding:16px;max-width:500px;margin:0 auto;">
-
-      <!-- Header -->
-      <div style="margin-bottom:20px;">
-        <div style="font-size:20px;font-weight:800;color:#C0392B;font-family:var(--font);">⚙️ ตั้งค่าบัญชี</div>
-        <div style="font-size:12px;color:#888;margin-top:2px;">แก้ไขข้อมูลส่วนตัวของคุณ</div>
+      <div class="page-title-row">
+        <div class="page-title">ตั้งค่าบัญชี</div>
+        <div class="page-subtitle">แก้ไขข้อมูลส่วนตัวของคุณ</div>
       </div>
 
       <!-- รูปโปรไฟล์ -->
-      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
-        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:14px;">📷 รูปโปรไฟล์</div>
+      <div class="settings-section-card">
+        <div class="settings-section-title">
+          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-camera"/></svg>รูปโปรไฟล์
+        </div>
         <div style="display:flex;align-items:center;gap:16px;">
-          <div id="settings-avatar-preview" style="width:72px;height:72px;border-radius:50%;background:#C0392B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;flex-shrink:0;overflow:hidden;border:3px solid rgba(192,57,43,.3);"></div>
+          <div id="settings-avatar-preview" class="settings-avatar"></div>
           <div style="flex:1;">
             <input type="file" id="settings-photo-input" accept="image/*" style="display:none" onchange="handleSettingsPhotoChange(this)">
-            <button onclick="document.getElementById('settings-photo-input').click()" style="width:100%;padding:10px;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
-              📤 เปลี่ยนรูปโปรไฟล์
+            <button onclick="document.getElementById('settings-photo-input').click()" class="btn-primary-full">
+              <svg width="14" height="14" style="margin-right:6px;vertical-align:-2px"><use href="#ic-camera"/></svg>เปลี่ยนรูปโปรไฟล์
             </button>
-            <div id="settings-photo-status" style="font-size:11px;color:#888;margin-top:6px;text-align:center;"></div>
+            <div id="settings-photo-status" class="status-text"></div>
           </div>
         </div>
       </div>
 
       <!-- ชื่อ-นามสกุล -->
-      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
-        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:14px;">👤 ชื่อ-นามสกุล</div>
-        <input id="settings-name-input" type="text" placeholder="ชื่อ-นามสกุล" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none;">
-        <button onclick="saveSettingsName()" style="width:100%;padding:11px;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
-          💾 บันทึกชื่อ
+      <div class="settings-section-card">
+        <div class="settings-section-title">
+          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-user"/></svg>ชื่อ-นามสกุล
+        </div>
+        <input id="settings-name-input" type="text" placeholder="ชื่อ-นามสกุล" class="settings-input">
+        <button onclick="saveSettingsName()" class="btn-primary-full">
+          <svg width="14" height="14" style="margin-right:6px;vertical-align:-2px"><use href="#ic-save"/></svg>บันทึกชื่อ
         </button>
-        <div id="settings-name-status" style="font-size:11px;color:#888;margin-top:6px;text-align:center;"></div>
+        <div id="settings-name-status" class="status-text"></div>
       </div>
 
       <!-- เบอร์โทร -->
-      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
-        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:14px;">📞 เบอร์โทรศัพท์</div>
-        <input id="settings-phone-input" type="tel" placeholder="เบอร์โทรศัพท์" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none;">
-        <button onclick="saveSettingsPhone()" style="width:100%;padding:11px;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
-          💾 บันทึกเบอร์โทร
+      <div class="settings-section-card">
+        <div class="settings-section-title">
+          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-phone"/></svg>เบอร์โทรศัพท์
+        </div>
+        <input id="settings-phone-input" type="tel" placeholder="เบอร์โทรศัพท์" class="settings-input">
+        <button onclick="saveSettingsPhone()" class="btn-primary-full">
+          <svg width="14" height="14" style="margin-right:6px;vertical-align:-2px"><use href="#ic-save"/></svg>บันทึกเบอร์โทร
         </button>
-        <div id="settings-phone-status" style="font-size:11px;color:#888;margin-top:6px;text-align:center;"></div>
+        <div id="settings-phone-status" class="status-text"></div>
       </div>
 
       <!-- เปลี่ยนรหัสผ่าน -->
-      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
-        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:14px;">🔐 เปลี่ยนรหัสผ่าน</div>
-        <input id="settings-pass-old" type="password" placeholder="รหัสผ่านเดิม" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:8px;box-sizing:border-box;outline:none;">
-        <input id="settings-pass-new" type="password" placeholder="รหัสผ่านใหม่" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:8px;box-sizing:border-box;outline:none;">
-        <input id="settings-pass-confirm" type="password" placeholder="ยืนยันรหัสผ่านใหม่" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none;">
-        <button onclick="saveSettingsPassword()" style="width:100%;padding:11px;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">
-          🔐 เปลี่ยนรหัสผ่าน
+      <div class="settings-section-card">
+        <div class="settings-section-title">
+          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-lock"/></svg>เปลี่ยนรหัสผ่าน
+        </div>
+        <input id="settings-pass-old" type="password" placeholder="รหัสผ่านเดิม" class="settings-input">
+        <input id="settings-pass-new" type="password" placeholder="รหัสผ่านใหม่" class="settings-input">
+        <input id="settings-pass-confirm" type="password" placeholder="ยืนยันรหัสผ่านใหม่" class="settings-input">
+        <button onclick="saveSettingsPassword()" class="btn-primary-full">
+          <svg width="14" height="14" style="margin-right:6px;vertical-align:-2px"><use href="#ic-lock"/></svg>เปลี่ยนรหัสผ่าน
         </button>
-        <div id="settings-pass-status" style="font-size:11px;color:#888;margin-top:6px;text-align:center;"></div>
+        <div id="settings-pass-status" class="status-text"></div>
       </div>
 
-      <!-- ข้อมูลบัญชี (read-only) -->
-      <div style="background:#fff8f8;border-radius:16px;padding:20px;margin-bottom:14px;border:1px solid rgba(192,57,43,.15);">
-        <div style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:12px;">📋 ข้อมูลบัญชี</div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0e0e0;">
-          <span style="font-size:13px;color:#888;">รหัสเซล</span>
-          <span id="settings-info-salesid" style="font-size:13px;font-weight:700;color:#C0392B;"></span>
+      <!-- ข้อมูลบัญชี -->
+      <div class="settings-section-card account-info-card">
+        <div class="settings-section-title">
+          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-clipboard"/></svg>ข้อมูลบัญชี
         </div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0e0e0;">
-          <span style="font-size:13px;color:#888;">Username</span>
-          <span id="settings-info-username" style="font-size:13px;font-weight:600;color:#333;"></span>
+        <div class="account-row">
+          <span class="account-label">รหัสเซล</span>
+          <span id="settings-info-salesid" class="account-val red"></span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;">
-          <span style="font-size:13px;color:#888;">สถานะ</span>
-          <span style="font-size:13px;font-weight:600;color:#27ae60;">🟢 ใช้งานอยู่</span>
+        <div class="account-row">
+          <span class="account-label">Username</span>
+          <span id="settings-info-username" class="account-val"></span>
+        </div>
+        <div class="account-row" style="border-bottom:none">
+          <span class="account-label">สถานะ</span>
+          <span class="account-val green">
+            <span class="status-dot green-dot"></span>ใช้งานอยู่
+          </span>
         </div>
       </div>
 
       <!-- ออกจากระบบ -->
-      <button onclick="doLogout()" style="width:100%;padding:14px;background:#fff;color:#C0392B;border:2px solid #C0392B;border-radius:12px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:20px;">
-        🚪 ออกจากระบบ
+      <button onclick="doLogout()" class="btn-logout">
+        <svg width="16" height="16" style="margin-right:8px;vertical-align:-3px"><use href="#ic-logout"/></svg>ออกจากระบบ
       </button>
 
     </div>
@@ -485,16 +1245,20 @@ html,body{
   <!-- Bottom Nav -->
   <div class="bnav">
     <button class="bnav-btn active" id="nav-id" onclick="switchPage('id')">
-      <span class="bnav-icon">🪪</span>บัตรเซล
+      <span class="bnav-icon"><svg width="22" height="22"><use href="#ic-id"/></svg></span>
+      <span>บัตรเซล</span>
     </button>
     <button class="bnav-btn" id="nav-sell" onclick="switchPage('sell')">
-      <span class="bnav-icon">🛒</span>ขายสินค้า
+      <span class="bnav-icon"><svg width="22" height="22"><use href="#ic-cart"/></svg></span>
+      <span>ขายสินค้า</span>
     </button>
     <button class="bnav-btn" id="nav-map" onclick="switchPage('map')">
-      <span class="bnav-icon">🗺️</span>เส้นทาง
+      <span class="bnav-icon"><svg width="22" height="22"><use href="#ic-map"/></svg></span>
+      <span>เส้นทาง</span>
     </button>
     <button class="bnav-btn" id="nav-settings" onclick="switchPage('settings')">
-      <span class="bnav-icon">⚙️</span>ตั้งค่า
+      <span class="bnav-icon"><svg width="22" height="22"><use href="#ic-settings"/></svg></span>
+      <span>ตั้งค่า</span>
     </button>
   </div>
 </div>
@@ -503,36 +1267,43 @@ html,body{
 <div class="mov" id="pin-cust-modal">
   <div class="mbox">
     <div class="mhdr">
-      <h2>📍 เพิ่มลูกค้าใหม่</h2>
-      <div class="mclose" onclick="closePinCustModal()">×</div>
+      <h2><svg width="16" height="16" style="vertical-align:-3px;margin-right:6px"><use href="#ic-pin"/></svg>เพิ่มลูกค้าใหม่</h2>
+      <div class="mclose" onclick="closePinCustModal()"><svg width="14" height="14"><use href="#ic-close"/></svg></div>
     </div>
-    <div id="pin-cust-coords" style="font-size:11px;color:#888;margin-bottom:12px;padding:6px 10px;background:#FDF0EF;border-radius:8px;"></div>
+    <div id="pin-cust-coords" class="coords-badge"></div>
     <div class="cfield"><label>ชื่อ / ชื่อร้าน *</label><input type="text" id="pc-name" placeholder="เช่น ร้านสมชาย, คุณมาลี"></div>
     <div class="cfield"><label>เบอร์โทร</label><input type="tel" id="pc-phone" placeholder="0812345678"></div>
-    <div class="cfield"><label>ประเภท</label>
-      <select id="pc-type" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(192,57,43,.25);background:#fff;color:#1a1a1a;font-family:var(--font);font-size:13px;outline:none;">
-        <option value="shop">🏪 ร้านค้า</option>
-        <option value="home">🏠 บ้าน</option>
-        <option value="business">🏢 ธุรกิจ</option>
-        <option value="other">📍 อื่นๆ</option>
+    <div class="cfield">
+      <label>ประเภท</label>
+      <select id="pc-type" class="cselect">
+        <option value="shop">ร้านค้า</option>
+        <option value="home">บ้าน</option>
+        <option value="business">ธุรกิจ</option>
+        <option value="other">อื่นๆ</option>
       </select>
     </div>
-    <div class="cfield"><label>หมายเหตุ</label><textarea id="pc-note" placeholder="สินค้าที่สนใจ, วันนัด, ข้อมูลเพิ่มเติม..." style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(192,57,43,.25);background:#fff;color:#1a1a1a;font-family:var(--font);font-size:13px;outline:none;resize:none;height:70px;"></textarea></div>
+    <div class="cfield"><label>หมายเหตุ</label><textarea id="pc-note" placeholder="สินค้าที่สนใจ, วันนัด, ข้อมูลเพิ่มเติม..."></textarea></div>
     <div class="cfield">
-      <label>📸 รูปสถานที่ <span style="font-size:11px;color:#aaa;font-weight:400;">(ไม่บังคับ)</span></label>
+      <label>รูปสถานที่ <span class="label-optional">(ไม่บังคับ)</span></label>
       <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <button type="button" onclick="document.getElementById('pc-photo-input').click()" style="flex:1;padding:9px;border-radius:9px;border:1.5px solid rgba(192,57,43,.3);background:#fff8f8;color:#C0392B;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">🖼️ เลือกรูป</button>
-        <button type="button" onclick="document.getElementById('pc-camera-input').click()" style="flex:1;padding:9px;border-radius:9px;border:1.5px solid rgba(192,57,43,.3);background:#fff8f8;color:#C0392B;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">📷 ถ่ายรูป</button>
+        <button type="button" onclick="document.getElementById('pc-photo-input').click()" class="btn-outline-red">
+          <svg width="14" height="14" style="margin-right:5px;vertical-align:-2px"><use href="#ic-image"/></svg>เลือกรูป
+        </button>
+        <button type="button" onclick="document.getElementById('pc-camera-input').click()" class="btn-outline-red">
+          <svg width="14" height="14" style="margin-right:5px;vertical-align:-2px"><use href="#ic-camera"/></svg>ถ่ายรูป
+        </button>
       </div>
       <input type="file" id="pc-photo-input" accept="image/*" style="display:none;" onchange="onPinPhotoSelected(this)">
       <input type="file" id="pc-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="onPinPhotoSelected(this)">
       <div id="pc-photo-preview" style="display:none;position:relative;border-radius:10px;overflow:hidden;margin-top:4px;">
         <img id="pc-photo-img" src="" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;display:block;">
-        <button type="button" onclick="clearPinPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;color:#fff;width:26px;height:26px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+        <button type="button" onclick="clearPinPhoto()" class="photo-clear-btn"><svg width="12" height="12"><use href="#ic-close"/></svg></button>
       </div>
-      <div id="pc-photo-status" style="font-size:11px;color:#888;margin-top:4px;display:none;"></div>
+      <div id="pc-photo-status" class="status-text" style="display:none;"></div>
     </div>
-    <button class="confirm-btn" id="pc-save-btn" onclick="savePinCustomer()">✅ บันทึกลูกค้า</button>
+    <button class="confirm-btn" id="pc-save-btn" onclick="savePinCustomer()">
+      <svg width="15" height="15" style="margin-right:6px;vertical-align:-3px"><use href="#ic-check"/></svg>บันทึกลูกค้า
+    </button>
   </div>
 </div>
 
@@ -541,7 +1312,7 @@ html,body{
   <div class="mbox">
     <div class="mhdr">
       <h2>เลือกขนาด</h2>
-      <div class="mclose" onclick="document.getElementById('size-modal').classList.remove('show')">×</div>
+      <div class="mclose" onclick="document.getElementById('size-modal').classList.remove('show')"><svg width="14" height="14"><use href="#ic-close"/></svg></div>
     </div>
     <div id="size-modal-body"></div>
   </div>
@@ -550,33 +1321,50 @@ html,body{
 <!-- CART MODAL -->
 <div class="mov" id="cart-modal">
   <div class="mbox">
-    <div class="mhdr"><h2>🛒 ตะกร้าสินค้า</h2><div class="mclose" onclick="closeCart()">×</div></div>
+    <div class="mhdr">
+      <h2><svg width="16" height="16" style="vertical-align:-3px;margin-right:6px"><use href="#ic-cart"/></svg>ตะกร้าสินค้า</h2>
+      <div class="mclose" onclick="closeCart()"><svg width="14" height="14"><use href="#ic-close"/></svg></div>
+    </div>
     <div id="cart-items"></div>
-    <div class="cart-total-row"><span>รวม</span><span id="cart-total">฿0</span></div>
-    <button class="confirm-btn" onclick="goToCheckout()">ถัดไป — กรอกข้อมูลลูกค้า →</button>
+    <div class="cart-total-row"><span>รวมทั้งหมด</span><span id="cart-total">฿0</span></div>
+    <button class="confirm-btn" onclick="goToCheckout()">
+      ถัดไป — กรอกข้อมูลลูกค้า
+      <svg width="15" height="15" style="margin-left:6px;vertical-align:-3px"><use href="#ic-arrow-r"/></svg>
+    </button>
   </div>
 </div>
 
 <!-- CHECKOUT MODAL -->
 <div class="mov" id="checkout-modal">
   <div class="mbox">
-    <div class="mhdr"><h2>📋 ข้อมูลลูกค้า</h2><div class="mclose" onclick="closeCheckout()">×</div></div>
-    <div class="pin-hint">📍 แตะปุ่มด้านล่างเพื่อปักหมุดที่อยู่บนแผนที่</div>
+    <div class="mhdr">
+      <h2><svg width="16" height="16" style="vertical-align:-3px;margin-right:6px"><use href="#ic-clipboard"/></svg>ข้อมูลลูกค้า</h2>
+      <div class="mclose" onclick="closeCheckout()"><svg width="14" height="14"><use href="#ic-close"/></svg></div>
+    </div>
+    <div class="pin-hint">
+      <svg width="14" height="14" style="flex-shrink:0"><use href="#ic-warning"/></svg>
+      แตะปุ่มด้านล่างเพื่อปักหมุดที่อยู่บนแผนที่
+    </div>
     <div class="cfield"><label>ชื่อลูกค้า *</label><input type="text" id="c-name" placeholder="ชื่อ-นามสกุล หรือชื่อร้าน"></div>
     <div class="cfield"><label>เบอร์โทร</label><input type="tel" id="c-phone" placeholder="0812345678"></div>
     <div class="cfield"><label>ที่อยู่</label><input type="text" id="c-addr" placeholder="บ้านเลขที่ / หมู่บ้าน / ตำบล"></div>
     <div class="cfield"><label>หมายเหตุ</label><textarea id="c-note" placeholder="สินค้าที่สนใจ วันนัด ฯลฯ"></textarea></div>
-    <div class="cfield"><label>การชำระเงิน</label>
-      <select id="c-payment">
+    <div class="cfield">
+      <label>การชำระเงิน</label>
+      <select id="c-payment" class="cselect">
         <option value="cod">เงินปลายทาง (COD)</option>
         <option value="transfer">โอนเงิน</option>
       </select>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:14px;">
-      <button class="mbtn" style="flex:1" onclick="openPinMap()">📍 ปักหมุดที่อยู่</button>
-      <div id="pin-status" style="flex:1;padding:9px;background:var(--bg3);border-radius:10px;font-size:12px;color:var(--muted);text-align:center;">ยังไม่ปักหมุด</div>
+      <button class="mbtn" style="flex:1" onclick="openPinMap()">
+        <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px"><use href="#ic-pin"/></svg>ปักหมุดที่อยู่
+      </button>
+      <div id="pin-status" class="pin-status-box">ยังไม่ปักหมุด</div>
     </div>
-    <button class="confirm-btn" id="submit-btn" onclick="submitOrder()">✅ ยืนยันออเดอร์</button>
+    <button class="confirm-btn" id="submit-btn" onclick="submitOrder()">
+      <svg width="15" height="15" style="margin-right:6px;vertical-align:-3px"><use href="#ic-check"/></svg>ยืนยันออเดอร์
+    </button>
   </div>
 </div>
 
@@ -585,7 +1373,9 @@ html,body{
   <div id="pin-map"></div>
   <div class="pin-map-bar">
     <div class="pin-map-info">
-      <div style="font-size:13px;font-weight:600;">📍 ปักหมุด ณ ตำแหน่งปัจจุบัน — ลากหมุดหรือแตะแผนที่เพื่อปรับ</div>
+      <div style="font-size:13px;font-weight:600;">
+        <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px;color:var(--red-500)"><use href="#ic-pin"/></svg>ปักหมุด ณ ตำแหน่งปัจจุบัน — ลากหมุดหรือแตะแผนที่เพื่อปรับ
+      </div>
       <div class="pin-map-coords" id="pin-coords">ยังไม่ได้เลือก</div>
     </div>
     <button class="mbtn primary" onclick="confirmPin()" style="flex:0;padding:9px 16px;">ยืนยัน</button>
@@ -597,32 +1387,37 @@ html,body{
 <div class="mov center" id="success-modal">
   <div class="mbox center-box">
     <div class="success-card">
-      <div class="success-icon">🎉</div>
+      <div class="success-icon-wrap">
+        <svg width="44" height="44" style="color:#fff"><use href="#ic-success"/></svg>
+      </div>
       <div class="success-title">สั่งซื้อสำเร็จ!</div>
       <div class="success-sub">ออเดอร์ถูกส่งไปยัง Admin แล้ว</div>
       <div class="success-order-id" id="success-order-id">—</div>
-      <div class="success-sub" style="margin-top:4px">ออเดอร์นี้อ้างอิงถึงคุณเลย ✅</div>
+      <div class="success-sub" style="margin-top:4px">ออเดอร์นี้อ้างอิงถึงคุณเลย</div>
     </div>
-    <button class="confirm-btn" onclick="closeSuccess()">กลับหน้าขาย</button>
+    <button class="confirm-btn" onclick="closeSuccess()">
+      <svg width="15" height="15" style="margin-right:6px;vertical-align:-3px"><use href="#ic-cart"/></svg>กลับหน้าขาย
+    </button>
   </div>
 </div>
 
 <!-- CFG MODAL -->
 <div id="cfg-modal" style="display:none!important">
   <div class="cfg-box">
-    <h2>⚙️ ตั้งค่า GAS URL</h2>
+    <h2>ตั้งค่า GAS URL</h2>
     <div class="cfg-field">
       <label>GAS Web App URL</label>
       <input type="url" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec">
     </div>
     <div class="cfg-btns">
-      <button onclick="closeCfg()" style="background:var(--bg3);">ยกเลิก</button>
+      <button onclick="closeCfg()">ยกเลิก</button>
       <button class="cfg-save" onclick="saveCfg()">บันทึก</button>
     </div>
   </div>
 </div>
 
 <div id="toast"></div>
+
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -861,7 +1656,7 @@ async function doRefresh() {
       indicator = document.createElement('div');
       indicator.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:8000;' +
         'display:flex;align-items:center;justify-content:center;' +
-        'background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;' +
+        'background:linear-gradient(120deg,var(--red-700),var(--red-500));color:#fff;' +
         'font-family:Sarabun,sans-serif;font-size:13px;font-weight:700;' +
         'padding:10px;transform:translateY(-100%);transition:transform .2s;' +
         'box-shadow:0 2px 8px rgba(192,57,43,.4);';
@@ -987,7 +1782,7 @@ function renderIdCard() {
           ${avatarHtml}
           <button onclick="document.getElementById('photo-input').click()"
             style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;
-                   background:#C0392B;border:2px solid #fff;color:#fff;font-size:11px;
+                   background:var(--red-500);border:2px solid #fff;color:#fff;font-size:11px;
                    cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">
             📷
           </button>
@@ -1023,33 +1818,33 @@ function renderIdCard() {
     </div>
 
     <!-- ══ ยอดขาย Dashboard ══ -->
-    <div style="margin-top:14px;background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
-      <div style="font-size:14px;font-weight:800;color:#C0392B;margin-bottom:12px;">📊 ยอดขายของฉัน</div>
+    <div style="margin-top:14px;background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid var(--border-red);">
+      <div style="font-size:14px;font-weight:800;color:var(--red-500);margin-bottom:12px;">📊 ยอดขายของฉัน</div>
 
       <!-- แท็บ วันนี้ / เดือนนี้ / ทั้งหมด -->
       <div style="display:flex;gap:6px;margin-bottom:12px;" id="stats-tab-group">
         <button onclick="switchStatsTab('today')" id="stab-today"
-          style="flex:1;padding:7px;border-radius:8px;border:none;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#C0392B;color:#fff;">
+          style="flex:1;padding:7px;border-radius:8px;border:none;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:var(--red-500);color:#fff;">
           วันนี้
         </button>
         <button onclick="switchStatsTab('month')" id="stab-month"
-          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid #C0392B;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:#C0392B;">
+          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid var(--red-500);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:var(--red-500);">
           เดือนนี้
         </button>
         <button onclick="switchStatsTab('all')" id="stab-all"
-          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid #C0392B;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:#C0392B;">
+          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid var(--red-500);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:var(--red-500);">
           ทั้งหมด
         </button>
       </div>
 
       <!-- สรุปตัวเลข -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-        <div style="background:#fff8f8;border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(192,57,43,.15);">
-          <div id="ds-orders" style="font-size:22px;font-weight:800;color:#C0392B;font-family:var(--font);">—</div>
+        <div style="background:var(--red-50);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--border-red);">
+          <div id="ds-orders" style="font-size:22px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
           <div style="font-size:11px;color:#888;margin-top:2px;">จำนวนออเดอร์</div>
         </div>
-        <div style="background:#fff8f8;border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(192,57,43,.15);">
-          <div id="ds-revenue" style="font-size:18px;font-weight:800;color:#C0392B;font-family:var(--font);">—</div>
+        <div style="background:var(--red-50);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--border-red);">
+          <div id="ds-revenue" style="font-size:18px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
           <div style="font-size:11px;color:#888;margin-top:2px;">ยอดขาย (฿)</div>
         </div>
       </div>
@@ -1071,10 +1866,10 @@ function renderIdCard() {
     </div>
 
     <!-- ══ ลูกค้าของฉัน ══ -->
-    <div style="margin-top:14px;background:#fff;border-radius:16px;padding:16px;margin-bottom:80px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(192,57,43,.1);">
+    <div style="margin-top:14px;background:#fff;border-radius:16px;padding:16px;margin-bottom:80px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid var(--border-red);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div style="font-size:14px;font-weight:800;color:#C0392B;">📍 ลูกค้าของฉัน</div>
-        <div id="customer-count" style="background:#C0392B;color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;">0 ราย</div>
+        <div style="font-size:14px;font-weight:800;color:var(--red-500);">📍 ลูกค้าของฉัน</div>
+        <div id="customer-count" style="background:var(--red-500);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;">0 ราย</div>
       </div>
       <div id="customers-list" style="font-size:12px;color:#888;">⏳ กำลังโหลด...</div>
     </div>`;
@@ -1119,8 +1914,8 @@ function printSalesCard() {
   const qrCanvas = document.querySelector('#qr-canvas canvas') || document.querySelector('#qr-canvas img');
   const qrSrc = qrCanvas ? (qrCanvas.tagName === 'CANVAS' ? qrCanvas.toDataURL() : qrCanvas.src) : '';
   const avatarHtml = photo
-    ? `<img src="${photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #C0392B;">`
-    : `<div style="width:80px;height:80px;border-radius:50%;background:#C0392B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;">${s.name[0]}</div>`;
+    ? `<img src="${photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--red-500);">`
+    : `<div style="width:80px;height:80px;border-radius:50%;background:var(--red-500);color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;">${s.name[0]}</div>`;
 
   // สร้าง modal overlay แทน popup window
   const existing = document.getElementById('card-modal-overlay');
@@ -1134,7 +1929,7 @@ function printSalesCard() {
     <div id="card-modal-content" style="width:100%;max-width:360px;">
       <!-- ด้านหน้า -->
       <div class="print-card" style="background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.18);margin-bottom:16px;">
-        <div style="background:linear-gradient(135deg,#96281B 0%,#C0392B 50%,#E74C3C 100%);padding:20px;text-align:center;position:relative;">
+        <div style="background:linear-gradient(135deg,var(--red-700) 0%,var(--red-500) 50%,var(--red-400) 100%);padding:20px;text-align:center;position:relative;">
           <div style="font-size:24px;margin-bottom:4px;">🏪</div>
           <div style="font-family:Prompt,sans-serif;font-size:16px;font-weight:800;color:#fff;">มนชิน ซัพพลาย</div>
           <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;">Monshin Supply · จังหวัดแพร่</div>
@@ -1144,35 +1939,35 @@ function printSalesCard() {
           <div style="flex-shrink:0;">${avatarHtml}</div>
           <div style="flex:1;">
             <div style="font-family:Prompt,sans-serif;font-size:18px;font-weight:800;color:#1a1a1a;">${s.name}</div>
-            <span style="display:inline-block;background:#C0392B;color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-top:5px;">💼 ${s.salesId}</span>
+            <span style="display:inline-block;background:var(--red-500);color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-top:5px;">💼 ${s.salesId}</span>
             <div style="font-size:11px;color:#888;margin-top:5px;">พนักงานขาย · Sales Representative</div>
-            ${s.phone ? `<div style="font-size:13px;color:#C0392B;font-weight:600;margin-top:4px;">📞 ${s.phone}</div>` : ''}
+            ${s.phone ? `<div style="font-size:13px;color:var(--red-500);font-weight:600;margin-top:4px;">📞 ${s.phone}</div>` : ''}
           </div>
         </div>
-        <div style="height:1px;background:linear-gradient(90deg,transparent,#C0392B33,transparent);margin:0 20px;"></div>
+        <div style="height:1px;background:linear-gradient(90deg,transparent,var(--red-500)33,transparent);margin:0 20px;"></div>
         <div style="padding:14px 20px;display:flex;align-items:center;gap:12px;">
           <div style="background:#fff;border:1.5px solid #eee;border-radius:10px;padding:6px;flex-shrink:0;">
             ${qrSrc ? `<img src="${qrSrc}" style="display:block;width:70px;height:70px;">` : '<div style="width:70px;height:70px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#888">QR</div>'}
           </div>
           <div style="flex:1;">
             <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">สแกนเพื่อสั่งสินค้า</div>
-            <div style="font-size:10px;color:#C0392B;word-break:break-all;line-height:1.4;">${refUrl}</div>
+            <div style="font-size:10px;color:var(--red-500);word-break:break-all;line-height:1.4;">${refUrl}</div>
             <div style="font-size:10px;color:#888;margin-top:4px;">ออเดอร์อ้างอิงถึงเซลคนนี้อัตโนมัติ</div>
           </div>
         </div>
       </div>
 
       <!-- ด้านหลัง -->
-      <div class="print-card" style="background:linear-gradient(160deg,#fff 60%,#FDF0EF);border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.18);margin-bottom:16px;">
-        <div style="font-family:Prompt,sans-serif;font-size:13px;font-weight:700;color:#C0392B;margin-bottom:10px;border-bottom:2px solid #C0392B;padding-bottom:6px;">📋 ข้อมูลพนักงานขาย</div>
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">ชื่อ</span><span style="font-weight:600;color:#1a1a1a;">${s.name}</span></div>
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">รหัสเซล</span><span style="font-weight:600;color:#C0392B;font-family:Prompt,sans-serif;">${s.salesId}</span></div>
-        ${s.phone ? `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เบอร์โทร</span><span style="font-weight:600;color:#1a1a1a;">${s.phone}</span></div>` : ''}
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">LINE OA</span><span style="font-weight:600;color:#06C755;">@monshin</span></div>
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เว็บไซต์</span><span style="font-weight:600;color:#C0392B;font-size:11px;">${refUrl}</span></div>
+      <div class="print-card" style="background:linear-gradient(160deg,#fff 60%,var(--red-50));border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.18);margin-bottom:16px;">
+        <div style="font-family:Prompt,sans-serif;font-size:13px;font-weight:700;color:var(--red-500);margin-bottom:10px;border-bottom:2px solid var(--red-500);padding-bottom:6px;">📋 ข้อมูลพนักงานขาย</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">ชื่อ</span><span style="font-weight:600;color:#1a1a1a;">${s.name}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">รหัสเซล</span><span style="font-weight:600;color:var(--red-500);font-family:Prompt,sans-serif;">${s.salesId}</span></div>
+        ${s.phone ? `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เบอร์โทร</span><span style="font-weight:600;color:#1a1a1a;">${s.phone}</span></div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">LINE OA</span><span style="font-weight:600;color:#06C755;">@monshin</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เว็บไซต์</span><span style="font-weight:600;color:var(--red-500);font-size:11px;">${refUrl}</span></div>
         <div style="text-align:center;margin-top:14px;">
           <div style="font-size:24px;margin-bottom:4px;">🏪</div>
-          <div style="font-family:Prompt,sans-serif;font-size:13px;font-weight:800;color:#C0392B;">มนชิน ซัพพลาย</div>
+          <div style="font-family:Prompt,sans-serif;font-size:13px;font-weight:800;color:var(--red-500);">มนชิน ซัพพลาย</div>
           <div style="font-size:10px;color:#888;margin-top:2px;">สินค้าคุณภาพ · ราคาโรงงาน · จังหวัดแพร่</div>
         </div>
       </div>
@@ -1181,7 +1976,7 @@ function printSalesCard() {
       <button onclick="downloadCardModal()" style="width:100%;padding:14px;background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;border-radius:12px;font-family:Sarabun,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 14px rgba(39,174,96,.4);" id="modal-dl-btn">
         📥 ดาวน์โหลดรูปบัตร
       </button>
-      <button onclick="closeCardModal()" style="width:100%;padding:14px;background:#fff;color:#C0392B;border:2px solid #C0392B;border-radius:12px;font-family:Sarabun,sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
+      <button onclick="closeCardModal()" style="width:100%;padding:14px;background:#fff;color:var(--red-500);border:2px solid var(--red-500);border-radius:12px;font-family:Sarabun,sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
         ✕ ปิด
       </button>
     </div>
@@ -1349,9 +2144,9 @@ function switchStatsTab(tab) {
     const btn = document.getElementById('stab-' + t);
     if (!btn) return;
     if (t === tab) {
-      btn.style.background = '#C0392B'; btn.style.color = '#fff'; btn.style.border = 'none';
+      btn.style.background = 'var(--red-500)'; btn.style.color = '#fff'; btn.style.border = 'none';
     } else {
-      btn.style.background = '#fff'; btn.style.color = '#C0392B'; btn.style.border = '1.5px solid #C0392B';
+      btn.style.background = '#fff'; btn.style.color = 'var(--red-500)'; btn.style.border = '1.5px solid var(--red-500)';
     }
   });
   renderDashboard();
@@ -1386,7 +2181,7 @@ async function loadDashboard() {
     renderChart();
   } catch(e) {
     const ol = document.getElementById('orders-list');
-    if (ol) ol.innerHTML = '<div style="color:#C0392B;font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
+    if (ol) ol.innerHTML = '<div style="color:var(--red-500);font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
   }
   // โหลดลูกค้า (pins)
   loadCustomersList();
@@ -1440,7 +2235,7 @@ function renderDashboard() {
         <div style="color:#888;font-size:11px;">${date}</div>
       </div>
       <div style="text-align:right;">
-        <div style="font-weight:700;color:#C0392B;font-size:13px;">฿${amount}</div>
+        <div style="font-weight:700;color:var(--red-500);font-size:13px;">฿${amount}</div>
         <div style="font-size:10px;color:${statusColor};font-weight:600;">${statusText}</div>
       </div>
     </div>`;
@@ -1478,9 +2273,9 @@ function renderChart() {
     const pct = Math.max((d.total / maxVal) * 100, d.count > 0 ? 5 : 0);
     const isToday = d.date.toDateString() === new Date().toDateString();
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;">
-      <div style="font-size:9px;color:#C0392B;font-weight:700;">${d.count > 0 ? d.count : ''}</div>
+      <div style="font-size:9px;color:var(--red-500);font-weight:700;">${d.count > 0 ? d.count : ''}</div>
       <div style="flex:1;display:flex;align-items:flex-end;width:100%;">
-        <div title="฿${d.total.toLocaleString()}" style="width:100%;background:${isToday ? '#C0392B' : 'rgba(192,57,43,.3)'};border-radius:4px 4px 0 0;height:${pct}%;min-height:${d.count>0?'4px':'0'};transition:height .3s;"></div>
+        <div title="฿${d.total.toLocaleString()}" style="width:100%;background:${isToday ? 'var(--red-500)' : 'var(--border-red2)'};border-radius:4px 4px 0 0;height:${pct}%;min-height:${d.count>0?'4px':'0'};transition:height .3s;"></div>
       </div>
     </div>`;
   }).join('');
@@ -1491,7 +2286,7 @@ function renderChart() {
     labels.innerHTML = dayData.map(d => {
       const isToday = d.date.toDateString() === new Date().toDateString();
       const dayName = d.date.toLocaleDateString('th-TH',{weekday:'short'});
-      return `<div style="flex:1;text-align:center;font-size:9px;color:${isToday?'#C0392B':'#888'};font-weight:${isToday?'700':'400'};">${dayName}</div>`;
+      return `<div style="flex:1;text-align:center;font-size:9px;color:${isToday?'var(--red-500)':'#888'};font-weight:${isToday?'700':'400'};">${dayName}</div>`;
     }).join('');
   }
 }
@@ -1532,27 +2327,27 @@ async function loadCustomersList() {
         : '';
       return `<div style="background:#fafafa;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(192,57,43,.08);">
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#96281B,#C0392B);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${i+1}</div>
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red-700),var(--red-500));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${i+1}</div>
           <div style="flex:1;min-width:0;">
             <div style="font-weight:700;color:#1a1a1a;font-size:13px;">${typeIcon} ${p.name || 'ไม่ระบุชื่อ'}</div>
             ${p.address ? `<div style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.address}</div>` : ''}
           </div>
           <button onclick="openNavigation(${p.lat},${p.lng})"
-            style="padding:6px 10px;background:#fff;border:1.5px solid rgba(192,57,43,.3);border-radius:8px;font-size:11px;color:#C0392B;flex-shrink:0;font-weight:700;cursor:pointer;">
+            style="padding:6px 10px;background:#fff;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;color:var(--red-500);flex-shrink:0;font-weight:700;cursor:pointer;">
             🗺️ นำทาง
           </button>
         </div>
         ${photoSection}
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
           ${p.phone ? `<a href="tel:${p.phone}" style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:20px;font-size:11px;color:#333;text-decoration:none;">📞 ${p.phone}</a>` : ''}
-          ${orderCount > 0 ? `<span style="padding:4px 10px;background:#fff8f8;border:1px solid rgba(192,57,43,.2);border-radius:20px;font-size:11px;color:#C0392B;font-weight:600;">🧾 ${orderCount} ออเดอร์</span>` : ''}
+          ${orderCount > 0 ? `<span style="padding:4px 10px;background:var(--red-50);border:1px solid var(--border-red);border-radius:20px;font-size:11px;color:var(--red-500);font-weight:600;">🧾 ${orderCount} ออเดอร์</span>` : ''}
           ${addedDate ? `<span style="padding:4px 10px;background:#f5f5f5;border-radius:20px;font-size:11px;color:#888;">📅 เพิ่ม ${addedDate}</span>` : ''}
-          ${p.note ? `<span style="padding:4px 10px;background:#fffbf0;border:1px solid #f0e0a0;border-radius:20px;font-size:11px;color:#888;">📝 ${p.note}</span>` : ''}
+          ${p.note ? `<span style="padding:4px 10px;background:#fffbf0;border:1px solid rgba(245,158,11,0.3);border-radius:20px;font-size:11px;color:#888;">📝 ${p.note}</span>` : ''}
         </div>
       </div>`;
     }).join('');
   } catch(e) {
-    if (cl) cl.innerHTML = '<div style="color:#C0392B;font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
+    if (cl) cl.innerHTML = '<div style="color:var(--red-500);font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
   }
 }
 
@@ -1620,7 +2415,7 @@ async function handleSettingsPhotoChange(input) {
 
   } catch(e) {
     status.textContent = '❌ อัปโหลดไม่สำเร็จ ลองใหม่อีกครั้ง';
-    status.style.color = '#C0392B';
+    status.style.color = 'var(--red-500)';
     console.error('Photo upload error:', e);
   }
 }
@@ -1656,7 +2451,7 @@ function compressImage(file, maxSize, quality) {
 async function saveSettingsName() {
   const name = document.getElementById('settings-name-input').value.trim();
   const status = document.getElementById('settings-name-status');
-  if (!name) { status.textContent = '⚠️ กรุณากรอกชื่อ'; status.style.color='#C0392B'; return; }
+  if (!name) { status.textContent = '⚠️ กรุณากรอกชื่อ'; status.style.color='var(--red-500)'; return; }
   status.textContent = '⏳ กำลังบันทึก...'; status.style.color='#888';
   try {
     const data = await gasCall({ action:'adminUpdateSales', token:session.token, salesId:session.salesId, field:'name', value:name });
@@ -1667,14 +2462,14 @@ async function saveSettingsName() {
       renderIdCard();
     } else throw new Error();
   } catch(e) {
-    status.textContent = '❌ บันทึกไม่สำเร็จ'; status.style.color='#C0392B';
+    status.textContent = '❌ บันทึกไม่สำเร็จ'; status.style.color='var(--red-500)';
   }
 }
 
 async function saveSettingsPhone() {
   const phone = document.getElementById('settings-phone-input').value.trim();
   const status = document.getElementById('settings-phone-status');
-  if (!phone) { status.textContent = '⚠️ กรุณากรอกเบอร์โทร'; status.style.color='#C0392B'; return; }
+  if (!phone) { status.textContent = '⚠️ กรุณากรอกเบอร์โทร'; status.style.color='var(--red-500)'; return; }
   status.textContent = '⏳ กำลังบันทึก...'; status.style.color='#888';
   try {
     const data = await gasCall({ action:'adminUpdateSales', token:session.token, salesId:session.salesId, field:'phone', value:phone });
@@ -1685,7 +2480,7 @@ async function saveSettingsPhone() {
       renderIdCard();
     } else throw new Error();
   } catch(e) {
-    status.textContent = '❌ บันทึกไม่สำเร็จ'; status.style.color='#C0392B';
+    status.textContent = '❌ บันทึกไม่สำเร็จ'; status.style.color='var(--red-500)';
   }
 }
 
@@ -1695,9 +2490,9 @@ async function saveSettingsPassword() {
   const confirm = document.getElementById('settings-pass-confirm').value;
   const status = document.getElementById('settings-pass-status');
 
-  if (!oldPass || !newPass || !confirm) { status.textContent = '⚠️ กรุณากรอกให้ครบ'; status.style.color='#C0392B'; return; }
-  if (newPass !== confirm) { status.textContent = '⚠️ รหัสผ่านใหม่ไม่ตรงกัน'; status.style.color='#C0392B'; return; }
-  if (newPass.length < 4) { status.textContent = '⚠️ รหัสผ่านต้องมีอย่างน้อย 4 ตัว'; status.style.color='#C0392B'; return; }
+  if (!oldPass || !newPass || !confirm) { status.textContent = '⚠️ กรุณากรอกให้ครบ'; status.style.color='var(--red-500)'; return; }
+  if (newPass !== confirm) { status.textContent = '⚠️ รหัสผ่านใหม่ไม่ตรงกัน'; status.style.color='var(--red-500)'; return; }
+  if (newPass.length < 4) { status.textContent = '⚠️ รหัสผ่านต้องมีอย่างน้อย 4 ตัว'; status.style.color='var(--red-500)'; return; }
 
   status.textContent = '⏳ กำลังเปลี่ยนรหัสผ่าน...'; status.style.color='#888';
   try {
@@ -1708,10 +2503,10 @@ async function saveSettingsPassword() {
       document.getElementById('settings-pass-new').value = '';
       document.getElementById('settings-pass-confirm').value = '';
     } else {
-      status.textContent = '❌ ' + (data.message || 'รหัสผ่านเดิมไม่ถูกต้อง'); status.style.color='#C0392B';
+      status.textContent = '❌ ' + (data.message || 'รหัสผ่านเดิมไม่ถูกต้อง'); status.style.color='var(--red-500)';
     }
   } catch(e) {
-    status.textContent = '❌ เปลี่ยนไม่สำเร็จ'; status.style.color='#C0392B';
+    status.textContent = '❌ เปลี่ยนไม่สำเร็จ'; status.style.color='var(--red-500)';
   }
 }
 
@@ -1726,7 +2521,7 @@ function downloadCard(btn) {
     btn.disabled = false;
     return;
   }
-  html2canvas(cardWrap, { scale:2, useCORS:true, backgroundColor:'#f0f0f0', logging:false }).then(function(canvas) {
+  html2canvas(cardWrap, { scale:2, useCORS:true, backgroundColor:'var(--gray-100)', logging:false }).then(function(canvas) {
     var link = document.createElement('a');
     link.download = 'บัตรเซล.png';
     link.href = canvas.toDataURL('image/png');
@@ -1832,12 +2627,12 @@ function renderProducts(list) {
     const btnLabel = sizes.length > 1 ? '🔍 เลือกขนาด' : '+ ใส่ตะกร้า';
     const imgHtml = p.img
       ? '<div style="width:100%;aspect-ratio:1587/2245;overflow:hidden;border-radius:10px 10px 0 0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;"><img src="' + p.img + '" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.parentElement.innerHTML=\'<span style=font-size:52px>' + (p.emoji||'📦') + '</span>\'"></div>'
-      : '<div style="width:100%;aspect-ratio:1587/2245;background:#FDF0EF;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:52px;">' + (p.emoji||'📦') + '</div>';
+      : '<div style="width:100%;aspect-ratio:1587/2245;background:var(--red-50);border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:52px;">' + (p.emoji||'📦') + '</div>';
     const pid = String(p.id).replace(/'/g, '');
     return '<div class="prod-card" onclick="openProductModal(\'' + pid + '\')" style="cursor:pointer">'
       + imgHtml
       + '<div style="padding:8px;">'
-      + (p.cat ? '<div style="font-size:10px;color:#C0392B;font-weight:700;margin-bottom:3px">' + p.cat + '</div>' : '')
+      + (p.cat ? '<div style="font-size:10px;color:var(--red-500);font-weight:700;margin-bottom:3px">' + p.cat + '</div>' : '')
       + '<div class="prod-name">' + p.name + '</div>'
       + '<div class="prod-price">' + priceText + '</div>'
       + '<button class="prod-add" onclick="event.stopPropagation();openProductModal(\'' + pid + '\')">' + btnLabel + '</button>'
@@ -1862,8 +2657,8 @@ function openProductModal(id) {
       + (p.desc ? '<div style="font-size:12px;color:#888;margin-bottom:12px">' + p.desc + '</div>' : '')
       + '<div style="font-size:12px;color:#888;font-weight:600;margin-bottom:8px">เลือกขนาด</div>'
       + sizes.map((s,i) =>
-          '<button onclick="addSizeToCart(' + i + ')" style="width:100%;padding:11px;margin-bottom:8px;border-radius:10px;border:1.5px solid rgba(192,57,43,.3);background:#fff;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">'
-          + '<span>' + (s.n||s.name) + '</span><span style="color:#C0392B;font-weight:700">฿' + (s.p||s.price||0).toLocaleString() + '</span></button>'
+          '<button onclick="addSizeToCart(' + i + ')" style="width:100%;padding:11px;margin-bottom:8px;border-radius:10px;border:1.5px solid var(--border-red2);background:#fff;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">'
+          + '<span>' + (s.n||s.name) + '</span><span style="color:var(--red-500);font-weight:700">฿' + (s.p||s.price||0).toLocaleString() + '</span></button>'
         ).join('');
     document.getElementById('size-modal').classList.add('show');
   } else {
@@ -1918,7 +2713,7 @@ function openCart() {
   document.getElementById('cart-items').innerHTML = items.map(([id,v]) => {
     const imgHtml = v.img
       ? '<img src="' + v.img + '" style="width:40px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0;" loading="lazy">'
-      : '<div style="width:40px;height:40px;background:#FDF0EF;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📦</div>';
+      : '<div style="width:40px;height:40px;background:var(--red-50);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📦</div>';
     return '<div class="cart-item">'
       + imgHtml
       + '<div class="cart-item-name" style="flex:1;margin-left:8px">' + v.name + '</div>'
@@ -1997,7 +2792,7 @@ function _updateTempPin(lat, lng) {
   if (tempPinMarker) pinMapObj.removeLayer(tempPinMarker);
   tempPinMarker = L.marker([lat, lng], {
     icon: L.divIcon({
-      html: `<div style="width:28px;height:28px;border-radius:50%;background:#C0392B;border:3px solid #fff;box-shadow:0 2px 12px rgba(192,57,43,.5);"></div>`,
+      html: `<div style="width:28px;height:28px;border-radius:50%;background:var(--red-500);border:3px solid #fff;box-shadow:0 2px 12px rgba(192,57,43,.5);"></div>`,
       iconSize:[28,28], iconAnchor:[14,14], className:''
     }),
     draggable: true
@@ -2184,8 +2979,8 @@ function startGPS() {
       if (!myMarker) {
         const _photo = getSalesPhoto();
         const _avatarHtml = _photo
-          ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px rgba(192,57,43,.3),0 3px 10px rgba(0,0,0,.3);overflow:hidden;background:#eee;"><img src="${_photo}" style="width:100%;height:100%;object-fit:cover;display:block;"></div>`
-          : `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(120deg,#96281B,#C0392B);border:3px solid #fff;box-shadow:0 0 0 3px rgba(192,57,43,.3),0 3px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:15px;">💼</div>`;
+          ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px var(--border-red2),0 3px 10px rgba(0,0,0,.3);overflow:hidden;background:#eee;"><img src="${_photo}" style="width:100%;height:100%;object-fit:cover;display:block;"></div>`
+          : `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(120deg,var(--red-700),var(--red-500));border:3px solid #fff;box-shadow:0 0 0 3px var(--border-red2),0 3px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:15px;">💼</div>`;
         myMarker = L.marker([myLat, myLng], {
           icon: L.divIcon({
             html: _avatarHtml,
@@ -2195,7 +2990,7 @@ function startGPS() {
         }).addTo(salesMap).bindPopup('<b>ตำแหน่งของคุณ</b><br>' + myLat.toFixed(5) + ', ' + myLng.toFixed(5));
 
         myCircle = L.circle([myLat, myLng], {
-          radius: acc, color:'#C0392B', fillColor:'#C0392B',
+          radius: acc, color:'var(--red-500)', fillColor:'var(--red-500)',
           fillOpacity:0.08, weight:1
         }).addTo(salesMap);
 
@@ -2211,12 +3006,12 @@ function startGPS() {
       if (myRouteLine) salesMap.removeLayer(myRouteLine);
       if (myRoutePoints.length >= 2) {
         myRouteLine = L.polyline(myRoutePoints, {
-          color:'#C0392B', weight:3, opacity:.45, dashArray:'4,4'
+          color:'var(--red-500)', weight:3, opacity:.45, dashArray:'4,4'
         }).addTo(salesMap);
       }
       // อัปเดต road route ทุก 5 จุด เพื่อไม่ spam OSRM
       if (myRoutePoints.length >= 2 && myRoutePoints.length % 5 === 0) {
-        drawRoadRoute(salesMap, myRoutePoints, '#C0392B', '_myRoadRoute');
+        drawRoadRoute(salesMap, myRoutePoints, 'var(--red-500)', '_myRoadRoute');
       }
 
       // push ไป Supabase ทุก 30 วิ หรือถ้าขยับ > 20 เมตร
@@ -2269,7 +3064,7 @@ function calcRouteFromMe() {
       if (!data.routes?.[0]) return;
       if (routeLayer) salesMap.removeLayer(routeLayer);
       routeLayer = L.geoJSON(data.routes[0].geometry, {
-        style:{ color:'#C0392B', weight:4, opacity:.85, dashArray:'8,4' }
+        style:{ color:'var(--red-500)', weight:4, opacity:.85, dashArray:'8,4' }
       }).addTo(salesMap);
       const km   = (data.routes[0].distance / 1000).toFixed(1);
       const cost = Math.round(data.routes[0].distance / 1000 / 15 * 40);
@@ -2346,17 +3141,17 @@ function showAutoStopPrompt() {
   el = document.createElement('div');
   el.id = 'auto-stop-prompt';
   el.style.cssText = 'position:fixed;bottom:160px;left:50%;transform:translateX(-50%);z-index:4000;' +
-    'background:#fff;border:2px solid #C0392B;border-radius:16px;padding:14px 16px;' +
-    'box-shadow:0 4px 20px rgba(192,57,43,.3);font-family:Sarabun,sans-serif;' +
+    'background:#fff;border:2px solid var(--red-500);border-radius:16px;padding:14px 16px;' +
+    'box-shadow:0 4px 20px var(--border-red2);font-family:Sarabun,sans-serif;' +
     'min-width:260px;max-width:320px;text-align:center;';
   const mins = document.getElementById('auto-pin-mins').value;
   el.innerHTML =
     '<div style="font-size:22px;margin-bottom:6px">📍</div>' +
-    '<div style="font-size:14px;font-weight:700;color:#C0392B;margin-bottom:4px">หยุดอยู่ที่นี่ ' + mins + ' นาทีแล้ว</div>' +
+    '<div style="font-size:14px;font-weight:700;color:var(--red-500);margin-bottom:4px">หยุดอยู่ที่นี่ ' + mins + ' นาทีแล้ว</div>' +
     '<div style="font-size:12px;color:#888;margin-bottom:12px">ต้องการบันทึกเป็นลูกค้าที่นี่ไหม?</div>' +
     '<div style="display:flex;gap:8px;">' +
     '<button onclick="dismissAutoStop()" style="flex:1;padding:8px;border-radius:8px;border:1px solid #ddd;background:#f5f5f5;font-size:13px;cursor:pointer;">ไม่</button>' +
-    '<button onclick="confirmAutoStop()" style="flex:1;padding:8px;border-radius:8px;border:none;background:linear-gradient(120deg,#96281B,#C0392B);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">✅ บันทึก</button>' +
+    '<button onclick="confirmAutoStop()" style="flex:1;padding:8px;border-radius:8px;border:none;background:linear-gradient(120deg,var(--red-700),var(--red-500));color:#fff;font-size:13px;font-weight:700;cursor:pointer;">✅ บันทึก</button>' +
     '</div>';
   document.body.appendChild(el);
   if (navigator.vibrate) navigator.vibrate([200,100,200]);
@@ -2453,7 +3248,7 @@ function calcDistM(lat1, lng1, lat2, lng2) {
 
 function addCustomerMarker(c) {
   if (!salesMap || !c.lat || !c.lng || isNaN(c.lat) || isNaN(c.lng)) return;
-  const colors = { shop:'#C0392B', home:'#4f8ef7', business:'#e67e22', other:'#8e44ad' };
+  const colors = { shop:'var(--red-500)', home:'#4f8ef7', business:'#e67e22', other:'#8e44ad' };
   const icons  = { shop:'🏪', home:'🏠', business:'🏢', other:'📍' };
   const bg = colors[c.type] || colors.shop;
   const m = L.marker([c.lat, c.lng], {
@@ -2465,11 +3260,11 @@ function addCustomerMarker(c) {
   const popupHtml =
     '<div style="font-family:Sarabun,sans-serif;min-width:160px;">'
     + '<div style="font-size:14px;font-weight:700;margin-bottom:4px;">' + (icons[c.type]||'📍') + ' ' + c.name + '</div>'
-    + (c.phone ? '<div style="font-size:12px;color:#C0392B;margin-bottom:3px;">📞 ' + c.phone + '</div>' : '')
+    + (c.phone ? '<div style="font-size:12px;color:var(--red-500);margin-bottom:3px;">📞 ' + c.phone + '</div>' : '')
     + (c.note  ? '<div style="font-size:11px;color:#888;margin-bottom:6px;">' + c.note + '</div>' : '')
     + (c.photo_url ? '<img src="' + c.photo_url + '" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:6px;display:block;" onerror="this.style.display=\'none\'">' : '')
     + '<div style="display:flex;gap:6px;margin-top:8px;">'
-    + '<button data-cid="' + c.id + '" data-act="edit" style="flex:1;padding:6px;border-radius:6px;border:1px solid rgba(192,57,43,.3);background:#fff;color:#C0392B;font-size:12px;font-weight:600;cursor:pointer;">✏️ แก้ไข</button>'
+    + '<button data-cid="' + c.id + '" data-act="edit" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border-red2);background:#fff;color:var(--red-500);font-size:12px;font-weight:600;cursor:pointer;">✏️ แก้ไข</button>'
     + '<button data-cid="' + c.id + '" data-act="del" style="flex:1;padding:6px;border-radius:6px;border:1px solid #e74c3c;background:#fff;color:#e74c3c;font-size:12px;font-weight:600;cursor:pointer;">🗑️ ลบ</button>'
     + '</div></div>';
   m.bindPopup(popupHtml);
@@ -2684,10 +3479,8 @@ function setSellMode(mode) {
   if (mode === 'liff') {
     liff.style.display  = 'flex';
     local.style.display = 'none';
-    btnL.style.background  = 'linear-gradient(120deg,#96281B,#C0392B)';
-    btnL.style.color        = '#fff';
-    btnLo.style.background  = '#f5f5f5';
-    btnLo.style.color        = '#888';
+    btnL.className  = 'mode-btn active';
+    btnLo.className = 'mode-btn inactive';
     // โหลด LIFF พร้อม ref เซล
     const iframe = document.getElementById('liff-iframe');
     if (session && !iframe.src) {
@@ -2696,10 +3489,8 @@ function setSellMode(mode) {
   } else {
     liff.style.display  = 'none';
     local.style.display = 'flex';
-    btnLo.style.background = 'linear-gradient(120deg,#96281B,#C0392B)';
-    btnLo.style.color       = '#fff';
-    btnL.style.background   = '#f5f5f5';
-    btnL.style.color         = '#888';
+    btnLo.className = 'mode-btn active';
+    btnL.className  = 'mode-btn inactive';
     // โหลด/refresh สินค้า real-time ทุกครั้งที่ switch มา local mode
     loadProducts();
   }
