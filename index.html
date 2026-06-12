@@ -3542,14 +3542,15 @@ if (urlRef) localStorage.setItem('sales_ref', urlRef);
   if (!raw) return;
   try {
     const sess = JSON.parse(raw);
+    enterApp(sess); // เข้าแอพก่อนเลย ไม่รอ
+    // เช็คสถานะในพื้นหลัง
     const check = await gasCall({ action: 'salesLogin', _checkOnly: true, token: sess.token });
     if (!check.ok) {
       localStorage.removeItem(SESSION_KEY);
-      if (check.suspended) showMsg('login-msg', '❌ บัญชีนี้ถูกระงับการใช้งาน', 'err');
-      return;
+      alert(check.suspended ? '❌ บัญชีนี้ถูกระงับการใช้งาน' : 'session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
+      location.reload();
     }
-    enterApp(sess);
-  } catch(_) { localStorage.removeItem(SESSION_KEY); }
+  } catch(_) {}
 })();
 </script>
 </body>
