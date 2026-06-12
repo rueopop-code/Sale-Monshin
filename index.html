@@ -3537,9 +3537,19 @@ function showToast(msg, type='warn') {
 const urlRef = new URLSearchParams(window.location.search).get('ref');
 if (urlRef) localStorage.setItem('sales_ref', urlRef);
 
-(function init() {
+(async function init() {
   const raw = localStorage.getItem(SESSION_KEY);
-  if (raw) { try { enterApp(JSON.parse(raw)); } catch(_) { localStorage.removeItem(SESSION_KEY); } }
+  if (!raw) return;
+  try {
+    const sess = JSON.parse(raw);
+    const check = await gasCall({ action: 'salesLogin', _checkOnly: true, token: sess.token });
+    if (!check.ok) {
+      localStorage.removeItem(SESSION_KEY);
+      if (check.suspended) showMsg('login-msg', '❌ บัญชีนี้ถูกระงับการใช้งาน', 'err');
+      return;
+    }
+    enterApp(sess);
+  } catch(_) { localStorage.removeItem(SESSION_KEY); }
 })();
 </script>
 </body>
