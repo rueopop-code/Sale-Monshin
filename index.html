@@ -1453,6 +1453,17 @@ html, body {
   </div>
 </div>
 
+<!-- STAT DETAIL MODAL (ออเดอร์ / ยอดขาย / ลูกค้า-หมุด) -->
+<div class="mov" id="stat-detail-modal">
+  <div class="mbox">
+    <div class="mhdr">
+      <h2 id="stat-detail-title">รายละเอียด</h2>
+      <div class="mclose" onclick="closeStatDetailModal()"><svg width="14" height="14"><use href="#ic-close"/></svg></div>
+    </div>
+    <div id="stat-detail-body"></div>
+  </div>
+</div>
+
 <!-- SIZE MODAL -->
 <div class="mov" id="size-modal">
   <div class="mbox">
@@ -2065,14 +2076,21 @@ function renderIdCard() {
         <div class="stg2-badge"><span class="stg2-dot"></span>รหัสเซล ${s.salesId}</div>
 
         <!-- สถิติย่อ -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
-          <div style="background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:12px;text-align:center;">
-            <div class="id-stat-val gold" id="stat-orders" style="font-size:22px;font-weight:800;">—</div>
-            <div style="font-size:10.5px;color:var(--text-3);margin-top:2px;">ออเดอร์</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px;">
+          <div onclick="openStatDetailModal('orders','all')" style="cursor:pointer;background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:10px 6px;text-align:center;position:relative;">
+            <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
+            <div class="id-stat-val gold" id="stat-orders" style="font-size:19px;font-weight:800;">—</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ออเดอร์</div>
           </div>
-          <div style="background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:12px;text-align:center;">
-            <div class="id-stat-val gold" id="stat-revenue" style="font-size:22px;font-weight:800;">—</div>
-            <div style="font-size:10.5px;color:var(--text-3);margin-top:2px;">ยอดขาย (฿)</div>
+          <div onclick="openStatDetailModal('revenue','all')" style="cursor:pointer;background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:10px 6px;text-align:center;position:relative;">
+            <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
+            <div class="id-stat-val gold" id="stat-revenue" style="font-size:19px;font-weight:800;">—</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ยอดขาย (฿)</div>
+          </div>
+          <div onclick="openStatDetailModal('customers')" style="cursor:pointer;background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:10px 6px;text-align:center;position:relative;">
+            <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
+            <div class="id-stat-val gold" id="stat-pins" style="font-size:19px;font-weight:800;">—</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ลูกค้า/หมุด</div>
           </div>
         </div>
       </div>
@@ -2124,14 +2142,21 @@ function renderIdCard() {
         </div>
 
         <!-- สรุปตัวเลข -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-          <div style="background:var(--red-50);border-radius:14px;padding:14px;text-align:center;border:1px solid var(--border-red);">
-            <div id="ds-orders" style="font-size:22px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">จำนวนออเดอร์</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+          <div onclick="openStatDetailModal('orders','filtered')" style="cursor:pointer;background:var(--red-50);border-radius:14px;padding:12px 6px;text-align:center;border:1px solid var(--border-red);position:relative;">
+            <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
+            <div id="ds-orders" style="font-size:19px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px;">จำนวนออเดอร์</div>
           </div>
-          <div style="background:var(--red-50);border-radius:14px;padding:14px;text-align:center;border:1px solid var(--border-red);">
-            <div id="ds-revenue" style="font-size:18px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">ยอดขาย (฿)</div>
+          <div onclick="openStatDetailModal('revenue','filtered')" style="cursor:pointer;background:var(--red-50);border-radius:14px;padding:12px 6px;text-align:center;border:1px solid var(--border-red);position:relative;">
+            <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
+            <div id="ds-revenue" style="font-size:16px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ยอดขาย (฿)</div>
+          </div>
+          <div onclick="openStatDetailModal('customers')" style="cursor:pointer;background:var(--red-50);border-radius:14px;padding:12px 6px;text-align:center;border:1px solid var(--border-red);position:relative;">
+            <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
+            <div id="ds-pins" style="font-size:19px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ลูกค้า/หมุด</div>
           </div>
         </div>
 
@@ -2470,6 +2495,18 @@ function switchStatsTab(tab) {
   renderDashboard();
 }
 
+// ══════════════════════════════════════════
+//  ออเดอร์ที่ยังไม่มีสินค้า/ยอดรวม (แค่เปิดลิงก์ดูสินค้า ยังไม่กดยืนยันสั่งซื้อ)
+//  ไม่ควรนับเป็นออเดอร์จริงในแดชบอร์ดของเซล — เหมือนที่แก้ไว้ในหน้าแอดมิน
+// ══════════════════════════════════════════
+function isBrowsingDraftOrder(o) {
+  const id = String(o.order_id || '');
+  if (!/^(LINK-CUST-|LINK-)/.test(id)) return false;
+  const hasTotal = Number(o.total_price || o.total || o.amount || 0) > 0;
+  const hasItems = Array.isArray(o.items) && o.items.length > 0;
+  return !hasTotal && !hasItems;
+}
+
 async function loadDashboard() {
   if (!session) return;
   try {
@@ -2494,7 +2531,8 @@ async function loadDashboard() {
         if (seen.has(o.order_id)) return false;
         seen.add(o.order_id);
         return true;
-      });
+      })
+      .filter(o => !isBrowsingDraftOrder(o));
     renderDashboard();
     renderChart();
   } catch(e) {
@@ -2609,6 +2647,60 @@ function renderChart() {
   }
 }
 
+// ══════════════════════════════════════════
+//  STAT DETAIL MODAL (แตะการ์ด ออเดอร์ / ยอดขาย / ลูกค้า-หมุด)
+// ══════════════════════════════════════════
+function renderOrdersDetailList(list, sortByRevenue) {
+  if (!list || !list.length) {
+    return '<div style="text-align:center;color:#bbb;padding:12px;">ยังไม่มีออเดอร์</div>';
+  }
+  const sorted = [...list].sort((a, b) => sortByRevenue
+    ? (parseFloat(b.total_price||b.total||b.amount||0) - parseFloat(a.total_price||a.total||a.amount||0))
+    : (new Date(b.created_at||0) - new Date(a.created_at||0)));
+  return sorted.map(o => {
+    const date = o.created_at ? new Date(o.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '-';
+    const amount = parseFloat(o.total_price || o.total || o.amount || 0).toLocaleString('th-TH');
+    const status = o.status || 'pending';
+    const statusColor = status === 'completed' ? '#27ae60' : status === 'cancelled' ? '#e74c3c' : '#e67e22';
+    const statusText = status === 'completed' ? '✅ สำเร็จ' : status === 'cancelled' ? '❌ ยกเลิก' : '⏳ รอดำเนินการ';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
+      <div>
+        <div style="font-weight:600;color:#333;font-size:12px;">${o.customer_name || o.name || 'ลูกค้า'}</div>
+        <div style="color:#888;font-size:11px;">${date}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700;color:var(--red-500);font-size:13px;">฿${amount}</div>
+        <div style="font-size:10px;color:${statusColor};font-weight:600;">${statusText}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openStatDetailModal(type, scope) {
+  const modal = document.getElementById('stat-detail-modal');
+  const title = document.getElementById('stat-detail-title');
+  const body  = document.getElementById('stat-detail-body');
+  if (!modal || !title || !body) return;
+
+  if (type === 'orders' || type === 'revenue') {
+    const list = scope === 'filtered' ? filterOrders(currentStatsTab) : allOrders;
+    title.textContent = type === 'orders' ? '🧾 ออเดอร์ของฉัน' : '💰 ยอดขายของฉัน';
+    body.innerHTML = renderOrdersDetailList(list, type === 'revenue');
+  } else if (type === 'customers') {
+    title.textContent = '📍 ลูกค้าของฉัน';
+    const src = document.getElementById('customers-list');
+    body.innerHTML = (src && src.innerHTML && !src.innerHTML.includes('กำลังโหลด'))
+      ? src.innerHTML
+      : '<div style="text-align:center;color:#bbb;padding:12px;">⏳ กำลังโหลดข้อมูลลูกค้า กรุณาลองแตะใหม่อีกครั้ง</div>';
+  }
+  modal.classList.add('show');
+}
+
+function closeStatDetailModal() {
+  const modal = document.getElementById('stat-detail-modal');
+  if (modal) modal.classList.remove('show');
+}
+
 async function loadCustomersList() {
   const cl = document.getElementById('customers-list');
   const cc = document.getElementById('customer-count');
@@ -2620,6 +2712,10 @@ async function loadCustomersList() {
     );
     const pins = await res.json();
     if (cc) cc.textContent = (pins.length || 0) + ' ราย';
+    const sp = document.getElementById('stat-pins');
+    const dp = document.getElementById('ds-pins');
+    if (sp) sp.textContent = pins.length || 0;
+    if (dp) dp.textContent = pins.length || 0;
 
     if (!pins || pins.length === 0) {
       cl.innerHTML = '<div style="text-align:center;color:#bbb;padding:12px;">ยังไม่มีลูกค้า</div>';
