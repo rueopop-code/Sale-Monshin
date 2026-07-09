@@ -1804,13 +1804,45 @@ function doLogout() {
 }
 
 // ── Refresh ────────────────────────────────────────────
+// ══════════════════════════════════════════
+//  ดึงข้อมูลโปรไฟล์ล่าสุดจากเซิร์ฟเวอร์ (ชื่อ/เบอร์/รูป) มาอัปเดตเครื่องนี้
+//  แก้ปัญหา: อัปโหลดรูปจากอุปกรณ์/เครื่อง PC หนึ่ง แล้วอีกเครื่อง (มือถือ)
+//  ที่ล็อกอินค้างอยู่ก่อนหน้านั้น ไม่เห็นรูปใหม่ เพราะเดิมข้อมูลโปรไฟล์
+//  จะถูกดึงมาครั้งเดียวตอน login เท่านั้น ไม่เคยถูกดึงซ้ำอีกเลย
+// ══════════════════════════════════════════
+async function refreshProfileFromServer() {
+  if (!session) return false;
+  try {
+    const check = await gasCall({ action: 'salesLogin', _checkOnly: true, token: session.token });
+    if (!check || !check.ok || !check.sales) return false;
+    const fresh = check.sales;
+    let changed = false;
+    if (fresh.photo !== undefined && fresh.photo !== session.photo) { session.photo = fresh.photo || ''; changed = true; }
+    if (fresh.name  !== undefined && fresh.name  !== session.name)  { session.name  = fresh.name;        changed = true; }
+    if (fresh.phone !== undefined && fresh.phone !== session.phone) { session.phone = fresh.phone;        changed = true; }
+    if (changed) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      if (session.photo) {
+        localStorage.setItem('sales_photo_' + session.salesId, session.photo);
+        updateHdrPhoto(session.photo);
+      } else {
+        localStorage.removeItem('sales_photo_' + session.salesId);
+        const hdrAv = document.getElementById('hdr-av');
+        if (hdrAv) hdrAv.textContent = session.name ? session.name[0] : '?';
+      }
+      document.getElementById('hdr-name').textContent = session.name;
+      renderIdCard();
+    }
+    return changed;
+  } catch(_) { return false; }
+}
+
 async function doRefresh() {
   const btn = document.getElementById('refresh-btn');
   if (btn) { btn.style.transform = 'rotate(360deg)'; btn.style.transition = 'transform 0.5s'; }
   showToast('🔄 กำลังรีเฟรช...', 'info');
   try {
-    await loadProducts();
-    await loadPinsFromSupabase();
+    await Promise.all([loadProducts(), loadPinsFromSupabase(), refreshProfileFromServer()]);
     // รีเฟรช markers บนแผนที่
     if (salesMap) {
       Object.values(customerMarkers).forEach(m => salesMap.removeLayer(m));
@@ -1929,6 +1961,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && session) {
     loadSalesStats();
     loadDashboard();
+    refreshProfileFromServer();
   }
 });
 
@@ -3541,7 +3574,11 @@ function addCustomerMarker(c) {
 
   m.bindPopup(popupHtml, {
     closeButton: false, autoClose: false, closeOnClick: false,
-    className: 'cust-card-popup', minWidth: 190, maxWidth: 190
+    className: 'cust-card-popup', minWidth: 190, maxWidth: 190,
+    // กันไม่ให้การ์ดโผล่ไปโดนปุ่มลอย (3D/ดาวเทียม/GPS/เส้นทาง) ทับด้านขวา
+    // หรือโดนแผงด้านล่าง (สถิติ/ปุ่มปักหมุด) บัง เวลาหมุดอยู่ใกล้ขอบจอ
+    autoPanPaddingTopLeft: [16, 70],
+    autoPanPaddingBottomRight: [78, 260]
   });
   m.on('popupopen', function() {
     const el = m.getPopup().getElement();
@@ -3835,6 +3872,10 @@ if (urlRef) localStorage.setItem('sales_ref', urlRef);
       localStorage.removeItem(SESSION_KEY);
       alert(check.suspended ? '❌ บัญชีนี้ถูกระงับการใช้งาน' : 'session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
       location.reload();
+    } else if (check.sales) {
+      // เอาข้อมูลล่าสุด (ชื่อ/เบอร์/รูปโปรไฟล์) จากเซิร์ฟเวอร์มาอัปเดต
+      // เผื่อมีการแก้ไข/อัปโหลดรูปจากอุปกรณ์เครื่องอื่นไว้ก่อนหน้านี้
+      await refreshProfileFromServer();
     }
   } catch(_) {}
 })();
