@@ -8,7 +8,7 @@
 <title>💼 Sales – มนชิน ซัพพลาย</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Prompt:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#C0392B">
+<meta name="theme-color" content="#E5322E">
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/Sale-Monshin/sw.js');}</script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -19,17 +19,17 @@
 
 :root {
   /* ── Core Palette ── */
-  --red-950: #1A0505;
-  --red-900: #3D0A0A;
-  --red-800: #6B1212;
-  --red-700: #8B1A1A;
-  --red-600: #A91E1E;
-  --red-500: #C0392B;
-  --red-400: #D64C3A;
-  --red-300: #E8705F;
-  --red-200: #F4A99D;
-  --red-100: #FAD8D4;
-  --red-50:  #FEF3F2;
+  --red-950: #200404;
+  --red-900: #4A0808;
+  --red-800: #7A0F0F;
+  --red-700: #A11515;
+  --red-600: #C41E1E;
+  --red-500: #E5322E;
+  --red-400: #EF4B3F;
+  --red-300: #F37568;
+  --red-200: #F8A79C;
+  --red-100: #FCD6D0;
+  --red-50:  #FFF3F1;
 
   /* ── Neutrals ── */
   --gray-950: #0D0D0D;
@@ -68,8 +68,8 @@
   /* ── Borders ── */
   --border:  rgba(0,0,0,0.07);
   --border2: rgba(0,0,0,0.12);
-  --border-red: rgba(192,57,43,0.18);
-  --border-red2: rgba(192,57,43,0.32);
+  --border-red: rgba(229,50,46,0.18);
+  --border-red2: rgba(229,50,46,0.32);
 
   /* ── Typography ── */
   --font: 'IBM Plex Sans Thai', 'Sarabun', sans-serif;
@@ -79,7 +79,7 @@
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow:    0 4px 12px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-red: 0 4px 16px rgba(192,57,43,0.22);
+  --shadow-red: 0 4px 16px rgba(229,50,46,0.24);
 
   /* ── Radius ── */
   --r-sm:  8px;
@@ -172,7 +172,7 @@ html, body {
 }
 .afield input:focus {
   border-color: var(--red-500);
-  box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+  box-shadow: 0 0 0 3px rgba(229,50,46,0.1);
   background: var(--surface);
 }
 
@@ -224,7 +224,7 @@ html, body {
   padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
   background: linear-gradient(135deg, var(--red-800) 0%, var(--red-600) 55%, var(--red-500) 100%);
   flex-shrink: 0;
-  box-shadow: 0 2px 16px rgba(139,26,26,0.4);
+  box-shadow: 0 2px 16px rgba(161,21,21,0.4);
 }
 .hdr-left { display: flex; align-items: center; gap: 11px; }
 .av {
@@ -276,7 +276,7 @@ html, body {
 .page.active { display: block; }
 
 /* ══ PAGE: ID CARD ══ */
-.id-card-page { padding: 16px; }
+.id-card-page { padding: 0; background: var(--gray-50); }
 
 .sales-id-card {
   background: linear-gradient(145deg, #FFFFFF 0%, var(--red-50) 100%);
@@ -290,13 +290,13 @@ html, body {
   content: '';
   position: absolute; top: -40px; right: -40px;
   width: 140px; height: 140px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(192,57,43,0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(229,50,46,0.06) 0%, transparent 70%);
 }
 .sales-id-card::after {
   content: '';
   position: absolute; bottom: -20px; left: -20px;
   width: 100px; height: 100px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(192,57,43,0.04) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(229,50,46,0.04) 0%, transparent 70%);
 }
 
 .id-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
@@ -342,10 +342,10 @@ html, body {
 
 .id-actions { display: flex; gap: 8px; margin-top: 14px; }
 .id-btn {
-  flex: 1; padding: 11px; border-radius: var(--r-md);
+  flex: 1; padding: 15px; border-radius: var(--r-md);
   border: 1.5px solid var(--border2);
   background: var(--gray-50); color: var(--text);
-  font-family: var(--font); font-size: 12px; font-weight: 600;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
   cursor: pointer; text-align: center; transition: all 0.15s;
 }
 .id-btn:hover { background: var(--gray-100); }
@@ -377,7 +377,7 @@ html, body {
 }
 .sell-search input:focus {
   border-color: var(--red-500);
-  box-shadow: 0 0 0 3px rgba(192,57,43,0.08);
+  box-shadow: 0 0 0 3px rgba(229,50,46,0.08);
   background: var(--surface);
 }
 
@@ -392,7 +392,7 @@ html, body {
 }
 .prod-card:hover {
   border-color: var(--border-red2);
-  box-shadow: 0 4px 14px rgba(192,57,43,0.12);
+  box-shadow: 0 4px 14px rgba(229,50,46,0.12);
   transform: translateY(-1px);
 }
 .prod-card:active { transform: scale(0.98); }
@@ -406,7 +406,7 @@ html, body {
   background: linear-gradient(135deg, var(--red-700), var(--red-500));
   color: #fff; font-family: var(--font);
   font-size: 12px; font-weight: 600; cursor: pointer;
-  box-shadow: 0 2px 6px rgba(192,57,43,0.28);
+  box-shadow: 0 2px 6px rgba(229,50,46,0.28);
   transition: opacity 0.15s;
 }
 .prod-add:hover { opacity: 0.9; }
@@ -438,26 +438,43 @@ html, body {
 /* ══ PAGE: MAP ══ */
 .map-page { display: flex; flex-direction: column; height: 100%; }
 #sales-map { flex: 1; min-height: 0; }
+#map-3d-wrap { flex:1; min-height:0; position:relative; overflow:hidden; perspective: 1200px; }
+#map-3d-wrap #sales-map { position:absolute; inset:0; transition: transform .35s ease; transform-origin: 50% 100%; }
+#map-3d-wrap.tilt-3d #sales-map { transform: rotateX(48deg) scale(1.55); }
+.map-3d-toggle-badge {
+  position:absolute; top:8px; left:8px; z-index:500;
+  background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:4px 9px;
+  border-radius:20px; display:none; pointer-events:none;
+}
 
 .map-bottom {
-  padding: 12px 14px; background: var(--surface);
-  border-top: 1px solid var(--border); flex-shrink: 0;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: none; flex-shrink: 0;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -6px 24px rgba(0,0,0,.10);
+  position: relative; z-index: 600;
+  margin-top: -18px;
 }
-.map-stats { display: flex; gap: 8px; margin-bottom: 9px; }
+.map-bottom::before {
+  content:''; display:block; width:44px; height:4px; border-radius:4px;
+  background: var(--gray-200); margin: 0 auto 10px;
+}
+.map-stats { display: flex; gap: 8px; margin-bottom: 10px; }
 .mstat {
-  flex: 1; background: var(--gray-50);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md); padding: 9px; text-align: center;
+  flex: 1; background: var(--red-50);
+  border: 1px solid var(--border-red);
+  border-radius: 14px; padding: 10px; text-align: center;
 }
-.mstat-val { font-size: 16px; font-weight: 700; color: var(--red-500); }
+.mstat-val { font-size: 17px; font-weight: 800; color: var(--red-500); }
 .mstat-lbl { font-size: 10px; color: var(--text-3); margin-top: 2px; }
 
 .map-btns { display: flex; gap: 7px; }
 .mbtn {
-  flex: 1; padding: 9px 6px; border-radius: var(--r-md);
+  flex: 1; padding: 13px 8px; border-radius: var(--r-md);
   border: 1.5px solid var(--border2);
   background: var(--gray-50); color: var(--text);
-  font-family: var(--font); font-size: 12px; font-weight: 600;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
   cursor: pointer; transition: all 0.15s;
 }
 .mbtn:hover { background: var(--gray-100); }
@@ -555,7 +572,7 @@ html, body {
 .cfield input:focus,
 .cfield textarea:focus {
   border-color: var(--red-500);
-  box-shadow: 0 0 0 3px rgba(192,57,43,0.08);
+  box-shadow: 0 0 0 3px rgba(229,50,46,0.08);
   background: var(--surface);
 }
 .cfield textarea { resize: none; height: 62px; }
@@ -713,12 +730,12 @@ html, body {
 
 /* ── GPS status pill ── */
 .gps-pill {
-  display: flex; align-items: center; gap: 7px;
-  padding: 6px 11px;
-  background: var(--red-50);
-  border: 1px solid var(--border-red);
-  border-radius: var(--r-md);
-  margin-bottom: 9px; font-size: 12px; color: var(--text-3);
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  margin-bottom: 10px; font-size: 12px; color: var(--text-3); font-weight: 600;
 }
 
 /* ── Utility classes ── */
@@ -742,7 +759,7 @@ html, body {
 
 /* ── FAB buttons ── */
 .fab-btn {
-  width: 42px; height: 42px; border-radius: 50%;
+  width: 52px; height: 52px; border-radius: 50%;
   border: 1px solid var(--border-red);
   background: var(--surface); cursor: pointer;
   box-shadow: var(--shadow);
@@ -804,7 +821,7 @@ html, body {
 }
 .settings-input:focus {
   border-color: var(--red-500);
-  box-shadow: 0 0 0 3px rgba(192,57,43,0.08);
+  box-shadow: 0 0 0 3px rgba(229,50,46,0.08);
   background: var(--surface);
 }
 .btn-primary-full {
@@ -830,6 +847,101 @@ html, body {
 .account-val.green { color: var(--green); }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .green-dot { background: var(--green); }
+
+/* ── Settings page v2 (professional redesign) ── */
+.stg2-hero {
+  background: linear-gradient(135deg, var(--red-800) 0%, var(--red-600) 55%, var(--red-500) 100%);
+  padding: calc(20px + env(safe-area-inset-top)) 20px 44px;
+  position: relative; overflow: hidden;
+}
+.stg2-hero::after {
+  content:''; position:absolute; right:-40px; top:-40px; width:180px; height:180px;
+  border-radius:50%; background: rgba(255,255,255,.08);
+}
+.stg2-hero h1 { font-family: var(--font-display); color:#fff; font-size: 21px; font-weight: 800; position:relative; z-index:1; }
+.stg2-hero p { color: rgba(255,255,255,.82); font-size: 12px; margin-top: 4px; position:relative; z-index:1; }
+
+.stg2-body { padding: 0 16px; margin-top: -28px; position: relative; z-index: 2; }
+
+.stg2-profile-card {
+  background: var(--surface); border-radius: 22px; padding: 24px 18px 20px;
+  box-shadow: var(--shadow-lg); text-align:center; margin-bottom: 14px;
+  border: 1px solid var(--border);
+}
+.stg2-avatar-wrap { position: relative; width: 88px; height: 88px; margin: 0 auto 12px; }
+.stg2-avatar {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: linear-gradient(145deg, var(--red-700), var(--red-500));
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size: 32px; font-weight: 800; font-family: var(--font-display);
+  border: 4px solid var(--surface); box-shadow: var(--shadow-red); overflow:hidden;
+}
+.stg2-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+.stg2-avatar-edit-btn {
+  position:absolute; right:-2px; bottom:-2px; width: 30px; height:30px; border-radius:50%;
+  background: var(--gray-900); border: 3px solid var(--surface); color:#fff;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,.25);
+}
+.stg2-profile-name { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text); }
+.stg2-profile-role { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
+.stg2-badge {
+  display:inline-flex; align-items:center; gap:5px; margin-top: 10px;
+  background: var(--red-50); color: var(--red-700); font-size: 11px; font-weight:700;
+  padding: 5px 12px; border-radius: 20px; border:1px solid var(--border-red);
+}
+.stg2-dot { width:6px; height:6px; border-radius:50%; background: var(--green); flex-shrink:0; }
+
+.stg2-card {
+  background: var(--surface); border-radius: 18px; padding: 18px; margin-bottom: 14px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+}
+.stg2-card-title { display:flex; align-items:center; gap:9px; font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+.stg2-card-icon {
+  width: 30px; height:30px; border-radius: 9px; background: var(--red-50); color: var(--red-600);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+
+.stg2-field { margin-bottom: 14px; }
+.stg2-field-label { font-size: 11.5px; font-weight: 600; color: var(--text-3); margin-bottom: 7px; display:block; }
+.stg2-field-row { display:flex; gap: 8px; align-items:center; }
+.stg2-input {
+  flex: 1; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--border2);
+  background: var(--gray-50); font-family: var(--font); font-size: 14px; color: var(--text);
+  outline: none; transition: all .15s;
+}
+.stg2-input:focus { border-color: var(--red-500); background: var(--surface); box-shadow: 0 0 0 3px var(--red-50); }
+.stg2-save-chip {
+  flex-shrink:0; padding: 12px 16px; border-radius: 12px; border:none; cursor:pointer;
+  background: var(--gray-900); color:#fff; font-family: var(--font); font-size: 12.5px; font-weight:700;
+  display:flex; align-items:center; gap:6px; transition: opacity .15s;
+}
+.stg2-save-chip svg { flex-shrink:0; }
+.stg2-save-chip:hover { opacity:.85; }
+.stg2-status { font-size: 10.5px; color: var(--text-3); margin-top: 6px; min-height:13px; }
+
+.stg2-btn-full {
+  width: 100%; padding: 14px; border:none; border-radius: 14px; margin-top: 4px;
+  background: linear-gradient(135deg, var(--red-700), var(--red-500)); color:#fff;
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor:pointer;
+  box-shadow: var(--shadow-red); display:flex; align-items:center; justify-content:center; gap:8px;
+}
+
+.stg2-info-row { display:flex; justify-content:space-between; align-items:center; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.stg2-info-label { font-size: 12.5px; color: var(--text-3); }
+.stg2-info-val { font-size: 13px; font-weight: 700; color: var(--text); display:flex; align-items:center; gap:6px; }
+.stg2-info-val.red { color: var(--red-600); }
+.stg2-info-val.green { color: var(--green); }
+
+.stg2-danger-zone { margin-top: 22px; }
+.stg2-danger-label { font-size: 11px; font-weight:700; color: var(--text-4); text-transform:uppercase; letter-spacing:.6px; margin-bottom: 10px; padding-left: 2px; }
+.stg2-btn-logout {
+  width:100%; padding: 15px; border-radius: 14px; background: var(--surface);
+  border: 1.5px solid var(--red-500); color: var(--red-600);
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px; transition: background .15s;
+}
+.stg2-btn-logout:hover { background: var(--red-50); }
 
 /* ── Logout button ── */
 .btn-logout {
@@ -1058,21 +1170,17 @@ html, body {
   </div>
 
   <div class="page" id="page-sell" style="overflow:hidden;display:none;flex-direction:column;">
-    <!-- mode toggle -->
-    <div class="mode-toggle-bar">
+    <!-- mode toggle (hidden — kept in DOM so existing JS refs don't break) -->
+    <div class="mode-toggle-bar" style="display:none;">
       <button id="mode-liff-btn" onclick="setSellMode('liff')" class="mode-btn active">
         <svg width="16" height="16" style="margin-right:6px;vertical-align:-3px"><use href="#ic-line"/></svg>สั่งผ่าน LINE OA
       </button>
       <button id="mode-local-btn" onclick="setSellMode('local')" class="mode-btn inactive">
-        <svg width="16" height="16" style="margin-right:6px;vertical-align:-3px"><use href="#ic-shop"/></svg>สั่งแทนลูกค้า
+        <svg width="16" height="16" style="margin-right:6px;vertical-align:-3px"><use href="#ic-shop"/></svg>สั่งสินค้า
       </button>
     </div>
-    <!-- LIFF iframe mode -->
+    <!-- Real storefront embedded directly -->
     <div id="sell-liff" style="flex:1;display:flex;flex-direction:column;">
-      <div class="info-banner">
-        <svg width="14" height="14" style="flex-shrink:0;opacity:.7"><use href="#ic-info"/></svg>
-        ลูกค้าสั่งผ่านหน้าร้าน LINE OA — ระบบจะรู้ว่าคุณเป็นผู้แนะนำ
-      </div>
       <iframe id="liff-iframe" src="" style="flex:1;border:none;width:100%;" allow="camera;microphone;geolocation"></iframe>
     </div>
     <!-- Local product mode -->
@@ -1102,13 +1210,22 @@ html, body {
 
   <!-- Map page -->
   <div class="page" id="page-map" style="overflow:hidden;display:none;flex-direction:column;">
-    <div id="sales-map" style="flex:1;position:relative;"></div>
+    <div id="map-3d-wrap">
+      <div id="sales-map"></div>
+      <div class="map-3d-toggle-badge" id="map-3d-badge">โหมด 3D (มุมมองเท่านั้น)</div>
+    </div>
     <div style="position:absolute;right:12px;bottom:200px;z-index:500;display:flex;flex-direction:column;gap:8px;">
+      <button onclick="toggleMap3D()" title="สลับมุมมอง 2D/3D" class="fab-btn" id="btn-map-3d">
+        <span id="map-3d-label" style="font-size:14px;font-weight:800;">3D</span>
+      </button>
+      <button onclick="toggleMapSatellite()" title="สลับแผนที่ปกติ/ภาพถ่ายดาวเทียม" class="fab-btn" id="btn-map-sat">
+        <span id="map-sat-icon" style="font-size:20px;">🛰️</span>
+      </button>
       <button onclick="centerGPS()" title="ตำแหน่งของฉัน" class="fab-btn">
-        <svg width="18" height="18"><use href="#ic-gps"/></svg>
+        <svg width="23" height="23"><use href="#ic-gps"/></svg>
       </button>
       <button onclick="calcRouteFromMe()" title="เส้นทางจากตำแหน่งฉัน" class="fab-btn">
-        <svg width="18" height="18"><use href="#ic-route"/></svg>
+        <svg width="23" height="23"><use href="#ic-route"/></svg>
       </button>
     </div>
     <div class="map-bottom">
@@ -1123,122 +1240,119 @@ html, body {
       </div>
       <div class="map-btns">
         <button class="mbtn primary" onclick="pinFromGPS()" id="btn-pin-gps">
-          <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px"><use href="#ic-gps"/></svg>ปักที่นี่
+          <svg width="16" height="16" style="margin-right:5px;vertical-align:-3px"><use href="#ic-gps"/></svg>ปักที่นี่
         </button>
         <button class="mbtn" onclick="toggleAddPin()" id="btn-pin-manual">
-          <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px"><use href="#ic-pin"/></svg>ปักเอง
+          <svg width="16" height="16" style="margin-right:5px;vertical-align:-3px"><use href="#ic-pin"/></svg>ปักเอง
         </button>
         <button class="mbtn primary" onclick="calcRoute()">
-          <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px"><use href="#ic-play"/></svg>คำนวณ
+          <svg width="16" height="16" style="margin-right:5px;vertical-align:-3px"><use href="#ic-play"/></svg>คำนวณ
         </button>
         <button class="mbtn success" onclick="clearRoute()">
-          <svg width="13" height="13" style="margin-right:4px;vertical-align:-2px"><use href="#ic-close"/></svg>ล้าง
+          <svg width="16" height="16" style="margin-right:5px;vertical-align:-3px"><use href="#ic-close"/></svg>ล้าง
         </button>
-      </div>
-      <div class="auto-pin-row">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
-          <input type="checkbox" id="auto-pin-toggle" onchange="toggleAutoPin(this.checked)" style="accent-color:var(--red-500);">
-          <svg width="14" height="14" style="color:var(--text-3)"><use href="#ic-robot"/></svg>
-          <span>ปักหมุดอัตโนมัติเมื่อหยุดนาน</span>
-        </label>
-        <select id="auto-pin-mins" class="auto-pin-select">
-          <option value="5">5 นาที</option>
-          <option value="10" selected>10 นาที</option>
-          <option value="20">20 นาที</option>
-        </select>
       </div>
     </div>
   </div>
 
   <!-- Settings page -->
-  <div class="page" id="page-settings" style="overflow-y:auto;display:none;-webkit-overflow-scrolling:touch;">
-    <div style="padding:16px;max-width:500px;margin:0 auto;">
-      <div class="page-title-row">
-        <div class="page-title">ตั้งค่าบัญชี</div>
-        <div class="page-subtitle">แก้ไขข้อมูลส่วนตัวของคุณ</div>
+  <div class="page" id="page-settings" style="overflow-y:auto;display:none;-webkit-overflow-scrolling:touch;background:var(--gray-50);">
+    <div style="max-width:500px;margin:0 auto;padding-bottom:24px;">
+
+      <div class="stg2-hero">
+        <h1>ตั้งค่าบัญชี</h1>
+        <p>จัดการข้อมูลส่วนตัวและความปลอดภัยของบัญชีคุณ</p>
       </div>
 
-      <!-- รูปโปรไฟล์ -->
-      <div class="settings-section-card">
-        <div class="settings-section-title">
-          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-camera"/></svg>รูปโปรไฟล์
-        </div>
-        <div style="display:flex;align-items:center;gap:16px;">
-          <div id="settings-avatar-preview" class="settings-avatar"></div>
-          <div style="flex:1;">
+      <div class="stg2-body">
+        <!-- โปรไฟล์ -->
+        <div class="stg2-profile-card">
+          <div class="stg2-avatar-wrap">
+            <div id="settings-avatar-preview" class="stg2-avatar"></div>
+            <div class="stg2-avatar-edit-btn" onclick="document.getElementById('settings-photo-input').click()">
+              <svg width="14" height="14"><use href="#ic-camera"/></svg>
+            </div>
             <input type="file" id="settings-photo-input" accept="image/*" style="display:none" onchange="handleSettingsPhotoChange(this)">
-            <button onclick="document.getElementById('settings-photo-input').click()" class="btn-primary-full">
-              <svg width="14" height="14" style="margin-right:6px;vertical-align:-2px"><use href="#ic-camera"/></svg>เปลี่ยนรูปโปรไฟล์
-            </button>
-            <div id="settings-photo-status" class="status-text"></div>
+          </div>
+          <div class="stg2-profile-name" id="settings-info-name">—</div>
+          <div class="stg2-profile-role">พนักงานขาย · Monshin Supply</div>
+          <div class="stg2-badge"><span class="stg2-dot"></span>รหัสเซล <span id="settings-info-salesid-badge">—</span> · ใช้งานอยู่</div>
+          <div id="settings-photo-status" class="stg2-status" style="margin-top:8px;"></div>
+        </div>
+
+        <!-- ข้อมูลส่วนตัว -->
+        <div class="stg2-card">
+          <div class="stg2-card-title">
+            <div class="stg2-card-icon"><svg width="15" height="15"><use href="#ic-user"/></svg></div>
+            ข้อมูลส่วนตัว
+          </div>
+
+          <div class="stg2-field">
+            <label class="stg2-field-label">ชื่อ-นามสกุล</label>
+            <div class="stg2-field-row">
+              <input id="settings-name-input" type="text" placeholder="ชื่อ-นามสกุล" class="stg2-input">
+              <button onclick="saveSettingsName()" class="stg2-save-chip">
+                <svg width="13" height="13"><use href="#ic-save"/></svg>บันทึก
+              </button>
+            </div>
+            <div id="settings-name-status" class="stg2-status"></div>
+          </div>
+
+          <div class="stg2-field" style="margin-bottom:0;">
+            <label class="stg2-field-label">เบอร์โทรศัพท์</label>
+            <div class="stg2-field-row">
+              <input id="settings-phone-input" type="tel" placeholder="เบอร์โทรศัพท์" class="stg2-input">
+              <button onclick="saveSettingsPhone()" class="stg2-save-chip">
+                <svg width="13" height="13"><use href="#ic-save"/></svg>บันทึก
+              </button>
+            </div>
+            <div id="settings-phone-status" class="stg2-status"></div>
           </div>
         </div>
-      </div>
 
-      <!-- ชื่อ-นามสกุล -->
-      <div class="settings-section-card">
-        <div class="settings-section-title">
-          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-user"/></svg>ชื่อ-นามสกุล
+        <!-- เปลี่ยนรหัสผ่าน -->
+        <div class="stg2-card">
+          <div class="stg2-card-title">
+            <div class="stg2-card-icon"><svg width="15" height="15"><use href="#ic-lock"/></svg></div>
+            เปลี่ยนรหัสผ่าน
+          </div>
+          <div class="stg2-field"><input id="settings-pass-old" type="password" placeholder="รหัสผ่านเดิม" class="stg2-input" style="width:100%;"></div>
+          <div class="stg2-field"><input id="settings-pass-new" type="password" placeholder="รหัสผ่านใหม่" class="stg2-input" style="width:100%;"></div>
+          <div class="stg2-field" style="margin-bottom:0;"><input id="settings-pass-confirm" type="password" placeholder="ยืนยันรหัสผ่านใหม่" class="stg2-input" style="width:100%;"></div>
+          <button onclick="saveSettingsPassword()" class="stg2-btn-full">
+            <svg width="15" height="15"><use href="#ic-lock"/></svg>เปลี่ยนรหัสผ่าน
+          </button>
+          <div id="settings-pass-status" class="stg2-status"></div>
         </div>
-        <input id="settings-name-input" type="text" placeholder="ชื่อ-นามสกุล" class="settings-input">
-        <button onclick="saveSettingsName()" class="btn-primary-full">
-          <svg width="14" height="14" style="margin-right:6px;vertical-align:-2px"><use href="#ic-save"/></svg>บันทึกชื่อ
-        </button>
-        <div id="settings-name-status" class="status-text"></div>
-      </div>
 
-      <!-- เบอร์โทร -->
-      <div class="settings-section-card">
-        <div class="settings-section-title">
-          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-phone"/></svg>เบอร์โทรศัพท์
+        <!-- ข้อมูลบัญชี -->
+        <div class="stg2-card">
+          <div class="stg2-card-title">
+            <div class="stg2-card-icon"><svg width="15" height="15"><use href="#ic-clipboard"/></svg></div>
+            ข้อมูลบัญชี
+          </div>
+          <div class="stg2-info-row">
+            <span class="stg2-info-label">รหัสเซล</span>
+            <span id="settings-info-salesid" class="stg2-info-val red"></span>
+          </div>
+          <div class="stg2-info-row">
+            <span class="stg2-info-label">Username</span>
+            <span id="settings-info-username" class="stg2-info-val"></span>
+          </div>
+          <div class="stg2-info-row" style="border-bottom:none;padding-bottom:0;">
+            <span class="stg2-info-label">สถานะ</span>
+            <span class="stg2-info-val green"><span class="stg2-dot" style="background:var(--green);"></span>ใช้งานอยู่</span>
+          </div>
         </div>
-        <input id="settings-phone-input" type="tel" placeholder="เบอร์โทรศัพท์" class="settings-input">
-        <button onclick="saveSettingsPhone()" class="btn-primary-full">
-          <svg width="14" height="14" style="margin-right:6px;vertical-align:-2px"><use href="#ic-save"/></svg>บันทึกเบอร์โทร
-        </button>
-        <div id="settings-phone-status" class="status-text"></div>
-      </div>
 
-      <!-- เปลี่ยนรหัสผ่าน -->
-      <div class="settings-section-card">
-        <div class="settings-section-title">
-          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-lock"/></svg>เปลี่ยนรหัสผ่าน
-        </div>
-        <input id="settings-pass-old" type="password" placeholder="รหัสผ่านเดิม" class="settings-input">
-        <input id="settings-pass-new" type="password" placeholder="รหัสผ่านใหม่" class="settings-input">
-        <input id="settings-pass-confirm" type="password" placeholder="ยืนยันรหัสผ่านใหม่" class="settings-input">
-        <button onclick="saveSettingsPassword()" class="btn-primary-full">
-          <svg width="14" height="14" style="margin-right:6px;vertical-align:-2px"><use href="#ic-lock"/></svg>เปลี่ยนรหัสผ่าน
-        </button>
-        <div id="settings-pass-status" class="status-text"></div>
-      </div>
-
-      <!-- ข้อมูลบัญชี -->
-      <div class="settings-section-card account-info-card">
-        <div class="settings-section-title">
-          <svg width="15" height="15" style="vertical-align:-2px;margin-right:6px"><use href="#ic-clipboard"/></svg>ข้อมูลบัญชี
-        </div>
-        <div class="account-row">
-          <span class="account-label">รหัสเซล</span>
-          <span id="settings-info-salesid" class="account-val red"></span>
-        </div>
-        <div class="account-row">
-          <span class="account-label">Username</span>
-          <span id="settings-info-username" class="account-val"></span>
-        </div>
-        <div class="account-row" style="border-bottom:none">
-          <span class="account-label">สถานะ</span>
-          <span class="account-val green">
-            <span class="status-dot green-dot"></span>ใช้งานอยู่
-          </span>
+        <!-- ออกจากระบบ -->
+        <div class="stg2-danger-zone">
+          <div class="stg2-danger-label">บัญชีของฉัน</div>
+          <button onclick="doLogout()" class="stg2-btn-logout">
+            <svg width="16" height="16"><use href="#ic-logout"/></svg>ออกจากระบบ
+          </button>
         </div>
       </div>
-
-      <!-- ออกจากระบบ -->
-      <button onclick="doLogout()" class="btn-logout">
-        <svg width="16" height="16" style="margin-right:8px;vertical-align:-3px"><use href="#ic-logout"/></svg>ออกจากระบบ
-      </button>
-
     </div>
   </div>
 
@@ -1250,7 +1364,7 @@ html, body {
     </button>
     <button class="bnav-btn" id="nav-sell" onclick="switchPage('sell')">
       <span class="bnav-icon"><svg width="22" height="22"><use href="#ic-cart"/></svg></span>
-      <span>ขายสินค้า</span>
+      <span>สั่งสินค้า</span>
     </button>
     <button class="bnav-btn" id="nav-map" onclick="switchPage('map')">
       <span class="bnav-icon"><svg width="22" height="22"><use href="#ic-map"/></svg></span>
@@ -1383,6 +1497,16 @@ html, body {
   </div>
 </div>
 
+<!-- QR MODAL -->
+<div class="mov center" id="qr-modal" onclick="if(event.target===this) closeQrModal()">
+  <div class="mbox center-box" style="max-width:320px;text-align:center;padding:24px;">
+    <div style="font-size:15px;font-weight:800;color:var(--red-500);margin-bottom:14px;">📤 QR ลิงก์ส่วนตัวของฉัน</div>
+    <div id="qr-canvas-big" style="display:flex;justify-content:center;margin-bottom:14px;"></div>
+    <div id="qr-modal-link" style="font-size:12px;color:var(--red-600);word-break:break-all;margin-bottom:16px;"></div>
+    <button class="confirm-btn" onclick="closeQrModal()">ปิด</button>
+  </div>
+</div>
+
 <!-- SUCCESS MODAL -->
 <div class="mov center" id="success-modal">
   <div class="mbox center-box">
@@ -1466,6 +1590,8 @@ async function loadPinsFromSupabase() {
         createdAt: r.created_at,
         photo_url: r.photo_url || null
       }));
+      const mapPage = document.getElementById('page-map');
+      if (mapPage && mapPage.style.display !== 'none') renderCustomerMarkers();
     }
   } catch(_) {}
 }
@@ -1515,6 +1641,7 @@ let addPinMode = false;
 let _pendingPinLat = null, _pendingPinLng = null;
 let _editCustId = null;
 let salesMap = null, pinMap = null;
+let _streetLayer = null, _satelliteLayer = null, mapSatelliteOn = false;
 let pinLat = null, pinLng = null;
 let pinMarker = null;
 let customerMarkers = {};
@@ -1659,7 +1786,7 @@ async function doRefresh() {
         'background:linear-gradient(120deg,var(--red-700),var(--red-500));color:#fff;' +
         'font-family:Sarabun,sans-serif;font-size:13px;font-weight:700;' +
         'padding:10px;transform:translateY(-100%);transition:transform .2s;' +
-        'box-shadow:0 2px 8px rgba(192,57,43,.4);';
+        'box-shadow:0 2px 8px rgba(229,50,46,.4);';
       indicator.textContent = '↓ ดึงลงเพื่อรีเฟรช';
       document.body.appendChild(indicator);
     }
@@ -1768,116 +1895,136 @@ function renderIdCard() {
   const refUrl   = `${BACKEND_URL}/sales/${s.salesId}`;
   const photo    = getSalesPhoto();
   const avatarHtml = photo
-    ? `<div class="id-avatar" style="overflow:hidden;padding:0;">
+    ? `<div class="stg2-avatar" style="overflow:hidden;padding:0;">
          <img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" id="avatar-img">
        </div>`
-    : `<div class="id-avatar" id="avatar-img-wrap">${s.name[0]}</div>`;
+    : `<div class="stg2-avatar" id="avatar-img-wrap">${s.name[0]}</div>`;
 
   const el = document.getElementById('id-card-content');
   el.innerHTML = `
-    <div class="sales-id-card">
-      <div class="id-card-header">
-        <!-- รูปโปรไฟล์ + ปุ่มเปลี่ยนรูป -->
-        <div style="position:relative;flex-shrink:0;">
+    <div class="stg2-hero">
+      <h1>บัตรเซล</h1>
+      <p>บัตรประจำตัวและผลงานการขายของคุณ</p>
+    </div>
+
+    <div class="stg2-body">
+      <!-- ══ โปรไฟล์ ══ -->
+      <div class="stg2-profile-card">
+        <div class="stg2-avatar-wrap">
           ${avatarHtml}
-          <button onclick="document.getElementById('photo-input').click()"
-            style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;
-                   background:var(--red-500);border:2px solid #fff;color:#fff;font-size:11px;
-                   cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">
-            📷
-          </button>
+          <div class="stg2-avatar-edit-btn" onclick="document.getElementById('photo-input').click()">
+            <svg width="14" height="14"><use href="#ic-camera"/></svg>
+          </div>
           <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
         </div>
-        <div class="id-info">
-          <h2>${s.name}</h2>
-          <div class="id-code">รหัสเซล: ${s.salesId}</div>
-          <div class="id-role">💼 พนักงานขาย · Monshin Supply</div>
-        </div>
-      </div>
-      <div class="id-qr-section">
-        <div class="id-qr-box">
-          <div id="qr-canvas"></div>
-        </div>
-        <div class="id-qr-info">
-          <div class="id-qr-label">ลิงก์ LINE OA ส่วนตัว</div>
-          <div class="id-link">${refUrl}</div>
-          <div style="font-size:11px;color:var(--muted);line-height:1.6">
-            ลูกค้าสแกน QR หรือกดลิงก์นี้<br>Add LINE OA แล้วสั่งสินค้า<br>ระบบจะรู้ว่าคุณเป็นผู้แนะนำ
+        <div class="stg2-profile-name">${s.name}</div>
+        <div class="stg2-profile-role">💼 พนักงานขาย · Monshin Supply</div>
+        <div class="stg2-badge"><span class="stg2-dot"></span>รหัสเซล ${s.salesId}</div>
+
+        <!-- สถิติย่อ -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+          <div style="background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:12px;text-align:center;">
+            <div class="id-stat-val gold" id="stat-orders" style="font-size:22px;font-weight:800;">—</div>
+            <div style="font-size:10.5px;color:var(--text-3);margin-top:2px;">ออเดอร์</div>
+          </div>
+          <div style="background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:12px;text-align:center;">
+            <div class="id-stat-val gold" id="stat-revenue" style="font-size:22px;font-weight:800;">—</div>
+            <div style="font-size:10.5px;color:var(--text-3);margin-top:2px;">ยอดขาย (฿)</div>
           </div>
         </div>
       </div>
-      <div class="id-stats">
-        <div class="id-stat"><div class="id-stat-val gold" id="stat-orders">—</div><div class="id-stat-lbl">ออเดอร์</div></div>
-        <div class="id-stat"><div class="id-stat-val gold" id="stat-revenue">—</div><div class="id-stat-lbl">ยอดขาย (฿)</div></div>
-      </div>
-      <div class="id-actions">
-        <button class="id-btn gold" onclick="shareMyLink()">📤 แชร์ลิงก์</button>
-        <button class="id-btn primary" onclick="copyMyLink()">📋 คัดลอกลิงก์</button>
-        <button class="id-btn" onclick="printSalesCard()" style="background:linear-gradient(120deg,#2c3e50,#34495e);color:#fff;border-color:#2c3e50;">🖨️ พิมพ์บัตร</button>
-      </div>
-    </div>
 
-    <!-- ══ ยอดขาย Dashboard ══ -->
-    <div style="margin-top:14px;background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid var(--border-red);">
-      <div style="font-size:14px;font-weight:800;color:var(--red-500);margin-bottom:12px;">📊 ยอดขายของฉัน</div>
-
-      <!-- แท็บ วันนี้ / เดือนนี้ / ทั้งหมด -->
-      <div style="display:flex;gap:6px;margin-bottom:12px;" id="stats-tab-group">
-        <button onclick="switchStatsTab('today')" id="stab-today"
-          style="flex:1;padding:7px;border-radius:8px;border:none;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:var(--red-500);color:#fff;">
-          วันนี้
-        </button>
-        <button onclick="switchStatsTab('month')" id="stab-month"
-          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid var(--red-500);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:var(--red-500);">
-          เดือนนี้
-        </button>
-        <button onclick="switchStatsTab('all')" id="stab-all"
-          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid var(--red-500);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:var(--red-500);">
-          ทั้งหมด
-        </button>
-      </div>
-
-      <!-- สรุปตัวเลข -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-        <div style="background:var(--red-50);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--border-red);">
-          <div id="ds-orders" style="font-size:22px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
-          <div style="font-size:11px;color:#888;margin-top:2px;">จำนวนออเดอร์</div>
+      <!-- ══ QR ลิงก์ส่วนตัว ══ -->
+      <div class="stg2-card">
+        <div class="stg2-card-title">
+          <div class="stg2-card-icon"><svg width="15" height="15"><use href="#ic-qr"/></svg></div>
+          ลิงก์ LINE OA ส่วนตัว
         </div>
-        <div style="background:var(--red-50);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--border-red);">
-          <div id="ds-revenue" style="font-size:18px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
-          <div style="font-size:11px;color:#888;margin-top:2px;">ยอดขาย (฿)</div>
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="id-qr-box" onclick="openQrModal()" style="cursor:pointer;text-align:center;background:#fff;border:1px solid var(--border);border-radius:16px;padding:12px;box-shadow:var(--shadow-sm);">
+            <div id="qr-canvas"></div>
+            <div style="margin-top:6px;font-size:10px;color:var(--text-3);">🔍 แตะเพื่อขยาย</div>
+          </div>
+          <div class="id-link" style="font-size:11.5px;color:var(--red-600);word-break:break-all;line-height:1.5;margin:12px 0 4px;text-align:center;">${refUrl}</div>
+          <div style="font-size:11px;color:var(--text-3);line-height:1.6;text-align:center;">
+            ลูกค้าสแกน QR หรือกดลิงก์นี้ Add LINE OA แล้วสั่งสินค้า<br>ระบบจะรู้ว่าคุณเป็นผู้แนะนำ
+          </div>
+        </div>
+        <div class="id-actions" style="margin-top:16px;">
+          <button class="id-btn gold" onclick="shareMyLink()">📤 แชร์ลิงก์</button>
+          <button class="id-btn primary" onclick="copyMyLink()">📋 คัดลอกลิงก์</button>
+          <button class="id-btn" onclick="printSalesCard()" style="background:linear-gradient(120deg,#2c3e50,#34495e);color:#fff;border-color:#2c3e50;">🖨️ พิมพ์บัตร</button>
         </div>
       </div>
 
-      <!-- กราฟ 7 วันล่าสุด -->
-      <div style="margin-bottom:12px;">
-        <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">📈 7 วันล่าสุด</div>
-        <div id="sales-chart" style="display:flex;align-items:flex-end;gap:4px;height:70px;background:#fafafa;border-radius:8px;padding:8px;">
-          <div style="color:#bbb;font-size:11px;margin:auto;">⏳ กำลังโหลด...</div>
+      <!-- ══ ยอดขาย Dashboard ══ -->
+      <div class="stg2-card">
+        <div class="stg2-card-title">
+          <div class="stg2-card-icon"><svg width="15" height="15"><use href="#ic-clipboard"/></svg></div>
+          ยอดขายของฉัน
         </div>
-        <div id="sales-chart-labels" style="display:flex;gap:4px;margin-top:4px;"></div>
+
+        <!-- แท็บ วันนี้ / เดือนนี้ / ทั้งหมด -->
+        <div style="display:flex;gap:6px;margin-bottom:14px;" id="stats-tab-group">
+          <button onclick="switchStatsTab('today')" id="stab-today"
+            style="flex:1;padding:9px;border-radius:10px;border:none;font-family:var(--font);font-size:12.5px;font-weight:700;cursor:pointer;background:var(--red-500);color:#fff;">
+            วันนี้
+          </button>
+          <button onclick="switchStatsTab('month')" id="stab-month"
+            style="flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--red-500);font-family:var(--font);font-size:12.5px;font-weight:700;cursor:pointer;background:#fff;color:var(--red-500);">
+            เดือนนี้
+          </button>
+          <button onclick="switchStatsTab('all')" id="stab-all"
+            style="flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--red-500);font-family:var(--font);font-size:12.5px;font-weight:700;cursor:pointer;background:#fff;color:var(--red-500);">
+            ทั้งหมด
+          </button>
+        </div>
+
+        <!-- สรุปตัวเลข -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div style="background:var(--red-50);border-radius:14px;padding:14px;text-align:center;border:1px solid var(--border-red);">
+            <div id="ds-orders" style="font-size:22px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">จำนวนออเดอร์</div>
+          </div>
+          <div style="background:var(--red-50);border-radius:14px;padding:14px;text-align:center;border:1px solid var(--border-red);">
+            <div id="ds-revenue" style="font-size:18px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">ยอดขาย (฿)</div>
+          </div>
+        </div>
+
+        <!-- กราฟ 7 วันล่าสุด -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;">📈 7 วันล่าสุด</div>
+          <div id="sales-chart" style="display:flex;align-items:flex-end;gap:4px;height:70px;background:var(--gray-50);border-radius:12px;padding:8px;">
+            <div style="color:var(--text-4);font-size:11px;margin:auto;">⏳ กำลังโหลด...</div>
+          </div>
+          <div id="sales-chart-labels" style="display:flex;gap:4px;margin-top:4px;"></div>
+        </div>
+
+        <!-- รายการออเดอร์ล่าสุด -->
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;">🧾 ออเดอร์ล่าสุด</div>
+          <div id="orders-list" style="font-size:12px;color:var(--text-3);">⏳ กำลังโหลด...</div>
+        </div>
       </div>
 
-      <!-- รายการออเดอร์ล่าสุด -->
-      <div>
-        <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">🧾 ออเดอร์ล่าสุด</div>
-        <div id="orders-list" style="font-size:12px;color:#888;">⏳ กำลังโหลด...</div>
+      <!-- ══ ลูกค้าของฉัน ══ -->
+      <div class="stg2-card" style="margin-bottom:80px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div class="stg2-card-title" style="margin-bottom:0;">
+            <div class="stg2-card-icon"><svg width="15" height="15"><use href="#ic-pin"/></svg></div>
+            ลูกค้าของฉัน
+          </div>
+          <div id="customer-count" style="background:var(--red-500);color:#fff;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;">0 ราย</div>
+        </div>
+        <div id="customers-list" style="font-size:12px;color:var(--text-3);">⏳ กำลังโหลด...</div>
       </div>
-    </div>
-
-    <!-- ══ ลูกค้าของฉัน ══ -->
-    <div style="margin-top:14px;background:#fff;border-radius:16px;padding:16px;margin-bottom:80px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid var(--border-red);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div style="font-size:14px;font-weight:800;color:var(--red-500);">📍 ลูกค้าของฉัน</div>
-        <div id="customer-count" style="background:var(--red-500);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;">0 ราย</div>
-      </div>
-      <div id="customers-list" style="font-size:12px;color:#888;">⏳ กำลังโหลด...</div>
     </div>`;
 
   // สร้าง QR
   setTimeout(() => {
     new QRCode(document.getElementById('qr-canvas'), {
-      text: refUrl, width: 120, height: 120,
+      text: refUrl, width: 160, height: 160,
       colorDark: '#0f1117', colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M
     });
@@ -1905,6 +2052,23 @@ async function loadSalesStats() {
     document.getElementById('stat-orders').textContent  = merged.length;
     document.getElementById('stat-revenue').textContent = totalRevenue.toLocaleString('th-TH', {minimumFractionDigits:0});
   } catch(_) {}
+}
+
+function openQrModal() {
+  if (!session) return;
+  const refUrl = `${BACKEND_URL}/sales/${session.salesId}`;
+  const box = document.getElementById('qr-canvas-big');
+  box.innerHTML = '';
+  new QRCode(box, {
+    text: refUrl, width: 260, height: 260,
+    colorDark: '#0f1117', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  document.getElementById('qr-modal-link').textContent = refUrl;
+  document.getElementById('qr-modal').classList.add('show');
+}
+function closeQrModal() {
+  document.getElementById('qr-modal').classList.remove('show');
 }
 
 function printSalesCard() {
@@ -1941,7 +2105,7 @@ function printSalesCard() {
             <div style="font-family:Prompt,sans-serif;font-size:18px;font-weight:800;color:#1a1a1a;">${s.name}</div>
             <span style="display:inline-block;background:var(--red-500);color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-top:5px;">💼 ${s.salesId}</span>
             <div style="font-size:11px;color:#888;margin-top:5px;">พนักงานขาย · Sales Representative</div>
-            ${s.phone ? `<div style="font-size:13px;color:var(--red-500);font-weight:600;margin-top:4px;">📞 ${s.phone}</div>` : ''}
+            ${s.phone ? `<div style="font-size:13px;color:var(--red-500);font-weight:600;margin-top:4px;">📞 ${formatThaiPhone(s.phone)}</div>` : ''}
           </div>
         </div>
         <div style="height:1px;background:linear-gradient(90deg,transparent,var(--red-500)33,transparent);margin:0 20px;"></div>
@@ -1962,7 +2126,7 @@ function printSalesCard() {
         <div style="font-family:Prompt,sans-serif;font-size:13px;font-weight:700;color:var(--red-500);margin-bottom:10px;border-bottom:2px solid var(--red-500);padding-bottom:6px;">📋 ข้อมูลพนักงานขาย</div>
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">ชื่อ</span><span style="font-weight:600;color:#1a1a1a;">${s.name}</span></div>
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">รหัสเซล</span><span style="font-weight:600;color:var(--red-500);font-family:Prompt,sans-serif;">${s.salesId}</span></div>
-        ${s.phone ? `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เบอร์โทร</span><span style="font-weight:600;color:#1a1a1a;">${s.phone}</span></div>` : ''}
+        ${s.phone ? `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เบอร์โทร</span><span style="font-weight:600;color:#1a1a1a;">${formatThaiPhone(s.phone)}</span></div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">LINE OA</span><span style="font-weight:600;color:#06C755;">@monshin</span></div>
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เว็บไซต์</span><span style="font-weight:600;color:var(--red-500);font-size:11px;">${refUrl}</span></div>
         <div style="text-align:center;margin-top:14px;">
@@ -2325,7 +2489,7 @@ async function loadCustomersList() {
       const photoSection = p.photo_url
         ? `<div style="margin-top:8px;border-radius:10px;overflow:hidden;"><img src="${p.photo_url}" loading="lazy" style="width:100%;max-height:140px;object-fit:cover;display:block;border-radius:10px;" onerror="this.parentElement.style.display='none'"></div>`
         : '';
-      return `<div style="background:#fafafa;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(192,57,43,.08);">
+      return `<div style="background:#fafafa;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(229,50,46,.08);">
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red-700),var(--red-500));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${i+1}</div>
           <div style="flex:1;min-width:0;">
@@ -2358,9 +2522,11 @@ function initSettingsPage() {
   if (!session) return;
   // โหลดข้อมูลปัจจุบัน
   document.getElementById('settings-name-input').value = session.name || '';
-  document.getElementById('settings-phone-input').value = session.phone || '';
+  document.getElementById('settings-phone-input').value = formatThaiPhone(session.phone) || '';
   document.getElementById('settings-info-salesid').textContent = session.salesId || '-';
   document.getElementById('settings-info-username').textContent = session.username || '-';
+  document.getElementById('settings-info-name').textContent = session.name || '-';
+  document.getElementById('settings-info-salesid-badge').textContent = session.salesId || '-';
 
   // แสดงรูปโปรไฟล์
   const photo = getSalesPhoto();
@@ -2459,6 +2625,8 @@ async function saveSettingsName() {
       session.name = name;
       localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       status.textContent = '✅ บันทึกชื่อสำเร็จ!'; status.style.color='#27ae60';
+      const nameEl = document.getElementById('settings-info-name');
+      if (nameEl) nameEl.textContent = name;
       renderIdCard();
     } else throw new Error();
   } catch(e) {
@@ -2466,8 +2634,16 @@ async function saveSettingsName() {
   }
 }
 
+// เบอร์โทรไทย 9 หลักไม่มีเลข 0 นำหน้า (เช่น Google Sheet แปลงเป็นตัวเลขแล้วตัด 0 ทิ้ง) — เติม 0 คืนให้
+function formatThaiPhone(p) {
+  if (!p) return '';
+  const digits = String(p).replace(/[^0-9]/g, '');
+  if (digits.length === 9 && !digits.startsWith('0')) return '0' + digits;
+  return digits;
+}
+
 async function saveSettingsPhone() {
-  const phone = document.getElementById('settings-phone-input').value.trim();
+  const phone = formatThaiPhone(document.getElementById('settings-phone-input').value.trim());
   const status = document.getElementById('settings-phone-status');
   if (!phone) { status.textContent = '⚠️ กรุณากรอกเบอร์โทร'; status.style.color='var(--red-500)'; return; }
   status.textContent = '⏳ กำลังบันทึก...'; status.style.color='#888';
@@ -2792,7 +2968,7 @@ function _updateTempPin(lat, lng) {
   if (tempPinMarker) pinMapObj.removeLayer(tempPinMarker);
   tempPinMarker = L.marker([lat, lng], {
     icon: L.divIcon({
-      html: `<div style="width:28px;height:28px;border-radius:50%;background:var(--red-500);border:3px solid #fff;box-shadow:0 2px 12px rgba(192,57,43,.5);"></div>`,
+      html: `<div style="width:28px;height:28px;border-radius:50%;background:var(--red-500);border:3px solid #fff;box-shadow:0 2px 12px rgba(229,50,46,.5);"></div>`,
       iconSize:[28,28], iconAnchor:[14,14], className:''
     }),
     draggable: true
@@ -2914,7 +3090,8 @@ function initSalesMap() {
     if (salesMap) return;
     salesMap = L.map('sales-map', { zoomControl:true, attributionControl:false })
       .setView([18.145, 100.14], 12);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(salesMap);
+    _streetLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(salesMap);
+    _satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:19 });
     salesMap.on('click', e => {
       if (!addPinMode) return;
       _pendingPinLat = e.latlng.lat;
@@ -2922,12 +3099,18 @@ function initSalesMap() {
       openPinCustModal(_pendingPinLat, _pendingPinLng);
       setAddPin(false);
     });
-    // โหลด pins จาก Supabase แล้ว render
-    loadPinsFromSupabase().then(() => {
-      customers.forEach(c => addCustomerMarker(c));
-    });
+    // โหลด pins จาก Supabase — ไม่วาด marker ทันที (แผนที่ยังถูกซ่อนอยู่ ขนาด 0
+    // การ addTo(map) ตอนนี้ทำให้ Leaflet คำนวณพิกัดผิดพลาด) รอวาดตอนเปิดหน้าแผนที่จริง
+    loadPinsFromSupabase();
     startGPS();
   }, 300);
+}
+
+let _pinsRendered = false;
+function renderCustomerMarkers() {
+  if (!salesMap) return;
+  customers.forEach(c => { if (!customerMarkers[c.id]) addCustomerMarker(c); });
+  _pinsRendered = true;
 }
 
 // ── GPS ──────────────────────────────────────────────────
@@ -2936,8 +3119,6 @@ let gpsWatchId = null;
 let _lastPushLat = null, _lastPushLng = null;
 let _gpsInterval = null;
 let myRouteLine = null, myRoutePoints = [];
-
-// ── Push GPS ไป Supabase ──────────────────────────────────
 async function pushGpsToSupabase(lat, lng, acc) {
   if (!session) return;
   try {
@@ -2975,54 +3156,27 @@ function startGPS() {
       const acc = Math.round(pos.coords.accuracy);
       setGpsStatus(true, 'GPS ✓ ความแม่นยำ ~' + acc + ' ม.');
 
-      // อัปเดต marker
-      if (!myMarker) {
-        const _photo = getSalesPhoto();
-        const _avatarHtml = _photo
-          ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px var(--border-red2),0 3px 10px rgba(0,0,0,.3);overflow:hidden;background:#eee;"><img src="${_photo}" style="width:100%;height:100%;object-fit:cover;display:block;"></div>`
-          : `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(120deg,var(--red-700),var(--red-500));border:3px solid #fff;box-shadow:0 0 0 3px var(--border-red2),0 3px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:15px;">💼</div>`;
-        myMarker = L.marker([myLat, myLng], {
-          icon: L.divIcon({
-            html: _avatarHtml,
-            iconSize:[36,36], iconAnchor:[18,18], className:''
-          }),
-          zIndexOffset: 1000
-        }).addTo(salesMap).bindPopup('<b>ตำแหน่งของคุณ</b><br>' + myLat.toFixed(5) + ', ' + myLng.toFixed(5));
-
-        myCircle = L.circle([myLat, myLng], {
-          radius: acc, color:'var(--red-500)', fillColor:'var(--red-500)',
-          fillOpacity:0.08, weight:1
-        }).addTo(salesMap);
-
-        salesMap.flyTo([myLat, myLng], 14, { duration:1 });
-      } else {
-        myMarker.setLatLng([myLat, myLng]);
-        myMarker.setPopupContent('<b>ตำแหน่งของคุณ</b><br>' + myLat.toFixed(5) + ', ' + myLng.toFixed(5));
-        myCircle.setLatLng([myLat, myLng]).setRadius(acc);
-      }
-
-      // วาดเส้นทางในแผนที่เซล (เส้นตรง GPS จริง — road route วาดแยกต่างหาก)
+      // เก็บพิกัดลง trail เสมอ (แค่ข้อมูล ไม่แตะแผนที่ ปลอดภัยแม้หน้าแผนที่ยังซ่อนอยู่)
       myRoutePoints.push([myLat, myLng]);
-      if (myRouteLine) salesMap.removeLayer(myRouteLine);
-      if (myRoutePoints.length >= 2) {
-        myRouteLine = L.polyline(myRoutePoints, {
-          color:'var(--red-500)', weight:3, opacity:.45, dashArray:'4,4'
-        }).addTo(salesMap);
-      }
-      // อัปเดต road route ทุก 5 จุด เพื่อไม่ spam OSRM
-      if (myRoutePoints.length >= 2 && myRoutePoints.length % 5 === 0) {
+
+      // วาด/อัปเดต marker บนแผนที่ก็ต่อเมื่อหน้าแผนที่กำลังแสดงผลอยู่จริง (มีขนาดจริงแล้ว)
+      // ถ้าวาดตอนแผนที่ยังซ่อนอยู่ (display:none ขนาด 0) Leaflet จะคำนวณพิกัดผิดพลาดเป็น NaN
+      const mapVisible = salesMap && document.getElementById('page-map').style.display !== 'none';
+      if (mapVisible) renderMyPositionOnMap(acc);
+
+      // อัปเดต road route ทุก 5 จุด เพื่อไม่ spam OSRM (เฉพาะตอนแผนที่แสดงผลอยู่)
+      if (mapVisible && myRoutePoints.length >= 2 && myRoutePoints.length % 5 === 0) {
         drawRoadRoute(salesMap, myRoutePoints, 'var(--red-500)', '_myRoadRoute');
       }
 
-      // push ไป Supabase ทุก 30 วิ หรือถ้าขยับ > 20 เมตร
-      const now = Date.now();
+      // push ไป Supabase ทุก 30 วิ หรือถ้าขยับ > 20 เมตร (ทำงานเสมอ ไม่เกี่ยวกับแผนที่)
       const dist = (_lastPushLat !== null) ? calcDistM(_lastPushLat, _lastPushLng, myLat, myLng) : 999;
       if (dist > 20) {
         _lastPushLat = myLat; _lastPushLng = myLng;
         pushGpsToSupabase(myLat, myLng, acc);
       }
 
-      checkAutoStop(myLat, myLng);
+      pushRouteDay(myLat, myLng);
     },
     err => {
       const msgs = { 1:'ไม่ได้รับอนุญาต GPS', 2:'ไม่พบสัญญาณ GPS', 3:'GPS หมดเวลา' };
@@ -3035,6 +3189,43 @@ function startGPS() {
   _gpsInterval = setInterval(() => {
     if (myLat) pushGpsToSupabase(myLat, myLng, 0);
   }, 30000);
+}
+
+// วาด/อัปเดตหมุดตำแหน่งของฉัน + วงกลมความแม่นยำ + เส้นทางเดิน — เรียกเฉพาะตอนแผนที่แสดงผลอยู่จริง
+function renderMyPositionOnMap(acc) {
+  if (!salesMap || !myLat || !myLng) return;
+  if (!myMarker) {
+    const _photo = getSalesPhoto();
+    const _avatarHtml = _photo
+      ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px var(--border-red2),0 3px 10px rgba(0,0,0,.3);overflow:hidden;background:#eee;"><img src="${_photo}" style="width:100%;height:100%;object-fit:cover;display:block;"></div>`
+      : `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(120deg,var(--red-700),var(--red-500));border:3px solid #fff;box-shadow:0 0 0 3px var(--border-red2),0 3px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:15px;">💼</div>`;
+    myMarker = L.marker([myLat, myLng], {
+      icon: L.divIcon({
+        html: _avatarHtml,
+        iconSize:[36,36], iconAnchor:[18,18], className:''
+      }),
+      zIndexOffset: 1000
+    }).addTo(salesMap).bindPopup('<b>ตำแหน่งของคุณ</b><br>' + myLat.toFixed(5) + ', ' + myLng.toFixed(5));
+
+    myCircle = L.circle([myLat, myLng], {
+      radius: acc||10, color:'var(--red-500)', fillColor:'var(--red-500)',
+      fillOpacity:0.08, weight:1
+    }).addTo(salesMap);
+
+    salesMap.flyTo([myLat, myLng], 14, { duration:1 });
+  } else {
+    myMarker.setLatLng([myLat, myLng]);
+    myMarker.setPopupContent('<b>ตำแหน่งของคุณ</b><br>' + myLat.toFixed(5) + ', ' + myLng.toFixed(5));
+    myCircle.setLatLng([myLat, myLng]).setRadius(acc||myCircle.getRadius());
+  }
+
+  // วาดเส้นทางในแผนที่เซล (เส้นตรง GPS จริง — road route วาดแยกต่างหาก)
+  if (myRouteLine) salesMap.removeLayer(myRouteLine);
+  if (myRoutePoints.length >= 2) {
+    myRouteLine = L.polyline(myRoutePoints, {
+      color:'var(--red-500)', weight:3, opacity:.45, dashArray:'4,4'
+    }).addTo(salesMap);
+  }
 }
 
 function setGpsStatus(ok, msg) {
@@ -3050,6 +3241,43 @@ function setGpsStatus(ok, msg) {
 function centerGPS() {
   if (!myLat) { showToast('⚠️ ยังไม่พบ GPS'); return; }
   salesMap.flyTo([myLat, myLng], 15, { duration:0.8 });
+}
+
+// ── 2D / 3D tilt view (มุมมองพื้นฐาน ไม่ใช่ 3D อาคารจริง) ──
+let map3DOn = false;
+function toggleMap3D() {
+  map3DOn = !map3DOn;
+  const wrap  = document.getElementById('map-3d-wrap');
+  const badge = document.getElementById('map-3d-badge');
+  const label = document.getElementById('map-3d-label');
+  wrap.classList.toggle('tilt-3d', map3DOn);
+  badge.style.display = map3DOn ? 'block' : 'none';
+  label.textContent = map3DOn ? '2D' : '3D';
+  if (salesMap) {
+    // โหมด 3D เป็นมุมมองพรีวิวเท่านั้น ปิดการลาก/ซูมชั่วคราวกันคลิกพลาดตำแหน่ง
+    if (map3DOn) { salesMap.dragging.disable(); salesMap.scrollWheelZoom.disable(); }
+    else { salesMap.dragging.enable(); salesMap.scrollWheelZoom.enable(); }
+    setTimeout(() => salesMap.invalidateSize(), 400);
+  }
+  showToast(map3DOn ? '🗺️ มุมมอง 3D (ดูอย่างเดียว)' : '🗺️ กลับสู่มุมมอง 2D', 'success');
+}
+
+// สลับแผนที่ปกติ (เส้นถนน) ↔ ภาพถ่ายดาวเทียม (เสมือนจริง)
+function toggleMapSatellite() {
+  if (!salesMap || !_streetLayer || !_satelliteLayer) return;
+  mapSatelliteOn = !mapSatelliteOn;
+  const icon = document.getElementById('map-sat-icon');
+  if (mapSatelliteOn) {
+    salesMap.removeLayer(_streetLayer);
+    salesMap.addLayer(_satelliteLayer);
+    icon.textContent = '🗺️';
+    showToast('🛰️ แผนที่ภาพถ่ายดาวเทียม (เสมือนจริง)', 'success');
+  } else {
+    salesMap.removeLayer(_satelliteLayer);
+    salesMap.addLayer(_streetLayer);
+    icon.textContent = '🛰️';
+    showToast('🗺️ กลับสู่แผนที่ปกติ', 'success');
+  }
 }
 
 function calcRouteFromMe() {
@@ -3085,93 +3313,18 @@ function pinFromGPS() {
 }
 
 // ── Auto-stop detection ──────────────────────────────────
-let _autoStopTimer   = null;
-let _autoStopLat     = null;
-let _autoStopLng     = null;
-let _autoStopEnabled = false;
-let _stopAlertShown  = false;
-const STOP_RADIUS_M  = 50; // เคลื่อนที่น้อยกว่า 50 เมตร ถือว่าหยุด
+let _routeDay = new Date().toDateString(); // ใช้เช็ควันที่เพื่อรีเซ็ตเส้นทางทุกวัน
 
-function toggleAutoPin(on) {
-  _autoStopEnabled = on;
-  if (!on) {
-    clearTimeout(_autoStopTimer);
-    _autoStopTimer = null;
-    _autoStopLat = null; _autoStopLng = null;
-    _stopAlertShown = false;
-    showToast('ปิดปักหมุดอัตโนมัติ');
-  } else {
-    showToast('✅ เปิดปักหมุดอัตโนมัติแล้ว', 'success');
+// รีเซ็ตเส้นทาง (จุดเดินจริงจาก GPS) เมื่อขึ้นวันใหม่ ระหว่างที่แอปเปิดค้างไว้
+function pushRouteDay(lat, lng) {
+  const today = new Date().toDateString();
+  if (today !== _routeDay) {
+    _routeDay = today;
+    myRoutePoints = [];
+    if (myRouteLine) { salesMap.removeLayer(myRouteLine); myRouteLine = null; }
+    if (_roadLayers['_myRoadRoute']) { try { salesMap.removeLayer(_roadLayers['_myRoadRoute']); } catch(_){} delete _roadLayers['_myRoadRoute']; }
+    showToast('📅 วันใหม่ — รีเซ็ตเส้นทางเดินแล้ว', 'success');
   }
-}
-
-function checkAutoStop(lat, lng) {
-  if (!_autoStopEnabled) return;
-  const mins = parseInt(document.getElementById('auto-pin-mins').value) || 10;
-  const ms   = mins * 60 * 1000;
-
-  if (_autoStopLat === null) {
-    // เริ่มจับเวลา
-    _autoStopLat = lat; _autoStopLng = lng; _stopAlertShown = false;
-    _autoStopTimer = setTimeout(() => triggerAutoPin(), ms);
-    return;
-  }
-
-  // เช็คว่าเคลื่อนที่เกิน 50 เมตรไหม
-  const dist = calcDistM(_autoStopLat, _autoStopLng, lat, lng);
-  if (dist > STOP_RADIUS_M) {
-    // เคลื่อนที่แล้ว รีเซ็ตจับเวลา
-    clearTimeout(_autoStopTimer);
-    _autoStopLat = lat; _autoStopLng = lng; _stopAlertShown = false;
-    _autoStopTimer = setTimeout(() => triggerAutoPin(), ms);
-  }
-}
-
-function triggerAutoPin() {
-  if (_stopAlertShown || !_autoStopEnabled) return;
-  _stopAlertShown = true;
-  // แสดง toast พร้อมปุ่มยืนยัน
-  showAutoStopPrompt();
-}
-
-function showAutoStopPrompt() {
-  // สร้าง overlay notification
-  let el = document.getElementById('auto-stop-prompt');
-  if (el) el.remove();
-  el = document.createElement('div');
-  el.id = 'auto-stop-prompt';
-  el.style.cssText = 'position:fixed;bottom:160px;left:50%;transform:translateX(-50%);z-index:4000;' +
-    'background:#fff;border:2px solid var(--red-500);border-radius:16px;padding:14px 16px;' +
-    'box-shadow:0 4px 20px var(--border-red2);font-family:Sarabun,sans-serif;' +
-    'min-width:260px;max-width:320px;text-align:center;';
-  const mins = document.getElementById('auto-pin-mins').value;
-  el.innerHTML =
-    '<div style="font-size:22px;margin-bottom:6px">📍</div>' +
-    '<div style="font-size:14px;font-weight:700;color:var(--red-500);margin-bottom:4px">หยุดอยู่ที่นี่ ' + mins + ' นาทีแล้ว</div>' +
-    '<div style="font-size:12px;color:#888;margin-bottom:12px">ต้องการบันทึกเป็นลูกค้าที่นี่ไหม?</div>' +
-    '<div style="display:flex;gap:8px;">' +
-    '<button onclick="dismissAutoStop()" style="flex:1;padding:8px;border-radius:8px;border:1px solid #ddd;background:#f5f5f5;font-size:13px;cursor:pointer;">ไม่</button>' +
-    '<button onclick="confirmAutoStop()" style="flex:1;padding:8px;border-radius:8px;border:none;background:linear-gradient(120deg,var(--red-700),var(--red-500));color:#fff;font-size:13px;font-weight:700;cursor:pointer;">✅ บันทึก</button>' +
-    '</div>';
-  document.body.appendChild(el);
-  if (navigator.vibrate) navigator.vibrate([200,100,200]);
-}
-
-function confirmAutoStop() {
-  dismissAutoStop();
-  if (!myLat) { showToast('⚠️ ไม่พบ GPS'); return; }
-  _pendingPinLat = myLat; _pendingPinLng = myLng;
-  openPinCustModal(myLat, myLng, null);
-}
-
-function dismissAutoStop() {
-  const el = document.getElementById('auto-stop-prompt');
-  if (el) el.remove();
-  _stopAlertShown = false;
-  // รีเซ็ตจับเวลาใหม่
-  const mins = parseInt(document.getElementById('auto-pin-mins').value) || 10;
-  clearTimeout(_autoStopTimer);
-  _autoStopTimer = setTimeout(() => triggerAutoPin(), mins * 60 * 1000);
 }
 
 // ── Road routing via OSRM ─────────────────────────────────────────
@@ -3481,10 +3634,10 @@ function setSellMode(mode) {
     local.style.display = 'none';
     btnL.className  = 'mode-btn active';
     btnLo.className = 'mode-btn inactive';
-    // โหลด LIFF พร้อม ref เซล
+    // โหลดหน้าร้านจริงพร้อม ref เซล (แทนที่ LIFF link เดิม)
     const iframe = document.getElementById('liff-iframe');
     if (session && !iframe.src) {
-      iframe.src = LIFF_URL + '?ref=' + session.salesId;
+      iframe.src = BACKEND_URL + '?ref=' + session.salesId;
     }
   } else {
     liff.style.display  = 'none';
@@ -3504,7 +3657,13 @@ function switchPage(name) {
   page.classList.add('active');
   page.style.display = name === 'sell' ? 'flex' : name === 'map' ? 'flex' : 'block';
   document.getElementById('nav-' + name).classList.add('active');
-  if (name === 'map' && salesMap) setTimeout(() => salesMap.invalidateSize(), 100);
+  if (name === 'map' && salesMap) {
+    setTimeout(() => {
+      salesMap.invalidateSize();
+      renderCustomerMarkers();
+      if (myLat && myLng) renderMyPositionOnMap();
+    }, 100);
+  }
   if (name === 'sell') setSellMode('liff');
 }
 
