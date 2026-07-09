@@ -448,7 +448,7 @@ html, body {
 }
 
 .map-bottom {
-  padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: var(--surface);
   border-top: none; flex-shrink: 0;
   border-radius: 22px 22px 0 0;
@@ -458,25 +458,29 @@ html, body {
 }
 .map-bottom::before {
   content:''; display:block; width:44px; height:4px; border-radius:4px;
-  background: var(--gray-200); margin: 0 auto 10px;
+  background: var(--gray-200); margin: 0 auto 8px;
 }
-.map-stats { display: flex; gap: 8px; margin-bottom: 10px; }
+.map-stats { display: flex; gap: 6px; margin-bottom: 8px; }
 .mstat {
   flex: 1; background: var(--red-50);
   border: 1px solid var(--border-red);
-  border-radius: 14px; padding: 10px; text-align: center;
+  border-radius: 12px; padding: clamp(6px, 1.8vw, 10px); text-align: center;
+  min-width: 0;
 }
-.mstat-val { font-size: 17px; font-weight: 800; color: var(--red-500); }
-.mstat-lbl { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+.mstat-val { font-size: clamp(14px, 4vw, 17px); font-weight: 800; color: var(--red-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mstat-lbl { font-size: clamp(9px, 2.6vw, 10px); color: var(--text-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.map-btns { display: flex; gap: 7px; }
+.map-btns { display: flex; gap: 6px; }
 .mbtn {
-  flex: 1; padding: 13px 8px; border-radius: var(--r-md);
+  flex: 1; padding: clamp(10px, 2.8vw, 13px) 4px; border-radius: var(--r-md);
   border: 1.5px solid var(--border2);
   background: var(--gray-50); color: var(--text);
-  font-family: var(--font); font-size: 14px; font-weight: 700;
+  font-family: var(--font); font-size: clamp(11px, 3.2vw, 14px); font-weight: 700;
   cursor: pointer; transition: all 0.15s;
+  white-space: nowrap; min-width: 0;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
 }
+.mbtn svg { flex-shrink: 0; width: clamp(13px, 3.6vw, 16px); height: clamp(13px, 3.6vw, 16px); }
 .mbtn:hover { background: var(--gray-100); }
 .mbtn.primary {
   background: linear-gradient(135deg, var(--red-700), var(--red-500));
@@ -759,7 +763,7 @@ html, body {
 
 /* ── FAB buttons ── */
 .fab-btn {
-  width: 52px; height: 52px; border-radius: 50%;
+  width: clamp(44px, 12vw, 52px); height: clamp(44px, 12vw, 52px); border-radius: 50%;
   border: 1px solid var(--border-red);
   background: var(--surface); cursor: pointer;
   box-shadow: var(--shadow);
@@ -851,17 +855,17 @@ html, body {
 /* ── Settings page v2 (professional redesign) ── */
 .stg2-hero {
   background: linear-gradient(135deg, var(--red-800) 0%, var(--red-600) 55%, var(--red-500) 100%);
-  padding: calc(20px + env(safe-area-inset-top)) 20px 44px;
+  padding: calc(clamp(14px, 3.5vw, 20px) + env(safe-area-inset-top)) clamp(16px, 4.5vw, 20px) clamp(38px, 9vw, 44px);
   position: relative; overflow: hidden;
 }
 .stg2-hero::after {
   content:''; position:absolute; right:-40px; top:-40px; width:180px; height:180px;
   border-radius:50%; background: rgba(255,255,255,.08);
 }
-.stg2-hero h1 { font-family: var(--font-display); color:#fff; font-size: 21px; font-weight: 800; position:relative; z-index:1; }
-.stg2-hero p { color: rgba(255,255,255,.82); font-size: 12px; margin-top: 4px; position:relative; z-index:1; }
+.stg2-hero h1 { font-family: var(--font-display); color:#fff; font-size: clamp(18px, 5vw, 21px); font-weight: 800; position:relative; z-index:1; }
+.stg2-hero p { color: rgba(255,255,255,.82); font-size: clamp(11px, 3vw, 12px); margin-top: 4px; position:relative; z-index:1; }
 
-.stg2-body { padding: 0 16px; margin-top: -28px; position: relative; z-index: 2; }
+.stg2-body { padding: 0 clamp(12px, 3.5vw, 16px); margin-top: -28px; position: relative; z-index: 2; }
 
 .stg2-profile-card {
   background: var(--surface); border-radius: 22px; padding: 24px 18px 20px;
@@ -1214,7 +1218,7 @@ html, body {
       <div id="sales-map"></div>
       <div class="map-3d-toggle-badge" id="map-3d-badge">โหมด 3D (มุมมองเท่านั้น)</div>
     </div>
-    <div style="position:absolute;right:12px;bottom:200px;z-index:500;display:flex;flex-direction:column;gap:8px;">
+    <div style="position:absolute;right:10px;bottom:clamp(185px, 30vh, 230px);z-index:500;display:flex;flex-direction:column;gap:clamp(6px, 1.5vw, 8px);">
       <button onclick="toggleMap3D()" title="สลับมุมมอง 2D/3D" class="fab-btn" id="btn-map-3d">
         <span id="map-3d-label" style="font-size:14px;font-weight:800;">3D</span>
       </button>
@@ -1240,16 +1244,16 @@ html, body {
       </div>
       <div class="map-btns">
         <button class="mbtn primary" onclick="pinFromGPS()" id="btn-pin-gps">
-          <svg width="16" height="16" style="margin-right:5px;vertical-align:-3px"><use href="#ic-gps"/></svg>ปักที่นี่
+          <svg width="16" height="16"><use href="#ic-gps"/></svg><span>ปักที่นี่</span>
         </button>
         <button class="mbtn" onclick="toggleAddPin()" id="btn-pin-manual">
-          <svg width="16" height="16" style="margin-right:5px;vertical-align:-3px"><use href="#ic-pin"/></svg>ปักเอง
+          <svg width="16" height="16"><use href="#ic-pin"/></svg><span>ปักเอง</span>
         </button>
         <button class="mbtn primary" onclick="calcRoute()">
-          <svg width="16" height="16" style="margin-right:5px;vertical-align:-3px"><use href="#ic-play"/></svg>คำนวณ
+          <svg width="16" height="16"><use href="#ic-play"/></svg><span>คำนวณ</span>
         </button>
         <button class="mbtn success" onclick="clearRoute()">
-          <svg width="16" height="16" style="margin-right:5px;vertical-align:-3px"><use href="#ic-close"/></svg>ล้าง
+          <svg width="16" height="16"><use href="#ic-close"/></svg><span>ล้าง</span>
         </button>
       </div>
     </div>
@@ -1835,7 +1839,7 @@ function enterApp(sess) {
   const hdrAv = document.getElementById('hdr-av');
   const photo = (sess && sess.photo) || localStorage.getItem('sales_photo_' + (sess?.salesId||'')) || '';
   if (photo) {
-    hdrAv.innerHTML = '<img src="' + photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    hdrAv.innerHTML = '<img src="' + photo + '" onerror="avatarImgFallback(this)" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
   } else {
     hdrAv.textContent = sess.name[0];
   }
@@ -1858,9 +1862,27 @@ const CLOUDINARY_PRESET = 'monshin';
 function getSalesPhoto() {
   return (session && session.photo) || localStorage.getItem('sales_photo_' + (session?.salesId||'')) || '';
 }
+// รูปโหลดไม่ได้ (เช่น URL เก่าถูกลบจาก Cloudinary) → แสดงตัวอักษรแรกของชื่อแทนไอคอนรูปแตก
+// และล้าง URL ที่ตายแล้วออกจากเครื่อง เพื่อไม่ให้พยายามโหลดซ้ำทุกครั้งที่ render
+function avatarImgFallback(img) {
+  try {
+    const deadUrl = img.src;
+    const letter = (session && session.name ? session.name[0] : '?');
+    const wrap = img.parentElement;
+    if (wrap) { wrap.innerHTML = ''; wrap.textContent = letter; }
+    // ล้าง URL ตายออกจาก session/localStorage (อัปโหลดรูปใหม่จะกลับมาปกติ)
+    if (session && session.photo === deadUrl) {
+      session.photo = '';
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }
+    if (localStorage.getItem('sales_photo_' + (session?.salesId||'')) === deadUrl) {
+      localStorage.removeItem('sales_photo_' + (session?.salesId||''));
+    }
+  } catch(_) {}
+}
 function updateHdrPhoto(url) {
   const hdrAv = document.getElementById('hdr-av');
-  if (hdrAv) hdrAv.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+  if (hdrAv) hdrAv.innerHTML = '<img src="' + url + '" onerror="avatarImgFallback(this)" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
 }
 function setSalesPhotoLocal(url) {
   localStorage.setItem('sales_photo_' + (session?.salesId||''), url);
@@ -1896,7 +1918,7 @@ function renderIdCard() {
   const photo    = getSalesPhoto();
   const avatarHtml = photo
     ? `<div class="stg2-avatar" style="overflow:hidden;padding:0;">
-         <img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" id="avatar-img">
+         <img src="${photo}" onerror="avatarImgFallback(this)" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" id="avatar-img">
        </div>`
     : `<div class="stg2-avatar" id="avatar-img-wrap">${s.name[0]}</div>`;
 
@@ -2532,7 +2554,7 @@ function initSettingsPage() {
   const photo = getSalesPhoto();
   const preview = document.getElementById('settings-avatar-preview');
   if (photo) {
-    preview.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;">`;
+    preview.innerHTML = `<img src="${photo}" onerror="avatarImgFallback(this)" style="width:100%;height:100%;object-fit:cover;">`;
   } else {
     preview.textContent = (session.name || 'U')[0].toUpperCase();
   }
@@ -3197,7 +3219,7 @@ function renderMyPositionOnMap(acc) {
   if (!myMarker) {
     const _photo = getSalesPhoto();
     const _avatarHtml = _photo
-      ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px var(--border-red2),0 3px 10px rgba(0,0,0,.3);overflow:hidden;background:#eee;"><img src="${_photo}" style="width:100%;height:100%;object-fit:cover;display:block;"></div>`
+      ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px var(--border-red2),0 3px 10px rgba(0,0,0,.3);overflow:hidden;background:#eee;"><img src="${_photo}" onerror="this.parentElement.style.cssText+=';display:flex;align-items:center;justify-content:center;font-size:17px;background:linear-gradient(120deg,var(--red-700),var(--red-500))';this.parentElement.innerHTML='💼'" style="width:100%;height:100%;object-fit:cover;display:block;"></div>`
       : `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(120deg,var(--red-700),var(--red-500));border:3px solid #fff;box-shadow:0 0 0 3px var(--border-red2),0 3px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:15px;">💼</div>`;
     myMarker = L.marker([myLat, myLng], {
       icon: L.divIcon({
@@ -3634,10 +3656,12 @@ function setSellMode(mode) {
     local.style.display = 'none';
     btnL.className  = 'mode-btn active';
     btnLo.className = 'mode-btn inactive';
-    // โหลดหน้าร้านจริงพร้อม ref เซล (แทนที่ LIFF link เดิม)
+    // โหลดหน้าร้านจริงพร้อม ref เซล
+    // หมายเหตุ: ต้องเช็คผ่าน getAttribute เพราะ iframe.src ของ src="" จะคืนค่าเป็น URL หน้าปัจจุบัน (ไม่ใช่ค่าว่าง)
     const iframe = document.getElementById('liff-iframe');
-    if (session && !iframe.src) {
-      iframe.src = BACKEND_URL + '?ref=' + session.salesId;
+    if (session) {
+      const want = BACKEND_URL + '?ref=' + session.salesId;
+      if (iframe.getAttribute('src') !== want) iframe.setAttribute('src', want);
     }
   } else {
     liff.style.display  = 'none';
