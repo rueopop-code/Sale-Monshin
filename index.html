@@ -213,6 +213,7 @@ html, body {
 #app {
   display: none; flex-direction: column;
   height: 100vh; height: 100dvh;
+  height: var(--app-height, 100dvh); /* เผื่อ WebView บางรุ่นไม่รองรับ dvh หรือคำนวณผิดเวลามีแถบระบบ/คีย์บอร์ด */
   width: 100vw;
   overflow: hidden; position: fixed; inset: 0;
 }
@@ -698,6 +699,33 @@ html, body {
   box-shadow: var(--shadow-lg) !important;
 }
 .leaflet-popup-tip { background: var(--surface) !important; }
+
+/* ── หมุดลูกค้า: การ์ดโชว์ตลอด ไม่ต้องกด ── */
+.cust-card-popup .leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 16px !important;
+  border: 2px solid var(--red-500) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18) !important;
+  overflow: hidden;
+}
+.cust-card-popup .leaflet-popup-content { margin: 0 !important; width: 190px !important; }
+.cust-card-popup .leaflet-popup-tip {
+  background: var(--surface) !important;
+  border: 2px solid var(--red-500) !important;
+  border-top: none !important; border-left: none !important;
+}
+.cust-card-popup .leaflet-popup-close-button { display: none !important; }
+.cust-card-img { width: 100%; height: 110px; object-fit: cover; display: block; background: var(--gray-100); }
+.cust-card-body { padding: 10px 10px 8px; }
+.cust-card-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cust-card-phone { font-size: 11px; color: var(--red-500); font-weight: 600; margin-bottom: 6px; }
+.cust-card-btns { display: flex; gap: 6px; }
+.cust-card-btn {
+  flex: 1; padding: 6px 4px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  cursor: pointer; text-align: center; border: 1.5px solid var(--red-500); background: #fff; color: var(--red-500);
+}
+.cust-card-btn.del { border-color: #e74c3c; color: #e74c3c; }
+.cust-card-btn:active { opacity: .7; }
 
 /* ── Settings page card overrides ── */
 .settings-section-card {
@@ -1213,7 +1241,7 @@ html, body {
   </div>
 
   <!-- Map page -->
-  <div class="page" id="page-map" style="overflow:hidden;display:none;flex-direction:column;">
+  <div class="page" id="page-map" style="overflow:hidden;display:none;flex-direction:column;min-height:0;">
     <div id="map-3d-wrap">
       <div id="sales-map"></div>
       <div class="map-3d-toggle-badge" id="map-3d-badge">โหมด 3D (มุมมองเท่านั้น)</div>
@@ -1511,6 +1539,14 @@ html, body {
   </div>
 </div>
 
+<!-- PHOTO VIEWER MODAL — ดูรูปหมุดลูกค้าแบบเต็มจอ -->
+<div class="mov center" id="photo-view-modal" onclick="if(event.target===this) closePhotoView()" style="z-index:4000;">
+  <div style="max-width:92vw;max-height:82vh;display:flex;flex-direction:column;align-items:center;">
+    <img id="photo-view-img" src="" style="max-width:92vw;max-height:74vh;object-fit:contain;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.4);">
+    <button onclick="closePhotoView()" style="margin-top:16px;background:rgba(255,255,255,0.95);color:var(--text);border:none;border-radius:24px;padding:9px 22px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">✕ ปิด</button>
+  </div>
+</div>
+
 <!-- SUCCESS MODAL -->
 <div class="mov center" id="success-modal">
   <div class="mbox center-box">
@@ -1551,6 +1587,19 @@ html, body {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
+// ══════════════════════════════════════════
+//  REAL VIEWPORT HEIGHT FIX
+//  WebView/เบราว์เซอร์มือถือบางตัวคำนวณ 100vh/100dvh ผิดตอนมีแถบระบบ
+//  (nav bar 3 ปุ่ม / status bar) ทำให้ปุ่มด้านล่างสุดของหน้าถูกดันเลยขอบจอ
+//  ไปและถูก overflow:hidden บัง — ใช้ window.innerHeight จริงแทน
+// ══════════════════════════════════════════
+function setAppHeight() {
+  document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 200));
+
 // ══════════════════════════════════════════
 //  CONFIG
 // ══════════════════════════════════════════
@@ -1749,6 +1798,7 @@ function stopBgService() {
 function doLogout() {
   if (!confirm('ออกจากระบบ?')) return;
   stopBgService();
+  stopStatsAutoRefresh();
   localStorage.removeItem(SESSION_KEY);
   location.reload();
 }
@@ -1850,7 +1900,37 @@ function enterApp(sess) {
   initSalesMap();
   // Start background GPS service
   setTimeout(() => startBgService(), 2000);
+  startStatsAutoRefresh();
 }
+
+// ══════════════════════════════════════════
+//  AUTO-REFRESH ยอดขาย/ออเดอร์
+//  แก้ปัญหาตัวเลขไม่ตรงกันข้ามอุปกรณ์ (บัญชีเดียวกัน) เพราะเดิมข้อมูล
+//  จะถูกดึงครั้งเดียวตอน login เท่านั้น ถ้าเปิดหน้าค้างไว้นาน หรือมี
+//  ออเดอร์ใหม่เข้ามาจากอุปกรณ์อื่น ตัวเลขจะไม่อัปเดตจนกว่าจะกดรีเฟรชเอง
+// ══════════════════════════════════════════
+let statsAutoRefreshTimer = null;
+function startStatsAutoRefresh() {
+  stopStatsAutoRefresh();
+  statsAutoRefreshTimer = setInterval(() => {
+    if (!session) return;
+    // รีเฟรชเฉพาะตอนแอปอยู่หน้าจอ (ประหยัดแบต/ดาต้า)
+    if (document.visibilityState === 'visible') {
+      loadSalesStats();
+      loadDashboard();
+    }
+  }, 20000); // ทุก 20 วินาที
+}
+function stopStatsAutoRefresh() {
+  if (statsAutoRefreshTimer) { clearInterval(statsAutoRefreshTimer); statsAutoRefreshTimer = null; }
+}
+// รีเฟรชทันทีเมื่อกลับมาเปิดแท็บ/สลับแอปกลับมา (ไม่ต้องรอ 20 วิ)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && session) {
+    loadSalesStats();
+    loadDashboard();
+  }
+});
 
 // ══════════════════════════════════════════
 //  ID CARD + QR
@@ -2091,6 +2171,17 @@ function openQrModal() {
 }
 function closeQrModal() {
   document.getElementById('qr-modal').classList.remove('show');
+}
+
+// ── ดูรูปหมุดลูกค้าแบบเต็มจอ ──
+function openPhotoView(url) {
+  if (!url) return;
+  document.getElementById('photo-view-img').src = url;
+  document.getElementById('photo-view-modal').classList.add('show');
+}
+function closePhotoView() {
+  document.getElementById('photo-view-modal').classList.remove('show');
+  document.getElementById('photo-view-img').src = '';
 }
 
 function printSalesCard() {
@@ -2509,7 +2600,7 @@ async function loadCustomersList() {
       const addedDate = p.created_at ? new Date(p.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : '';
       const typeIcon = p.type === 'shop' ? '🏪' : p.type === 'house' ? '🏠' : '📍';
       const photoSection = p.photo_url
-        ? `<div style="margin-top:8px;border-radius:10px;overflow:hidden;"><img src="${p.photo_url}" loading="lazy" style="width:100%;max-height:140px;object-fit:cover;display:block;border-radius:10px;" onerror="this.parentElement.style.display='none'"></div>`
+        ? `<div style="margin-top:8px;border-radius:10px;overflow:hidden;max-width:420px;background:#f0f0f0;cursor:zoom-in;" onclick="openPhotoView('${p.photo_url}')"><img src="${p.photo_url}" loading="lazy" style="width:100%;max-height:160px;object-fit:contain;display:block;border-radius:10px;" onerror="this.parentElement.style.display='none'"></div>`
         : '';
       return `<div style="background:#fafafa;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(229,50,46,.08);">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -3432,17 +3523,26 @@ function addCustomerMarker(c) {
       iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-14], className:''
     })
   }).addTo(salesMap);
+
+  // การ์ดข้อมูลลูกค้า — โชว์ตลอดทันทีบนแผนที่ ไม่ต้องกดหมุดก่อน
+  const imgHtml = c.photo_url
+    ? '<img src="' + c.photo_url + '" class="cust-card-img" data-cid="' + c.id + '" data-act="viewphoto" style="cursor:zoom-in;" onerror="this.style.display=\'none\'">'
+    : '';
   const popupHtml =
-    '<div style="font-family:Sarabun,sans-serif;min-width:160px;">'
-    + '<div style="font-size:14px;font-weight:700;margin-bottom:4px;">' + (icons[c.type]||'📍') + ' ' + c.name + '</div>'
-    + (c.phone ? '<div style="font-size:12px;color:var(--red-500);margin-bottom:3px;">📞 ' + c.phone + '</div>' : '')
-    + (c.note  ? '<div style="font-size:11px;color:#888;margin-bottom:6px;">' + c.note + '</div>' : '')
-    + (c.photo_url ? '<img src="' + c.photo_url + '" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:6px;display:block;" onerror="this.style.display=\'none\'">' : '')
-    + '<div style="display:flex;gap:6px;margin-top:8px;">'
-    + '<button data-cid="' + c.id + '" data-act="edit" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border-red2);background:#fff;color:var(--red-500);font-size:12px;font-weight:600;cursor:pointer;">✏️ แก้ไข</button>'
-    + '<button data-cid="' + c.id + '" data-act="del" style="flex:1;padding:6px;border-radius:6px;border:1px solid #e74c3c;background:#fff;color:#e74c3c;font-size:12px;font-weight:600;cursor:pointer;">🗑️ ลบ</button>'
-    + '</div></div>';
-  m.bindPopup(popupHtml);
+    '<div>'
+    + imgHtml
+    + '<div class="cust-card-body">'
+    + '<div class="cust-card-name">' + (icons[c.type]||'📍') + ' ' + c.name + '</div>'
+    + (c.phone ? '<div class="cust-card-phone">📞 ' + c.phone + '</div>' : '')
+    + '<div class="cust-card-btns">'
+    + '<button class="cust-card-btn" data-cid="' + c.id + '" data-act="edit">✏️ แก้ไข</button>'
+    + '<button class="cust-card-btn del" data-cid="' + c.id + '" data-act="del">🗑️ ลบ</button>'
+    + '</div></div></div>';
+
+  m.bindPopup(popupHtml, {
+    closeButton: false, autoClose: false, closeOnClick: false,
+    className: 'cust-card-popup', minWidth: 190, maxWidth: 190
+  });
   m.on('popupopen', function() {
     const el = m.getPopup().getElement();
     if (!el) return;
@@ -3454,7 +3554,10 @@ function addCustomerMarker(c) {
         else deleteCustomer(id);
       };
     });
+    const img = el.querySelector('img[data-act="viewphoto"]');
+    if (img) img.onclick = function() { openPhotoView(img.getAttribute('src')); };
   });
+  m.openPopup(); // โชว์การ์ดทันทีโดยไม่ต้องกดหมุด
   customerMarkers[c.id] = m;
 }
 
