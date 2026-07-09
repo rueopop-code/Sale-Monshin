@@ -1241,12 +1241,12 @@ html, body {
   </div>
 
   <!-- Map page -->
-  <div class="page" id="page-map" style="overflow:hidden;display:none;flex-direction:column;min-height:0;">
+  <div class="page" id="page-map" style="overflow:hidden;display:none;flex-direction:column;min-height:0;position:relative;">
     <div id="map-3d-wrap">
       <div id="sales-map"></div>
       <div class="map-3d-toggle-badge" id="map-3d-badge">โหมด 3D (มุมมองเท่านั้น)</div>
     </div>
-    <div style="position:absolute;right:10px;bottom:clamp(185px, 30vh, 230px);z-index:500;display:flex;flex-direction:column;gap:clamp(6px, 1.5vw, 8px);">
+    <div style="position:absolute;right:12px;top:14px;z-index:500;display:flex;flex-direction:column;gap:clamp(6px, 1.5vw, 8px);">
       <button onclick="toggleMap3D()" title="สลับมุมมอง 2D/3D" class="fab-btn" id="btn-map-3d">
         <span id="map-3d-label" style="font-size:14px;font-weight:800;">3D</span>
       </button>
@@ -1664,11 +1664,17 @@ async function savePinToSupabase(pin) {
       photo_url: pin.photo_url || null
     })
   });
+  if (!res.ok) {
+    // เก็บรายละเอียด error ไว้ debug แต่ throw ให้ผู้เรียกรู้ว่าบันทึกไม่สำเร็จจริง
+    let detail = '';
+    try { detail = JSON.stringify(await res.json()); } catch(_) {}
+    throw new Error('savePinToSupabase failed: ' + res.status + ' ' + detail);
+  }
   return await res.json();
 }
 
 async function updatePinInSupabase(pin) {
-  await fetch(SB_URL + '/rest/v1/sales_pins?id=eq.' + pin.id, {
+  const res = await fetch(SB_URL + '/rest/v1/sales_pins?id=eq.' + pin.id, {
     method: 'PATCH',
     headers: {
       'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON,
@@ -1680,13 +1686,15 @@ async function updatePinInSupabase(pin) {
       photo_url: pin.photo_url !== undefined ? (pin.photo_url || null) : undefined
     })
   });
+  if (!res.ok) throw new Error('updatePinInSupabase failed: ' + res.status);
 }
 
 async function deletePinFromSupabase(id) {
-  await fetch(SB_URL + '/rest/v1/sales_pins?id=eq.' + id, {
+  const res = await fetch(SB_URL + '/rest/v1/sales_pins?id=eq.' + id, {
     method: 'DELETE',
     headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON }
   });
+  if (!res.ok) throw new Error('deletePinFromSupabase failed: ' + res.status);
 }
 let routeSelected = [];
 let routeLayer = null, routeTotalKm = 0;
@@ -3237,7 +3245,10 @@ function initSalesMap() {
     salesMap = L.map('sales-map', { zoomControl:true, attributionControl:false })
       .setView([18.145, 100.14], 12);
     _streetLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(salesMap);
-    _satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:19 });
+    // ภาพถ่ายดาวเทียมอย่างเดียวไม่มีชื่อจังหวัด/อำเภอ/สถานที่ ต้องซ้อนเลเยอร์ label ทับ
+    const _satImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:19 });
+    const _satLabels  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom:19 });
+    _satelliteLayer = L.layerGroup([_satImagery, _satLabels]);
     salesMap.on('click', e => {
       if (!addPinMode) return;
       _pendingPinLat = e.latlng.lat;
@@ -3575,9 +3586,9 @@ function addCustomerMarker(c) {
   m.bindPopup(popupHtml, {
     closeButton: false, autoClose: false, closeOnClick: false,
     className: 'cust-card-popup', minWidth: 190, maxWidth: 190,
-    // กันไม่ให้การ์ดโผล่ไปโดนปุ่มลอย (3D/ดาวเทียม/GPS/เส้นทาง) ทับด้านขวา
+    // กันไม่ให้การ์ดโผล่ไปโดนปุ่มลอย (3D/ดาวเทียม/GPS/เส้นทาง) ที่ตอนนี้อยู่มุมขวาบน
     // หรือโดนแผงด้านล่าง (สถิติ/ปุ่มปักหมุด) บัง เวลาหมุดอยู่ใกล้ขอบจอ
-    autoPanPaddingTopLeft: [16, 70],
+    autoPanPaddingTopLeft: [16, 250],
     autoPanPaddingBottomRight: [78, 260]
   });
   m.on('popupopen', function() {
@@ -3713,15 +3724,23 @@ async function savePinCustomer() {
   if (_editCustId) {
     const idx = customers.findIndex(x => x.id === _editCustId);
     if (idx >= 0) {
+      const prev = customers[idx];
       customers[idx] = { ...customers[idx], name, phone, type, note, photo_url: photoUrl || customers[idx].photo_url || null };
       if (customerMarkers[_editCustId]) {
         salesMap.removeLayer(customerMarkers[_editCustId]);
         delete customerMarkers[_editCustId];
       }
       addCustomerMarker(customers[idx]);
-      updatePinInSupabase(customers[idx])
-        .then(() => showToast('✅ แก้ไขลูกค้าแล้ว', 'success'))
-        .catch(() => showToast('⚠️ บันทึกไม่สำเร็จ'));
+      try {
+        await updatePinInSupabase(customers[idx]);
+        showToast('✅ แก้ไขลูกค้าแล้ว', 'success');
+      } catch(e) {
+        // บันทึกไม่สำเร็จจริง - ย้อนกลับข้อมูลบนหน้าจอ ไม่ให้ค้างเป็นข้อมูลหลอกที่จะหายไปตอนรีเฟรช
+        customers[idx] = prev;
+        if (customerMarkers[_editCustId]) { salesMap.removeLayer(customerMarkers[_editCustId]); delete customerMarkers[_editCustId]; }
+        addCustomerMarker(prev);
+        showToast('❌ บันทึกไม่สำเร็จ (เน็ตหลุด/เซิร์ฟเวอร์ขัดข้อง) กรุณาลองใหม่', 'error');
+      }
     }
   } else {
     const cust = {
@@ -3732,9 +3751,15 @@ async function savePinCustomer() {
     };
     customers.push(cust);
     addCustomerMarker(cust);
-    savePinToSupabase(cust)
-      .then(() => showToast('✅ เพิ่มลูกค้าแล้ว', 'success'))
-      .catch(() => showToast('⚠️ บันทึกไม่สำเร็จ'));
+    try {
+      await savePinToSupabase(cust);
+      showToast('✅ เพิ่มลูกค้าแล้ว', 'success');
+    } catch(e) {
+      // บันทึกไม่สำเร็จจริง - เอาหมุดที่เพิ่มไว้ชั่วคราวออก ไม่ให้ผู้ใช้เข้าใจผิดว่าปักสำเร็จแล้ว
+      customers = customers.filter(x => x.id !== cust.id);
+      if (customerMarkers[cust.id]) { salesMap.removeLayer(customerMarkers[cust.id]); delete customerMarkers[cust.id]; }
+      showToast('❌ ปักหมุดไม่สำเร็จ (เน็ตหลุด/เซิร์ฟเวอร์ขัดข้อง) กรุณาลองปักใหม่อีกครั้ง', 'error');
+    }
   }
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '✅ บันทึกลูกค้า'; }
   closePinCustModal();
