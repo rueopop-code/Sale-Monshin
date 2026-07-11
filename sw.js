@@ -1,4 +1,4 @@
-const CACHE_NAME = 'monshin-sale-v1';
+const CACHE_NAME = 'monshin-sale-v2';
 const urlsToCache = [
   '/Sale-Monshin/',
   '/Sale-Monshin/index.html'

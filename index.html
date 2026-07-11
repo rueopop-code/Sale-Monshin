@@ -3385,14 +3385,14 @@ async function pushGpsToSupabase(lat, lng, acc) {
       },
       body: JSON.stringify({ sales_id: session.salesId, lat, lng, accuracy: acc, updated_at: new Date().toISOString() })
     });
-    // บันทึกเส้นทาง
+    // บันทึกเส้นทาง (ส่งค่าความแม่นยำไปด้วย ให้หน้าแอดมินกรองสัญญาณหยาบออกได้)
     await fetch(SB_URL + '/rest/v1/sales_routes', {
       method: 'POST',
       headers: {
         'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ sales_id: session.salesId, lat, lng, recorded_at: new Date().toISOString() })
+      body: JSON.stringify({ sales_id: session.salesId, lat, lng, accuracy: acc, recorded_at: new Date().toISOString() })
     });
   } catch(_) {}
 }
@@ -3402,14 +3402,55 @@ function startGPS() {
     setGpsStatus(false, 'เบราว์เซอร์ไม่รองรับ GPS');
     return;
   }
+  // ── โหมดความแม่นยำสูง ──────────────────────────────────────
+  // GPS_ACC_GOOD : จุดที่ "ดี" พร้อมใช้ทันที (≤ 25 ม.)
+  // GPS_ACC_MAX  : แย่กว่านี้ทิ้งเลย ไม่ใช้ ไม่ส่ง (100 ม. — มักเป็นตำแหน่งจากเสาสัญญาณ/WiFi)
+  // GPS_WARMUP   : จุดแรก ๆ ตอนเพิ่งเปิด GPS มักหยาบ ต้องรอให้ล็อกดาวเทียมก่อน
+  const GPS_ACC_GOOD = 25, GPS_ACC_MAX = 100, GPS_WARMUP_FIXES = 2, GPS_MIN_MOVE_M = 12;
+  let _gpsFixCount = 0;
+  let _lastGoodAcc = null;
+
   gpsWatchId = navigator.geolocation.watchPosition(
     pos => {
-      myLat = pos.coords.latitude;
-      myLng = pos.coords.longitude;
+      const rawLat = pos.coords.latitude;
+      const rawLng = pos.coords.longitude;
       const acc = Math.round(pos.coords.accuracy);
-      setGpsStatus(true, 'GPS ✓ ความแม่นยำ ~' + acc + ' ม.');
+      _gpsFixCount++;
 
-      // เก็บพิกัดลง trail เสมอ (แค่ข้อมูล ไม่แตะแผนที่ ปลอดภัยแม้หน้าแผนที่ยังซ่อนอยู่)
+      // 1) ตัดสัญญาณหยาบทิ้ง — ไม่ใช้ ไม่ส่ง (ตำแหน่งเพี้ยนได้เป็นร้อยเมตร)
+      if (acc > GPS_ACC_MAX) {
+        setGpsStatus(true, '📡 รอสัญญาณ GPS แม่น ๆ... (~' + acc + ' ม.)');
+        return;
+      }
+      // 2) ช่วงวอร์มอัพ: จุดแรก ๆ ถ้ายังไม่แม่นพอ รอก่อน (กันจุดเริ่มต้นลอยไปคนละที่)
+      if (_gpsFixCount <= GPS_WARMUP_FIXES && acc > GPS_ACC_GOOD * 2) {
+        setGpsStatus(true, '📡 กำลังล็อกดาวเทียม... (~' + acc + ' ม.)');
+        return;
+      }
+      // 3) กันจุดวาป: ถ้ากระโดดไกลผิดปกติจากจุดล่าสุด (> ~160 กม./ชม.) ทิ้ง
+      if (myLat !== null) {
+        const jumpM = calcDistM(myLat, myLng, rawLat, rawLng);
+        const dtSec = (Date.now() - (window._lastFixT || 0)) / 1000;
+        if (dtSec > 0 && dtSec < 120 && jumpM / dtSec > 45) return;
+      }
+      window._lastFixT = Date.now();
+
+      // 4) กันจุดแกว่งตอนอยู่กับที่: ขยับน้อยกว่า 12 ม. = ถือว่าอยู่ที่เดิม
+      //    (ยกเว้นจุดใหม่แม่นกว่าเดิมชัดเจน → รับไว้เพื่อ "ขยับเข้าตำแหน่งจริง")
+      const movedM = (myLat !== null) ? calcDistM(myLat, myLng, rawLat, rawLng) : 999;
+      const muchBetter = _lastGoodAcc !== null && acc < _lastGoodAcc - 10;
+      if (movedM < GPS_MIN_MOVE_M && !muchBetter && myLat !== null) {
+        setGpsStatus(true, 'GPS ✓ ความแม่นยำ ~' + acc + ' ม.');
+        return;
+      }
+
+      myLat = rawLat;
+      myLng = rawLng;
+      _lastGoodAcc = acc;
+      window._lastGpsAcc = acc; // เก็บไว้ให้ keepalive ส่งค่าจริง
+      setGpsStatus(true, 'GPS ✓ ความแม่นยำ ~' + acc + ' ม.' + (acc <= GPS_ACC_GOOD ? ' 🎯' : ''));
+
+      // เก็บพิกัดลง trail เฉพาะจุดที่ผ่านการกรองแล้ว (เส้นจะนิ่ง ไม่เดินทั่วแผนที่)
       myRoutePoints.push([myLat, myLng]);
 
       // วาด/อัปเดต marker บนแผนที่ก็ต่อเมื่อหน้าแผนที่กำลังแสดงผลอยู่จริง (มีขนาดจริงแล้ว)
@@ -3422,7 +3463,7 @@ function startGPS() {
         drawRoadRoute(salesMap, myRoutePoints, 'var(--red-500)', '_myRoadRoute');
       }
 
-      // push ไป Supabase ทุก 30 วิ หรือถ้าขยับ > 20 เมตร (ทำงานเสมอ ไม่เกี่ยวกับแผนที่)
+      // push ไป Supabase ถ้าขยับ > 20 เมตร (ทำงานเสมอ ไม่เกี่ยวกับแผนที่)
       const dist = (_lastPushLat !== null) ? calcDistM(_lastPushLat, _lastPushLng, myLat, myLng) : 999;
       if (dist > 20) {
         _lastPushLat = myLat; _lastPushLng = myLng;
@@ -3435,12 +3476,13 @@ function startGPS() {
       const msgs = { 1:'ไม่ได้รับอนุญาต GPS', 2:'ไม่พบสัญญาณ GPS', 3:'GPS หมดเวลา' };
       setGpsStatus(false, msgs[err.code] || 'GPS error');
     },
-    { enableHighAccuracy:true, maximumAge:5000, timeout:15000 }
+    // maximumAge:0 = ขอตำแหน่ง "สด" เสมอ ห้ามใช้ค่าเก่าจาก cache (เดิม 5 วิ ทำให้ตำแหน่งหน่วง)
+    { enableHighAccuracy:true, maximumAge:0, timeout:20000 }
   );
 
-  // push ทุก 30 วิแม้ไม่ขยับ (keepalive)
+  // push ทุก 30 วิแม้ไม่ขยับ (keepalive) — ส่งค่าความแม่นยำจริงล่าสุด ไม่ใช่ 0
   _gpsInterval = setInterval(() => {
-    if (myLat) pushGpsToSupabase(myLat, myLng, 0);
+    if (myLat) pushGpsToSupabase(myLat, myLng, window._lastGpsAcc || null);
   }, 30000);
 }
 
