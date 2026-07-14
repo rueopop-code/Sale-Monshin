@@ -1419,6 +1419,7 @@ html, body {
     <div id="pin-cust-coords" class="coords-badge"></div>
     <div class="cfield"><label>ชื่อ / ชื่อร้าน *</label><input type="text" id="pc-name" placeholder="เช่น ร้านสมชาย, คุณมาลี"></div>
     <div class="cfield"><label>เบอร์โทร</label><input type="tel" id="pc-phone" placeholder="0812345678"></div>
+    <div class="cfield"><label>ที่อยู่ <span class="label-optional">(ไม่บังคับ — ช่วยให้ "สั่งแทนลูกค้า" ไม่ต้องพิมพ์ที่อยู่ใหม่)</span></label><input type="text" id="pc-addr" placeholder="เช่น 12 หมู่ 3 ต.ในเวียง อ.เมือง จ.แพร่"></div>
     <div class="cfield">
       <label>ประเภท</label>
       <select id="pc-type" class="cselect">
@@ -1670,6 +1671,7 @@ async function savePinToSupabase(pin) {
     body: JSON.stringify({
       id: pin.id, sales_id: session.salesId,
       name: pin.name, phone: pin.phone||'',
+      address: pin.address || null,
       type: pin.type||'shop', note: pin.note||'',
       lat: pin.lat, lng: pin.lng,
       photo_url: pin.photo_url || null
@@ -1693,6 +1695,7 @@ async function updatePinInSupabase(pin) {
     },
     body: JSON.stringify({
       name: pin.name, phone: pin.phone||'',
+      address: pin.address || null,
       type: pin.type||'shop', note: pin.note||'',
       photo_url: pin.photo_url !== undefined ? (pin.photo_url || null) : undefined
     })
@@ -1717,6 +1720,8 @@ let _streetLayer = null, _satelliteLayer = null, mapSatelliteOn = false;
 let pinLat = null, pinLng = null;
 let pinMarker = null;
 let customerMarkers = {};
+let _orderingForPin = null;  // pin ลูกค้าที่กำลังสั่งแทนอยู่ (จากหน้า "ลูกค้าของฉัน")
+let _myPinsCache = [];       // cache ล่าสุดของ sales_pins ที่โหลดไว้ ใช้หา pin ตอนกด "สั่งแทน"
 
 // ══════════════════════════════════════════
 //  AUTH TABS
@@ -2731,6 +2736,8 @@ async function loadCustomersList() {
       });
     }
 
+    _myPinsCache = pins; // เก็บไว้ให้ orderForCustomer() หาข้อมูล pin ได้
+
     cl.innerHTML = pins.map((p, i) => {
       const cname = (p.name || '').toLowerCase().trim();
       const orderCount = pinOrderCount[cname] || 0;
@@ -2758,11 +2765,72 @@ async function loadCustomersList() {
           ${addedDate ? `<span style="padding:4px 10px;background:#f5f5f5;border-radius:20px;font-size:11px;color:#888;">📅 เพิ่ม ${addedDate}</span>` : ''}
           ${p.note ? `<span style="padding:4px 10px;background:#fffbf0;border:1px solid rgba(245,158,11,0.3);border-radius:20px;font-size:11px;color:#888;">📝 ${p.note}</span>` : ''}
         </div>
+        <button onclick="orderForCustomer('${p.id}')"
+          style="width:100%;margin-top:10px;padding:9px 10px;background:linear-gradient(120deg,var(--red-700),var(--red-500));border:none;border-radius:10px;font-size:12px;color:#fff;font-weight:700;cursor:pointer;">
+          🧾 สั่งซื้อแทนลูกค้ารายนี้
+        </button>
       </div>`;
     }).join('');
   } catch(e) {
     if (cl) cl.innerHTML = '<div style="color:var(--red-500);font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
   }
+}
+
+// ══════════════════════════════════════════
+//  สั่งซื้อแทนลูกค้า (จากฐานข้อมูล "ลูกค้าของฉัน")
+//  — ใช้หน้าร้านจริง (iframe) เดียวกับที่ลูกค้าใช้ แต่ส่งชื่อ/เบอร์/พิกัด
+//    ไปเติมให้อัตโนมัติผ่าน query string แทนที่จะพิมพ์ใหม่
+// ══════════════════════════════════════════
+function _buildStorefrontUrl() {
+  let url = BACKEND_URL + '?ref=' + session.salesId;
+  if (_orderingForPin) {
+    const p = _orderingForPin;
+    url += '&so=1'
+      + '&soName='  + encodeURIComponent(p.name  || '')
+      + '&soPhone=' + encodeURIComponent(p.phone || '')
+      + '&soAddr='  + encodeURIComponent(p.address || '')
+      + '&soNote='  + encodeURIComponent(p.note || '')
+      + '&_t=' + Date.now(); // กันไม่ให้ src ซ้ำของเดิม เวลาสั่งแทนลูกค้าคนเดิมติดกัน 2 ครั้ง (iframe จะไม่โหลดใหม่ถ้า src เหมือนเดิมเป๊ะ)
+    if (p.lat && p.lng) url += '&soLat=' + p.lat + '&soLng=' + p.lng;
+  }
+  return url;
+}
+
+function orderForCustomer(pinId) {
+  const p = (_myPinsCache || []).find(x => String(x.id) === String(pinId));
+  if (!p) { showToast('⚠️ ไม่พบข้อมูลลูกค้ารายนี้'); return; }
+  _orderingForPin = p;
+  closeStatDetailModal();
+  switchPage('sell');   // จะเรียก setSellMode('liff') ให้อัตโนมัติ (โหมดหน้าร้านจริง) พร้อมเติมพารามิเตอร์สั่งแทนลูกค้า
+  _renderOrderForBanner();
+  showToast('🧾 กำลังสั่งแทน: ' + (p.name || 'ลูกค้า') + ' — ระบบเติมชื่อ/เบอร์/พิกัดในหน้าร้านให้แล้ว', 'success');
+}
+
+function cancelOrderForCustomer() {
+  _orderingForPin = null;
+  const iframe = document.getElementById('liff-iframe');
+  if (iframe && session) iframe.setAttribute('src', _buildStorefrontUrl());
+  _renderOrderForBanner();
+  showToast('ยกเลิกโหมดสั่งแทนลูกค้าแล้ว');
+}
+
+function _renderOrderForBanner() {
+  const wrap = document.getElementById('sell-liff');
+  if (!wrap) return;
+  let bar = document.getElementById('order-for-banner');
+  if (!_orderingForPin) {
+    if (bar) bar.remove();
+    return;
+  }
+  const p = _orderingForPin;
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'order-for-banner';
+    bar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--red-50,#fff0ef);border-bottom:1.5px solid var(--border-red2,#f3b9b5);font-size:12px;color:var(--red-700,#b3261e);font-weight:700;';
+    wrap.insertBefore(bar, wrap.firstChild);
+  }
+  bar.innerHTML = `🧾 กำลังสั่งแทน: ${p.name || 'ลูกค้า'} ${p.address ? '· ' + p.address : ''}
+    <span onclick="cancelOrderForCustomer()" style="margin-left:auto;cursor:pointer;color:#888;font-weight:400;">✕ ยกเลิก</span>`;
 }
 
 // ══════════════════════════════════════════
@@ -3167,9 +3235,31 @@ function closeCart() { document.getElementById('cart-modal').classList.remove('s
 
 function goToCheckout() {
   closeCart();
-  pinLat = null; pinLng = null;
-  document.getElementById('pin-status').textContent = 'ยังไม่ปักหมุด';
-  document.getElementById('pin-status').style.color = 'var(--muted)';
+  if (_orderingForPin) {
+    // สั่งแทนลูกค้าที่มีอยู่แล้วในฐานข้อมูล — เติมข้อมูลให้อัตโนมัติ ไม่ต้องกรอกใหม่
+    const p = _orderingForPin;
+    document.getElementById('c-name').value  = p.name  || '';
+    document.getElementById('c-phone').value = p.phone || '';
+    document.getElementById('c-addr').value  = p.address || '';
+    document.getElementById('c-note').value  = p.note || '';
+    if (p.lat && p.lng) {
+      pinLat = p.lat; pinLng = p.lng;
+      document.getElementById('pin-status').textContent = `✅ ใช้ตำแหน่งที่ปักหมุดไว้ (${(+p.lat).toFixed(4)}, ${(+p.lng).toFixed(4)})`;
+      document.getElementById('pin-status').style.color = 'var(--green)';
+    } else {
+      pinLat = null; pinLng = null;
+      document.getElementById('pin-status').textContent = 'ยังไม่ปักหมุด';
+      document.getElementById('pin-status').style.color = 'var(--muted)';
+    }
+  } else {
+    document.getElementById('c-name').value  = '';
+    document.getElementById('c-phone').value = '';
+    document.getElementById('c-addr').value  = '';
+    document.getElementById('c-note').value  = '';
+    pinLat = null; pinLng = null;
+    document.getElementById('pin-status').textContent = 'ยังไม่ปักหมุด';
+    document.getElementById('pin-status').style.color = 'var(--muted)';
+  }
   document.getElementById('checkout-modal').classList.add('show');
 }
 function closeCheckout() { document.getElementById('checkout-modal').classList.remove('show'); }
@@ -3301,8 +3391,8 @@ async function submitOrder() {
         body: JSON.stringify({ sales_id: session.salesId })
       }).catch(() => {});
 
-      // บันทึก pin ลูกค้า ถ้ามีพิกัด
-      if (pinLat) {
+      // บันทึก pin ลูกค้าใหม่ ถ้ามีพิกัด — ข้ามขั้นตอนนี้ถ้าสั่งแทนลูกค้าที่มี pin อยู่แล้ว (กันปักหมุดซ้ำ)
+      if (pinLat && !_orderingForPin) {
         const cust = {
           id: 'sp_'+Date.now(), name, phone: phone||'',
           address: addr, type:'shop', note: note||'',
@@ -3316,6 +3406,8 @@ async function submitOrder() {
       cart = {};
       updateCartBar();
       closeCheckout();
+      _orderingForPin = null;
+      _renderOrderForBanner();
       document.getElementById('success-order-id').textContent = orderId;
       document.getElementById('success-modal').classList.add('show');
     } else {
@@ -3759,6 +3851,7 @@ function openPinCustModal(lat, lng, editId) {
     if (c) {
       document.getElementById('pc-name').value  = c.name  || '';
       document.getElementById('pc-phone').value = c.phone || '';
+      document.getElementById('pc-addr').value  = c.address || '';
       document.getElementById('pc-type').value  = c.type  || 'shop';
       document.getElementById('pc-note').value  = c.note  || '';
       _pendingPinLat = c.lat; _pendingPinLng = c.lng;
@@ -3775,9 +3868,20 @@ function openPinCustModal(lat, lng, editId) {
   } else {
     document.getElementById('pc-name').value  = '';
     document.getElementById('pc-phone').value = '';
+    document.getElementById('pc-addr').value  = '';
     document.getElementById('pc-type').value  = 'shop';
     document.getElementById('pc-note').value  = '';
     clearPinPhoto();
+    // เดาที่อยู่ให้อัตโนมัติจากพิกัด (แก้ไขเองได้ถ้าไม่ตรง) — เซลจะได้ไม่ต้องพิมพ์เอง
+    if (lat && lng) {
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+        .then(r => r.json()).then(d => {
+          const addrEl = document.getElementById('pc-addr');
+          if (d.display_name && addrEl && !addrEl.value) {
+            addrEl.value = d.display_name.split(',').slice(0,3).join(',');
+          }
+        }).catch(_=>{});
+    }
   }
   document.getElementById('pin-cust-modal').classList.add('show');
   setTimeout(() => document.getElementById('pc-name').focus(), 200);
@@ -3845,6 +3949,7 @@ async function uploadPinPhoto() {
 async function savePinCustomer() {
   const name  = document.getElementById('pc-name').value.trim();
   const phone = document.getElementById('pc-phone').value.trim();
+  const addr  = document.getElementById('pc-addr').value.trim();
   const type  = document.getElementById('pc-type').value;
   const note  = document.getElementById('pc-note').value.trim();
   if (!name) { showToast('⚠️ กรุณากรอกชื่อ'); return; }
@@ -3863,7 +3968,7 @@ async function savePinCustomer() {
     const idx = customers.findIndex(x => x.id === _editCustId);
     if (idx >= 0) {
       const prev = customers[idx];
-      customers[idx] = { ...customers[idx], name, phone, type, note, photo_url: photoUrl || customers[idx].photo_url || null };
+      customers[idx] = { ...customers[idx], name, phone, address: addr, type, note, photo_url: photoUrl || customers[idx].photo_url || null };
       if (customerMarkers[_editCustId]) {
         salesMap.removeLayer(customerMarkers[_editCustId]);
         delete customerMarkers[_editCustId];
@@ -3882,7 +3987,7 @@ async function savePinCustomer() {
     }
   } else {
     const cust = {
-      id: 'sp_' + Date.now(), name, phone, type, note,
+      id: 'sp_' + Date.now(), name, phone, address: addr, type, note,
       lat: _pendingPinLat, lng: _pendingPinLng,
       photo_url: photoUrl || null,
       createdAt: new Date().toISOString()
@@ -3959,11 +4064,11 @@ function setSellMode(mode) {
     local.style.display = 'none';
     btnL.className  = 'mode-btn active';
     btnLo.className = 'mode-btn inactive';
-    // โหลดหน้าร้านจริงพร้อม ref เซล
+    // โหลดหน้าร้านจริงพร้อม ref เซล (และพารามิเตอร์สั่งแทนลูกค้า ถ้ากำลังสั่งแทนอยู่)
     // หมายเหตุ: ต้องเช็คผ่าน getAttribute เพราะ iframe.src ของ src="" จะคืนค่าเป็น URL หน้าปัจจุบัน (ไม่ใช่ค่าว่าง)
     const iframe = document.getElementById('liff-iframe');
     if (session) {
-      const want = BACKEND_URL + '?ref=' + session.salesId;
+      const want = _buildStorefrontUrl();
       if (iframe.getAttribute('src') !== want) iframe.setAttribute('src', want);
     }
   } else {
@@ -3973,6 +4078,7 @@ function setSellMode(mode) {
     btnL.className  = 'mode-btn inactive';
     // โหลด/refresh สินค้า real-time ทุกครั้งที่ switch มา local mode
     loadProducts();
+    _renderOrderForBanner();
   }
 }
 
