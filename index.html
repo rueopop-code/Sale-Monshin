@@ -3999,7 +3999,10 @@ function reverseGeocodeStruct(lat, lng) {
   return run;
 }
 
+let _pinModalSession = 0; // กันผลลัพธ์ geocode ของหมุดเก่าเขียนทับฟอร์มของหมุดใหม่ (ถ้าปิด/เปิด modal เร็วระหว่างรอ geocode ที่คิวหน่วงไว้)
+
 function openPinCustModal(lat, lng, editId) {
+  const _mySession = ++_pinModalSession;
   _editCustId = editId || null;
   const title = editId ? '✏️ แก้ไขลูกค้า' : '📍 เพิ่มลูกค้าใหม่';
   document.querySelector('#pin-cust-modal .mhdr h2').textContent = title;
@@ -4027,6 +4030,21 @@ function openPinCustModal(lat, lng, editId) {
       } else {
         clearPinPhoto();
       }
+      // ลูกค้าเก่าที่ปักหมุดไว้ก่อนมีระบบนี้ จะยังไม่มีที่อยู่/จังหวัด/อำเภอ/ตำบลบันทึกไว้
+      // เดาให้ย้อนหลังจากพิกัดที่ปักไว้เดิม (เติมเฉพาะช่องที่ว่าง ไม่ทับของที่มีอยู่แล้ว)
+      if (c.lat && c.lng && (!c.address || !c.province || !c.district || !c.subdistrict)) {
+        reverseGeocodeStruct(c.lat, c.lng).then(g => {
+          if (_mySession !== _pinModalSession) return; // modal ถูกปิด/เปิดใหม่ไปแล้วระหว่างรอ — ทิ้งผลลัพธ์เก่านี้
+          const addrEl = document.getElementById('pc-addr');
+          if (g.display && addrEl && !addrEl.value) {
+            addrEl.value = g.display.split(',').slice(0,3).join(',');
+          }
+          const pEl = document.getElementById('pc-province'), dEl = document.getElementById('pc-district'), sEl = document.getElementById('pc-subdistrict');
+          if (pEl && !pEl.value) pEl.value = g.province || '';
+          if (dEl && !dEl.value) dEl.value = g.district || '';
+          if (sEl && !sEl.value) sEl.value = g.subdistrict || '';
+        }).catch(_=>{});
+      }
     }
   } else {
     document.getElementById('pc-name').value  = '';
@@ -4041,6 +4059,7 @@ function openPinCustModal(lat, lng, editId) {
     // เดาที่อยู่ + จังหวัด/อำเภอ/ตำบล ให้อัตโนมัติจากพิกัด (แก้ไขเองได้ถ้าไม่ตรง) — เซลจะได้ไม่ต้องพิมพ์เอง
     if (lat && lng) {
       reverseGeocodeStruct(lat, lng).then(g => {
+        if (_mySession !== _pinModalSession) return; // modal ถูกปิด/เปิดใหม่ไปแล้วระหว่างรอ — ทิ้งผลลัพธ์เก่านี้
         const addrEl = document.getElementById('pc-addr');
         if (g.display && addrEl && !addrEl.value) {
           addrEl.value = g.display.split(',').slice(0,3).join(',');
