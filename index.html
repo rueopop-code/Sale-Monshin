@@ -700,7 +700,7 @@ html, body {
 }
 .leaflet-popup-tip { background: var(--surface) !important; }
 
-/* ── หมุดลูกค้า: การ์ดโชว์ตลอด ไม่ต้องกด ── */
+/* ── หมุดลูกค้า: การ์ด — แตะหมุดถึงเปิด (เดิมโชว์ค้างทุกหมุดพร้อมกัน ทำให้เครื่องช้า) ── */
 .cust-card-popup .leaflet-popup-content-wrapper {
   padding: 0 !important;
   border-radius: 16px !important;
@@ -714,7 +714,13 @@ html, body {
   border: 2px solid var(--red-500) !important;
   border-top: none !important; border-left: none !important;
 }
-.cust-card-popup .leaflet-popup-close-button { display: none !important; }
+/* สีขอบการ์ดตรงกับสีหมุดตามประเภทลูกค้า (เดิม hardcode แดงหมดทุกประเภท ไม่ตรงกับสีหมุด) */
+.cust-card-popup.ctype-home .leaflet-popup-content-wrapper,
+.cust-card-popup.ctype-home .leaflet-popup-tip { border-color: #4f8ef7 !important; }
+.cust-card-popup.ctype-business .leaflet-popup-content-wrapper,
+.cust-card-popup.ctype-business .leaflet-popup-tip { border-color: #e67e22 !important; }
+.cust-card-popup.ctype-other .leaflet-popup-content-wrapper,
+.cust-card-popup.ctype-other .leaflet-popup-tip { border-color: #8e44ad !important; }
 .cust-card-img { width: 100%; height: 110px; object-fit: cover; display: block; background: var(--gray-100); }
 .cust-card-body { padding: 10px 10px 8px; }
 .cust-card-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1260,6 +1266,24 @@ html, body {
         <svg width="23" height="23"><use href="#ic-route"/></svg>
       </button>
     </div>
+    <!-- ตัวกรองพื้นที่ (จังหวัด/อำเภอ/ตำบล) — ย่อ/ขยายได้ กันหน้าจอรก -->
+    <div style="position:absolute;left:12px;top:14px;z-index:500;">
+      <button onclick="toggleMapAreaFilterPanel()" title="กรองตามพื้นที่" class="fab-btn" id="btn-map-areafilter">
+        <span style="font-size:18px;">🔎</span>
+      </button>
+      <div id="map-areafilter-panel" style="display:none;position:absolute;top:48px;left:0;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.25);padding:10px;width:180px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">📍 กรองตามพื้นที่</div>
+        <select id="maf-province" onchange="applyMapAreaFilter()" style="width:100%;padding:6px 8px;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;font-family:inherit;margin-bottom:6px;">
+          <option value="">ทุกจังหวัด</option>
+        </select>
+        <select id="maf-district" onchange="applyMapAreaFilter()" style="width:100%;padding:6px 8px;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;font-family:inherit;margin-bottom:6px;">
+          <option value="">ทุกอำเภอ</option>
+        </select>
+        <select id="maf-subdistrict" onchange="applyMapAreaFilter()" style="width:100%;padding:6px 8px;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;font-family:inherit;">
+          <option value="">ทุกตำบล</option>
+        </select>
+      </div>
+    </div>
     <div class="map-bottom">
       <div id="gps-status" class="gps-pill">
         <div id="gps-dot" style="width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;"></div>
@@ -1420,6 +1444,11 @@ html, body {
     <div class="cfield"><label>ชื่อ / ชื่อร้าน *</label><input type="text" id="pc-name" placeholder="เช่น ร้านสมชาย, คุณมาลี"></div>
     <div class="cfield"><label>เบอร์โทร</label><input type="tel" id="pc-phone" placeholder="0812345678"></div>
     <div class="cfield"><label>ที่อยู่ <span class="label-optional">(ไม่บังคับ — ช่วยให้ "สั่งแทนลูกค้า" ไม่ต้องพิมพ์ที่อยู่ใหม่)</span></label><input type="text" id="pc-addr" placeholder="เช่น 12 หมู่ 3 ต.ในเวียง อ.เมือง จ.แพร่"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div class="cfield"><label>จังหวัด</label><input type="text" id="pc-province" placeholder="แพร่"></div>
+      <div class="cfield"><label>อำเภอ</label><input type="text" id="pc-district" placeholder="เมืองแพร่"></div>
+      <div class="cfield"><label>ตำบล</label><input type="text" id="pc-subdistrict" placeholder="ในเวียง"></div>
+    </div>
     <div class="cfield">
       <label>ประเภท</label>
       <select id="pc-type" class="cselect">
@@ -1650,6 +1679,8 @@ async function loadPinsFromSupabase() {
     if (Array.isArray(data)) {
       customers = data.map(r => ({
         id: r.id, name: r.name, phone: r.phone||'',
+        address: r.address || '',
+        province: r.province || '', district: r.district || '', subdistrict: r.subdistrict || '',
         type: r.type||'shop', note: r.note||'',
         lat: parseFloat(r.lat), lng: parseFloat(r.lng),
         createdAt: r.created_at,
@@ -1672,6 +1703,9 @@ async function savePinToSupabase(pin) {
       id: pin.id, sales_id: session.salesId,
       name: pin.name, phone: pin.phone||'',
       address: pin.address || null,
+      province: pin.province || null,
+      district: pin.district || null,
+      subdistrict: pin.subdistrict || null,
       type: pin.type||'shop', note: pin.note||'',
       lat: pin.lat, lng: pin.lng,
       photo_url: pin.photo_url || null
@@ -1696,6 +1730,9 @@ async function updatePinInSupabase(pin) {
     body: JSON.stringify({
       name: pin.name, phone: pin.phone||'',
       address: pin.address || null,
+      province: pin.province || null,
+      district: pin.district || null,
+      subdistrict: pin.subdistrict || null,
       type: pin.type||'shop', note: pin.note||'',
       photo_url: pin.photo_url !== undefined ? (pin.photo_url || null) : undefined
     })
@@ -2706,6 +2743,78 @@ function closeStatDetailModal() {
   if (modal) modal.classList.remove('show');
 }
 
+// สร้าง <option> ของค่าที่ไม่ซ้ำ ใช้ทำ dropdown กรองพื้นที่
+function _uniqOptions(pins, field) {
+  const vals = [...new Set(pins.map(p => (p[field]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+  return vals.map(v => `<option value="${v}">${v}</option>`).join('');
+}
+
+function _renderCustomerCards(pins) {
+  if (!pins || !pins.length) {
+    return '<div style="text-align:center;color:#bbb;padding:12px;">ไม่พบลูกค้าตามเงื่อนไขที่เลือก</div>';
+  }
+  // นับจำนวนออเดอร์ต่อลูกค้า
+  const pinOrderCount = {};
+  if (allOrders && allOrders.length) {
+    allOrders.forEach(o => {
+      const cname = (o.customer_name || o.name || '').toLowerCase().trim();
+      if (cname) pinOrderCount[cname] = (pinOrderCount[cname] || 0) + 1;
+    });
+  }
+  return pins.map((p, i) => {
+    const cname = (p.name || '').toLowerCase().trim();
+    const orderCount = pinOrderCount[cname] || 0;
+    const addedDate = p.created_at ? new Date(p.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : '';
+    const typeIcon = p.type === 'shop' ? '🏪' : p.type === 'house' ? '🏠' : '📍';
+    const areaLine = [p.subdistrict, p.district, p.province].filter(Boolean).join(' · ');
+    const photoSection = p.photo_url
+      ? `<div style="margin-top:8px;border-radius:10px;overflow:hidden;max-width:420px;background:#f0f0f0;cursor:zoom-in;" onclick="openPhotoView('${p.photo_url}')"><img src="${p.photo_url}" loading="lazy" style="width:100%;max-height:160px;object-fit:contain;display:block;border-radius:10px;" onerror="this.parentElement.style.display='none'"></div>`
+      : '';
+    return `<div style="background:#fafafa;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(229,50,46,.08);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red-700),var(--red-500));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${i+1}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;color:#1a1a1a;font-size:13px;">${typeIcon} ${p.name || 'ไม่ระบุชื่อ'}</div>
+          ${p.address ? `<div style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.address}</div>` : ''}
+          ${areaLine ? `<div style="color:var(--red-500);font-size:10px;font-weight:700;margin-top:1px;">📍 ${areaLine}</div>` : ''}
+        </div>
+        <button onclick="openNavigation(${p.lat},${p.lng})"
+          style="padding:6px 10px;background:#fff;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;color:var(--red-500);flex-shrink:0;font-weight:700;cursor:pointer;">
+          🗺️ นำทาง
+        </button>
+      </div>
+      ${photoSection}
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        ${p.phone ? `<a href="tel:${p.phone}" style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:20px;font-size:11px;color:#333;text-decoration:none;">📞 ${p.phone}</a>` : ''}
+        ${orderCount > 0 ? `<span style="padding:4px 10px;background:var(--red-50);border:1px solid var(--border-red);border-radius:20px;font-size:11px;color:var(--red-500);font-weight:600;">🧾 ${orderCount} ออเดอร์</span>` : ''}
+        ${addedDate ? `<span style="padding:4px 10px;background:#f5f5f5;border-radius:20px;font-size:11px;color:#888;">📅 เพิ่ม ${addedDate}</span>` : ''}
+        ${p.note ? `<span style="padding:4px 10px;background:#fffbf0;border:1px solid rgba(245,158,11,0.3);border-radius:20px;font-size:11px;color:#888;">📝 ${p.note}</span>` : ''}
+      </div>
+      <button onclick="orderForCustomer('${p.id}')"
+        style="width:100%;margin-top:10px;padding:9px 10px;background:linear-gradient(120deg,var(--red-700),var(--red-500));border:none;border-radius:10px;font-size:12px;color:#fff;font-weight:700;cursor:pointer;">
+        🧾 สั่งซื้อแทนลูกค้ารายนี้
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// กรองรายชื่อตามจังหวัด/อำเภอ/ตำบลที่เลือก แล้ววาดใหม่เฉพาะส่วนการ์ด (ไม่แตะแถบตัวกรอง)
+// รับ element ของ <select> ที่ถูกแก้ไข แล้วหา container ของตัวเองผ่าน closest() แทนการใช้ id ตายตัว
+// เพราะ HTML ชุดนี้ถูกคัดลอกซ้ำเข้า modal ทีหลัง (คัดลอกด้วย innerHTML) ถ้าใช้ id จะชนกัน 2 ชุดในหน้าเดียว
+function filterMyCustomers(selectEl) {
+  const wrap = selectEl && selectEl.closest ? selectEl.closest('.my-cust-wrap') : null;
+  if (!wrap) return;
+  const pv = wrap.querySelector('.cf-province')?.value || '';
+  const ds = wrap.querySelector('.cf-district')?.value || '';
+  const sb = wrap.querySelector('.cf-subdistrict')?.value || '';
+  let list = _myPinsCache || [];
+  if (pv) list = list.filter(p => (p.province||'') === pv);
+  if (ds) list = list.filter(p => (p.district||'') === ds);
+  if (sb) list = list.filter(p => (p.subdistrict||'') === sb);
+  const cardsEl = wrap.querySelector('.my-cust-cards');
+  if (cardsEl) cardsEl.innerHTML = _renderCustomerCards(list);
+}
+
 async function loadCustomersList() {
   const cl = document.getElementById('customers-list');
   const cc = document.getElementById('customer-count');
@@ -2722,55 +2831,30 @@ async function loadCustomersList() {
     if (sp) sp.textContent = pins.length || 0;
     if (dp) dp.textContent = pins.length || 0;
 
+    _myPinsCache = Array.isArray(pins) ? pins : []; // เก็บไว้ให้ orderForCustomer() + ตัวกรองพื้นที่ ใช้
+
     if (!pins || pins.length === 0) {
       cl.innerHTML = '<div style="text-align:center;color:#bbb;padding:12px;">ยังไม่มีลูกค้า</div>';
       return;
     }
 
-    // นับจำนวนออเดอร์ต่อลูกค้า
-    const pinOrderCount = {};
-    if (allOrders && allOrders.length) {
-      allOrders.forEach(o => {
-        const cname = (o.customer_name || o.name || '').toLowerCase().trim();
-        if (cname) pinOrderCount[cname] = (pinOrderCount[cname] || 0) + 1;
-      });
-    }
+    // แถบตัวกรองพื้นที่ — โผล่เฉพาะตอนมีข้อมูลจังหวัด/อำเภอ/ตำบลอย่างน้อย 1 รายการ
+    // หมายเหตุ: ใช้ class ไม่ใช้ id เพราะ HTML ก้อนนี้จะถูกคัดลอกซ้ำเข้า modal ทีหลัง (ป้องกัน id ชนกัน)
+    const hasArea = pins.some(p => p.province || p.district || p.subdistrict);
+    const filterBar = hasArea ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+        <select class="cf-province" onchange="filterMyCustomers(this)" style="padding:6px 8px;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;font-family:inherit;">
+          <option value="">ทุกจังหวัด</option>${_uniqOptions(pins,'province')}
+        </select>
+        <select class="cf-district" onchange="filterMyCustomers(this)" style="padding:6px 8px;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;font-family:inherit;">
+          <option value="">ทุกอำเภอ</option>${_uniqOptions(pins,'district')}
+        </select>
+        <select class="cf-subdistrict" onchange="filterMyCustomers(this)" style="padding:6px 8px;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;font-family:inherit;">
+          <option value="">ทุกตำบล</option>${_uniqOptions(pins,'subdistrict')}
+        </select>
+      </div>` : '';
 
-    _myPinsCache = pins; // เก็บไว้ให้ orderForCustomer() หาข้อมูล pin ได้
-
-    cl.innerHTML = pins.map((p, i) => {
-      const cname = (p.name || '').toLowerCase().trim();
-      const orderCount = pinOrderCount[cname] || 0;
-      const addedDate = p.created_at ? new Date(p.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : '';
-      const typeIcon = p.type === 'shop' ? '🏪' : p.type === 'house' ? '🏠' : '📍';
-      const photoSection = p.photo_url
-        ? `<div style="margin-top:8px;border-radius:10px;overflow:hidden;max-width:420px;background:#f0f0f0;cursor:zoom-in;" onclick="openPhotoView('${p.photo_url}')"><img src="${p.photo_url}" loading="lazy" style="width:100%;max-height:160px;object-fit:contain;display:block;border-radius:10px;" onerror="this.parentElement.style.display='none'"></div>`
-        : '';
-      return `<div style="background:#fafafa;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(229,50,46,.08);">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red-700),var(--red-500));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${i+1}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-weight:700;color:#1a1a1a;font-size:13px;">${typeIcon} ${p.name || 'ไม่ระบุชื่อ'}</div>
-            ${p.address ? `<div style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.address}</div>` : ''}
-          </div>
-          <button onclick="openNavigation(${p.lat},${p.lng})"
-            style="padding:6px 10px;background:#fff;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;color:var(--red-500);flex-shrink:0;font-weight:700;cursor:pointer;">
-            🗺️ นำทาง
-          </button>
-        </div>
-        ${photoSection}
-        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-          ${p.phone ? `<a href="tel:${p.phone}" style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:20px;font-size:11px;color:#333;text-decoration:none;">📞 ${p.phone}</a>` : ''}
-          ${orderCount > 0 ? `<span style="padding:4px 10px;background:var(--red-50);border:1px solid var(--border-red);border-radius:20px;font-size:11px;color:var(--red-500);font-weight:600;">🧾 ${orderCount} ออเดอร์</span>` : ''}
-          ${addedDate ? `<span style="padding:4px 10px;background:#f5f5f5;border-radius:20px;font-size:11px;color:#888;">📅 เพิ่ม ${addedDate}</span>` : ''}
-          ${p.note ? `<span style="padding:4px 10px;background:#fffbf0;border:1px solid rgba(245,158,11,0.3);border-radius:20px;font-size:11px;color:#888;">📝 ${p.note}</span>` : ''}
-        </div>
-        <button onclick="orderForCustomer('${p.id}')"
-          style="width:100%;margin-top:10px;padding:9px 10px;background:linear-gradient(120deg,var(--red-700),var(--red-500));border:none;border-radius:10px;font-size:12px;color:#fff;font-weight:700;cursor:pointer;">
-          🧾 สั่งซื้อแทนลูกค้ารายนี้
-        </button>
-      </div>`;
-    }).join('');
+    cl.innerHTML = `<div class="my-cust-wrap">${filterBar}<div class="my-cust-cards">${_renderCustomerCards(pins)}</div></div>`;
   } catch(e) {
     if (cl) cl.innerHTML = '<div style="color:var(--red-500);font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
   }
@@ -2790,6 +2874,8 @@ function _buildStorefrontUrl() {
       + '&soPhone=' + encodeURIComponent(p.phone || '')
       + '&soAddr='  + encodeURIComponent(p.address || '')
       + '&soNote='  + encodeURIComponent(p.note || '')
+      + '&soProvince=' + encodeURIComponent(p.province || '')
+      + '&soDistrict='  + encodeURIComponent(p.district  || '')
       + '&_t=' + Date.now(); // กันไม่ให้ src ซ้ำของเดิม เวลาสั่งแทนลูกค้าคนเดิมติดกัน 2 ครั้ง (iframe จะไม่โหลดใหม่ถ้า src เหมือนเดิมเป๊ะ)
     if (p.lat && p.lng) url += '&soLat=' + p.lat + '&soLng=' + p.lng;
   }
@@ -3456,6 +3542,40 @@ function renderCustomerMarkers() {
   if (!salesMap) return;
   customers.forEach(c => { if (!customerMarkers[c.id]) addCustomerMarker(c); });
   _pinsRendered = true;
+  _populateMapAreaFilterOptions();
+}
+
+// ── ตัวกรองพื้นที่บนแผนที่ (จังหวัด/อำเภอ/ตำบล) ──────────────────
+function toggleMapAreaFilterPanel() {
+  const panel = document.getElementById('map-areafilter-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function _populateMapAreaFilterOptions() {
+  const pEl = document.getElementById('maf-province'), dEl = document.getElementById('maf-district'), sEl = document.getElementById('maf-subdistrict');
+  if (!pEl || !dEl || !sEl) return;
+  // เก็บค่าที่เลือกไว้เดิม กันตัวเลือกรีเซ็ตทุกครั้งที่โหลดลูกค้าใหม่
+  const curP = pEl.value, curD = dEl.value, curS = sEl.value;
+  pEl.innerHTML = '<option value="">ทุกจังหวัด</option>' + _uniqOptions(customers, 'province');
+  dEl.innerHTML = '<option value="">ทุกอำเภอ</option>' + _uniqOptions(customers, 'district');
+  sEl.innerHTML = '<option value="">ทุกตำบล</option>' + _uniqOptions(customers, 'subdistrict');
+  pEl.value = curP; dEl.value = curD; sEl.value = curS;
+}
+
+function applyMapAreaFilter() {
+  if (!salesMap) return;
+  const pv = document.getElementById('maf-province')?.value || '';
+  const ds = document.getElementById('maf-district')?.value || '';
+  const sb = document.getElementById('maf-subdistrict')?.value || '';
+  customers.forEach(c => {
+    const m = customerMarkers[c.id];
+    if (!m) return;
+    const match = (!pv || (c.province||'') === pv) && (!ds || (c.district||'') === ds) && (!sb || (c.subdistrict||'') === sb);
+    const onMap = salesMap.hasLayer(m);
+    if (match && !onMap) salesMap.addLayer(m);
+    else if (!match && onMap) { m.closePopup(); salesMap.removeLayer(m); }
+  });
 }
 
 // ── GPS ──────────────────────────────────────────────────
@@ -3786,6 +3906,16 @@ function calcDistM(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+// ย่อรูปจาก Cloudinary ให้เป็น thumbnail เล็กๆ ก่อนโชว์บนแผนที่ (ประหยัดเน็ต/แรม กันเครื่องค้าง)
+// ถ้าไม่ใช่ URL ของ Cloudinary จะคืนค่า url เดิมไป ไม่พัง
+function _cldThumb(url, w) {
+  if (!url) return url;
+  const marker = '/upload/';
+  const i = url.indexOf(marker);
+  if (i === -1) return url;
+  return url.slice(0, i + marker.length) + `w_${w},h_${w},c_fill,q_auto,f_auto/` + url.slice(i + marker.length);
+}
+
 function addCustomerMarker(c) {
   if (!salesMap || !c.lat || !c.lng || isNaN(c.lat) || isNaN(c.lng)) return;
   const colors = { shop:'var(--red-500)', home:'#4f8ef7', business:'#e67e22', other:'#8e44ad' };
@@ -3798,9 +3928,10 @@ function addCustomerMarker(c) {
     })
   }).addTo(salesMap);
 
-  // การ์ดข้อมูลลูกค้า — โชว์ตลอดทันทีบนแผนที่ ไม่ต้องกดหมุดก่อน
+  // การ์ดข้อมูลลูกค้า — แตะหมุดถึงจะเปิดดู (เดิมเปิดค้างไว้ทุกหมุดพร้อมกัน ทำให้เครื่องช้า/ค้างเวลามีลูกค้าเยอะ)
+  // รูปใช้ขนาดย่อ (thumbnail) + lazy load แทนรูปเต็ม เพื่อลดโหลด/แรมตอนแตะดู
   const imgHtml = c.photo_url
-    ? '<img src="' + c.photo_url + '" class="cust-card-img" data-cid="' + c.id + '" data-act="viewphoto" style="cursor:zoom-in;" onerror="this.style.display=\'none\'">'
+    ? '<img src="' + _cldThumb(c.photo_url, 300) + '" loading="lazy" class="cust-card-img" data-cid="' + c.id + '" data-full="' + c.photo_url + '" data-act="viewphoto" style="cursor:zoom-in;" onerror="this.style.display=\'none\'">'
     : '';
   const popupHtml =
     '<div>'
@@ -3814,8 +3945,8 @@ function addCustomerMarker(c) {
     + '</div></div></div>';
 
   m.bindPopup(popupHtml, {
-    closeButton: false, autoClose: false, closeOnClick: false,
-    className: 'cust-card-popup', minWidth: 190, maxWidth: 190,
+    closeButton: true, autoClose: true, closeOnClick: true,
+    className: 'cust-card-popup ctype-' + (c.type || 'shop'), minWidth: 190, maxWidth: 190,
     // กันไม่ให้การ์ดโผล่ไปโดนปุ่มลอย (3D/ดาวเทียม/GPS/เส้นทาง) ที่ตอนนี้อยู่มุมขวาบน
     // หรือโดนแผงด้านล่าง (สถิติ/ปุ่มปักหมุด) บัง เวลาหมุดอยู่ใกล้ขอบจอ
     autoPanPaddingTopLeft: [16, 250],
@@ -3832,11 +3963,40 @@ function addCustomerMarker(c) {
         else deleteCustomer(id);
       };
     });
+    // แตะรูปเพื่อดูรูปเต็ม (popup โชว์แค่รูปย่อ)
     const img = el.querySelector('img[data-act="viewphoto"]');
-    if (img) img.onclick = function() { openPhotoView(img.getAttribute('src')); };
+    if (img) img.onclick = function() { openPhotoView(img.getAttribute('data-full') || img.getAttribute('src')); };
   });
-  m.openPopup(); // โชว์การ์ดทันทีโดยไม่ต้องกดหมุด
   customerMarkers[c.id] = m;
+}
+
+// ── Reverse geocode แบบแยกจังหวัด/อำเภอ/ตำบล (สำหรับตัวกรองค้นหา + auto-fill ที่อยู่) ──
+// มี queue หน่วงคำขอ 1.1 วิ/ครั้ง ตามนโยบายของ Nominatim (ห้ามยิงรัว) และ cache กันเรียกซ้ำพิกัดเดิม
+const _geoStructCache = (() => { try { return JSON.parse(localStorage.getItem('geo_struct_cache')||'{}'); } catch(_) { return {}; } })();
+let _geoStructQueue = Promise.resolve();
+function _geoKey(lat, lng) { return lat.toFixed(4) + ',' + lng.toFixed(4); }
+function reverseGeocodeStruct(lat, lng) {
+  const key = _geoKey(lat, lng);
+  if (_geoStructCache[key]) return Promise.resolve(_geoStructCache[key]);
+  const run = _geoStructQueue.then(async () => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1&accept-language=th`);
+      const d = await r.json();
+      const a = d.address || {};
+      const province    = a.province || a.state || '';
+      const district     = a.county || a.district || a.city_district || a.town || '';
+      const subdistrict  = a.suburb || a.quarter || a.village || a.hamlet || a.neighbourhood || '';
+      const obj = { province, district, subdistrict, display: d.display_name || '' };
+      _geoStructCache[key] = obj;
+      try { localStorage.setItem('geo_struct_cache', JSON.stringify(_geoStructCache)); } catch(_){}
+      return obj;
+    } catch(_) { return { province:'', district:'', subdistrict:'', display:'' }; }
+    finally {
+      await new Promise(res => setTimeout(res, 1100)); // เว้นจังหวะเรียก API ตามนโยบายของ Nominatim
+    }
+  });
+  _geoStructQueue = run.catch(() => ({}));
+  return run;
 }
 
 function openPinCustModal(lat, lng, editId) {
@@ -3852,6 +4012,9 @@ function openPinCustModal(lat, lng, editId) {
       document.getElementById('pc-name').value  = c.name  || '';
       document.getElementById('pc-phone').value = c.phone || '';
       document.getElementById('pc-addr').value  = c.address || '';
+      document.getElementById('pc-province').value    = c.province    || '';
+      document.getElementById('pc-district').value    = c.district    || '';
+      document.getElementById('pc-subdistrict').value = c.subdistrict || '';
       document.getElementById('pc-type').value  = c.type  || 'shop';
       document.getElementById('pc-note').value  = c.note  || '';
       _pendingPinLat = c.lat; _pendingPinLng = c.lng;
@@ -3869,18 +4032,24 @@ function openPinCustModal(lat, lng, editId) {
     document.getElementById('pc-name').value  = '';
     document.getElementById('pc-phone').value = '';
     document.getElementById('pc-addr').value  = '';
+    document.getElementById('pc-province').value    = '';
+    document.getElementById('pc-district').value    = '';
+    document.getElementById('pc-subdistrict').value = '';
     document.getElementById('pc-type').value  = 'shop';
     document.getElementById('pc-note').value  = '';
     clearPinPhoto();
-    // เดาที่อยู่ให้อัตโนมัติจากพิกัด (แก้ไขเองได้ถ้าไม่ตรง) — เซลจะได้ไม่ต้องพิมพ์เอง
+    // เดาที่อยู่ + จังหวัด/อำเภอ/ตำบล ให้อัตโนมัติจากพิกัด (แก้ไขเองได้ถ้าไม่ตรง) — เซลจะได้ไม่ต้องพิมพ์เอง
     if (lat && lng) {
-      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
-        .then(r => r.json()).then(d => {
-          const addrEl = document.getElementById('pc-addr');
-          if (d.display_name && addrEl && !addrEl.value) {
-            addrEl.value = d.display_name.split(',').slice(0,3).join(',');
-          }
-        }).catch(_=>{});
+      reverseGeocodeStruct(lat, lng).then(g => {
+        const addrEl = document.getElementById('pc-addr');
+        if (g.display && addrEl && !addrEl.value) {
+          addrEl.value = g.display.split(',').slice(0,3).join(',');
+        }
+        const pEl = document.getElementById('pc-province'), dEl = document.getElementById('pc-district'), sEl = document.getElementById('pc-subdistrict');
+        if (pEl && !pEl.value) pEl.value = g.province || '';
+        if (dEl && !dEl.value) dEl.value = g.district || '';
+        if (sEl && !sEl.value) sEl.value = g.subdistrict || '';
+      }).catch(_=>{});
     }
   }
   document.getElementById('pin-cust-modal').classList.add('show');
@@ -3950,6 +4119,9 @@ async function savePinCustomer() {
   const name  = document.getElementById('pc-name').value.trim();
   const phone = document.getElementById('pc-phone').value.trim();
   const addr  = document.getElementById('pc-addr').value.trim();
+  const province    = document.getElementById('pc-province').value.trim();
+  const district     = document.getElementById('pc-district').value.trim();
+  const subdistrict  = document.getElementById('pc-subdistrict').value.trim();
   const type  = document.getElementById('pc-type').value;
   const note  = document.getElementById('pc-note').value.trim();
   if (!name) { showToast('⚠️ กรุณากรอกชื่อ'); return; }
@@ -3968,7 +4140,7 @@ async function savePinCustomer() {
     const idx = customers.findIndex(x => x.id === _editCustId);
     if (idx >= 0) {
       const prev = customers[idx];
-      customers[idx] = { ...customers[idx], name, phone, address: addr, type, note, photo_url: photoUrl || customers[idx].photo_url || null };
+      customers[idx] = { ...customers[idx], name, phone, address: addr, province, district, subdistrict, type, note, photo_url: photoUrl || customers[idx].photo_url || null };
       if (customerMarkers[_editCustId]) {
         salesMap.removeLayer(customerMarkers[_editCustId]);
         delete customerMarkers[_editCustId];
@@ -3987,7 +4159,7 @@ async function savePinCustomer() {
     }
   } else {
     const cust = {
-      id: 'sp_' + Date.now(), name, phone, address: addr, type, note,
+      id: 'sp_' + Date.now(), name, phone, address: addr, province, district, subdistrict, type, note,
       lat: _pendingPinLat, lng: _pendingPinLng,
       photo_url: photoUrl || null,
       createdAt: new Date().toISOString()
