@@ -1761,6 +1761,23 @@ let _orderingForPin = null;  // pin ลูกค้าที่กำลัง�
 let _myPinsCache = [];       // cache ล่าสุดของ sales_pins ที่โหลดไว้ ใช้หา pin ตอนกด "สั่งแทน"
 
 // ══════════════════════════════════════════
+//  แก้บั๊ก: การ์ดสถิติ (ออเดอร์/ยอดขาย/ลูกค้า-หมุด) โชว์ "—" ค้าง
+//  ทั้งที่มีข้อมูลจริงอยู่แล้ว ต้องกดรีเฟรชเองถึงจะกลับมาถูก
+//  สาเหตุ: renderIdCard() ถูกเรียกซ้ำได้จากหลายจุด (login, อัปโหลดรูป,
+//  refreshProfileFromServer ตอนสลับแท็บกลับมา ฯลฯ) ทุกครั้งที่เรียกจะ
+//  เขียน innerHTML ทั้งก้อนใหม่ รีเซ็ตตัวเลขกลับเป็น "—" เสมอ แล้วค่อยยิง
+//  fetch ใหม่ไปเติมทีหลัง — ถ้า fetch รอบนั้นช้า/พลาด (ชนกับ fetch อีกรอบ
+//  ที่วิ่งพร้อมกันจาก visibilitychange/ตัวจับเวลา auto-refresh 20 วิ)
+//  ตัวเลขจะค้างที่ "—" จนกว่าจะกดปุ่มรีเฟรชเอง
+//  วิธีแก้: เก็บค่าล่าสุดที่รู้แน่ชัดไว้ใน _lastStats แล้วให้ renderIdCard()
+//  ใช้ค่านี้ตั้งต้นแทนการฮาร์ดโค้ด "—" ทุกครั้ง + กันไม่ให้ loadCustomersList()
+//  ทำงานซ้อนกันหลายชุดพร้อมกัน (มีแค่ชุดเดียววิ่งจริง ที่เหลือรอผลชุดที่วิ่งอยู่)
+// ══════════════════════════════════════════
+let _lastStats = { orders: null, revenue: null, pins: null };
+let _loadCustomersInFlight = null; // Promise ของ loadCustomersList() ที่กำลังวิ่งอยู่ (กันเรียกซ้อน)
+let _dashboardLoadInFlight = null; // Promise ของ loadDashboard() ที่กำลังวิ่งอยู่ (กันเรียกซ้อน)
+
+// ══════════════════════════════════════════
 //  AUTH TABS
 // ══════════════════════════════════════════
 function switchAuthTab(tab, el) {
@@ -2121,17 +2138,17 @@ function renderIdCard() {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px;">
           <div onclick="openStatDetailModal('orders','all')" style="cursor:pointer;background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:10px 6px;text-align:center;position:relative;">
             <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
-            <div class="id-stat-val gold" id="stat-orders" style="font-size:19px;font-weight:800;">—</div>
+            <div class="id-stat-val gold" id="stat-orders" style="font-size:19px;font-weight:800;">${_lastStats.orders ?? '—'}</div>
             <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ออเดอร์</div>
           </div>
           <div onclick="openStatDetailModal('revenue','all')" style="cursor:pointer;background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:10px 6px;text-align:center;position:relative;">
             <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
-            <div class="id-stat-val gold" id="stat-revenue" style="font-size:19px;font-weight:800;">—</div>
+            <div class="id-stat-val gold" id="stat-revenue" style="font-size:19px;font-weight:800;">${_lastStats.revenue ?? '—'}</div>
             <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ยอดขาย (฿)</div>
           </div>
           <div onclick="openStatDetailModal('customers')" style="cursor:pointer;background:var(--red-50);border:1px solid var(--border-red);border-radius:14px;padding:10px 6px;text-align:center;position:relative;">
             <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
-            <div class="id-stat-val gold" id="stat-pins" style="font-size:19px;font-weight:800;">—</div>
+            <div class="id-stat-val gold" id="stat-pins" style="font-size:19px;font-weight:800;">${_lastStats.pins ?? '—'}</div>
             <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ลูกค้า/หมุด</div>
           </div>
         </div>
@@ -2187,17 +2204,17 @@ function renderIdCard() {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
           <div onclick="openStatDetailModal('orders','filtered')" style="cursor:pointer;background:var(--red-50);border-radius:14px;padding:12px 6px;text-align:center;border:1px solid var(--border-red);position:relative;">
             <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
-            <div id="ds-orders" style="font-size:19px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
+            <div id="ds-orders" style="font-size:19px;font-weight:800;color:var(--red-500);font-family:var(--font);">${_lastStats.orders ?? '—'}</div>
             <div style="font-size:10px;color:var(--text-3);margin-top:2px;">จำนวนออเดอร์</div>
           </div>
           <div onclick="openStatDetailModal('revenue','filtered')" style="cursor:pointer;background:var(--red-50);border-radius:14px;padding:12px 6px;text-align:center;border:1px solid var(--border-red);position:relative;">
             <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
-            <div id="ds-revenue" style="font-size:16px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
+            <div id="ds-revenue" style="font-size:16px;font-weight:800;color:var(--red-500);font-family:var(--font);">${_lastStats.revenue ?? '—'}</div>
             <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ยอดขาย (฿)</div>
           </div>
           <div onclick="openStatDetailModal('customers')" style="cursor:pointer;background:var(--red-50);border-radius:14px;padding:12px 6px;text-align:center;border:1px solid var(--border-red);position:relative;">
             <span style="position:absolute;top:4px;right:8px;opacity:.4;font-size:14px;line-height:1;">&rsaquo;</span>
-            <div id="ds-pins" style="font-size:19px;font-weight:800;color:var(--red-500);font-family:var(--font);">—</div>
+            <div id="ds-pins" style="font-size:19px;font-weight:800;color:var(--red-500);font-family:var(--font);">${_lastStats.pins ?? '—'}</div>
             <div style="font-size:10px;color:var(--text-3);margin-top:2px;">ลูกค้า/หมุด</div>
           </div>
         </div>
@@ -2259,8 +2276,11 @@ async function loadSalesStats() {
     const merged = [...(Array.isArray(s1)?s1:[]), ...(Array.isArray(s2)?s2:[])]
       .filter(o => { if (!o.order_id || seen.has(o.order_id)) return false; seen.add(o.order_id); return true; });
     const totalRevenue = merged.reduce((s,o) => s + parseFloat(o.total_price||o.total||o.amount||0), 0);
+    const revenueTxt = totalRevenue.toLocaleString('th-TH', {minimumFractionDigits:0});
     document.getElementById('stat-orders').textContent  = merged.length;
-    document.getElementById('stat-revenue').textContent = totalRevenue.toLocaleString('th-TH', {minimumFractionDigits:0});
+    document.getElementById('stat-revenue').textContent = revenueTxt;
+    _lastStats.orders = merged.length;
+    _lastStats.revenue = revenueTxt;
   } catch(_) {}
 }
 
@@ -2549,7 +2569,15 @@ function isBrowsingDraftOrder(o) {
   return !hasTotal && !hasItems;
 }
 
-async function loadDashboard() {
+function loadDashboard() {
+  // กันเรียกซ้อน: loadDashboard() ถูกเรียกได้พร้อมกันจากหลายจุด (visibilitychange,
+  // ตัวจับเวลา auto-refresh 20 วิ, renderIdCard()) — รวมเป็นชุดเดียวกัน ไม่ยิงซ้ำวนกันเอง
+  if (_dashboardLoadInFlight) return _dashboardLoadInFlight;
+  _dashboardLoadInFlight = _loadDashboardImpl().finally(() => { _dashboardLoadInFlight = null; });
+  return _dashboardLoadInFlight;
+}
+
+async function _loadDashboardImpl() {
   if (!session) return;
   try {
     // ดึงออเดอร์ทั้งจาก sales_id และ ref_code (สั่งแทนลูกค้า)
@@ -2611,8 +2639,11 @@ function renderDashboard() {
   // อัปเดต stat-orders, stat-revenue ด้านบนด้วย
   const so = document.getElementById('stat-orders');
   const sr = document.getElementById('stat-revenue');
+  const allRevenueTxt = allOrders.reduce((s,o)=>s+(parseFloat(o.total_price||o.total||o.amount||0)),0).toLocaleString('th-TH',{minimumFractionDigits:0});
   if (so) so.textContent = allOrders.length;
-  if (sr) sr.textContent = allOrders.reduce((s,o)=>s+(parseFloat(o.total_price||o.total||o.amount||0)),0).toLocaleString('th-TH',{minimumFractionDigits:0});
+  if (sr) sr.textContent = allRevenueTxt;
+  _lastStats.orders = allOrders.length;
+  _lastStats.revenue = allRevenueTxt;
 
   // รายการออเดอร์ล่าสุด
   const ol = document.getElementById('orders-list');
@@ -2801,21 +2832,38 @@ function _renderCustomerCards(pins) {
 // กรองรายชื่อตามจังหวัด/อำเภอ/ตำบลที่เลือก แล้ววาดใหม่เฉพาะส่วนการ์ด (ไม่แตะแถบตัวกรอง)
 // รับ element ของ <select> ที่ถูกแก้ไข แล้วหา container ของตัวเองผ่าน closest() แทนการใช้ id ตายตัว
 // เพราะ HTML ชุดนี้ถูกคัดลอกซ้ำเข้า modal ทีหลัง (คัดลอกด้วย innerHTML) ถ้าใช้ id จะชนกัน 2 ชุดในหน้าเดียว
-function filterMyCustomers(selectEl) {
-  const wrap = selectEl && selectEl.closest ? selectEl.closest('.my-cust-wrap') : null;
+function filterMyCustomers(triggerEl) {
+  const wrap = triggerEl && triggerEl.closest ? triggerEl.closest('.my-cust-wrap') : null;
   if (!wrap) return;
   const pv = wrap.querySelector('.cf-province')?.value || '';
   const ds = wrap.querySelector('.cf-district')?.value || '';
   const sb = wrap.querySelector('.cf-subdistrict')?.value || '';
+  const q  = (wrap.querySelector('.cf-search')?.value || '').trim().toLowerCase();
+  const qDigits = q.replace(/[^0-9]/g, '');
   let list = _myPinsCache || [];
   if (pv) list = list.filter(p => (p.province||'') === pv);
   if (ds) list = list.filter(p => (p.district||'') === ds);
   if (sb) list = list.filter(p => (p.subdistrict||'') === sb);
+  if (q) list = list.filter(p => {
+    const nameMatch  = (p.name||'').toLowerCase().includes(q);
+    const phoneDigits = (p.phone||'').replace(/[^0-9]/g, '');
+    const phoneMatch = qDigits ? phoneDigits.includes(qDigits) : (p.phone||'').toLowerCase().includes(q);
+    return nameMatch || phoneMatch;
+  });
   const cardsEl = wrap.querySelector('.my-cust-cards');
   if (cardsEl) cardsEl.innerHTML = _renderCustomerCards(list);
 }
 
-async function loadCustomersList() {
+function loadCustomersList() {
+  // กันเรียกซ้อน: ถ้ามีชุดที่กำลังวิ่งอยู่แล้ว ให้รอผลชุดเดิมแทนที่จะยิง fetch ใหม่ซ้ำ
+  // (เดิมถูกเรียกพร้อมกันได้จากหลายจุด เช่น visibilitychange + ตัวจับเวลา auto-refresh 20 วิ
+  //  + renderIdCard() หลัง refreshProfileFromServer() ทำให้ยิง request ซ้ำวนกันเอง)
+  if (_loadCustomersInFlight) return _loadCustomersInFlight;
+  _loadCustomersInFlight = _loadCustomersListImpl().finally(() => { _loadCustomersInFlight = null; });
+  return _loadCustomersInFlight;
+}
+
+async function _loadCustomersListImpl(_isRetry) {
   const cl = document.getElementById('customers-list');
   const cc = document.getElementById('customer-count');
   if (!cl || !session) return;
@@ -2824,19 +2872,31 @@ async function loadCustomersList() {
       SB_URL + '/rest/v1/sales_pins?sales_id=eq.' + session.salesId + '&order=created_at.desc',
       { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }
     );
+    if (!res.ok) throw new Error('sales_pins fetch failed: ' + res.status);
     const pins = await res.json();
-    if (cc) cc.textContent = (pins.length || 0) + ' ราย';
+    if (!Array.isArray(pins)) throw new Error('sales_pins ไม่ได้ส่งกลับเป็น array');
+
+    if (cc) cc.textContent = pins.length + ' ราย';
     const sp = document.getElementById('stat-pins');
     const dp = document.getElementById('ds-pins');
-    if (sp) sp.textContent = pins.length || 0;
-    if (dp) dp.textContent = pins.length || 0;
+    if (sp) sp.textContent = pins.length;
+    if (dp) dp.textContent = pins.length;
+    _lastStats.pins = pins.length; // เก็บค่าล่าสุดที่รู้แน่ชัดไว้ กันตัวเลขย้อนกลับไปเป็น "—" ตอน re-render
 
-    _myPinsCache = Array.isArray(pins) ? pins : []; // เก็บไว้ให้ orderForCustomer() + ตัวกรองพื้นที่ ใช้
+    _myPinsCache = pins; // เก็บไว้ให้ orderForCustomer() + ตัวกรองพื้นที่ ใช้
 
-    if (!pins || pins.length === 0) {
+    if (pins.length === 0) {
       cl.innerHTML = '<div style="text-align:center;color:#bbb;padding:12px;">ยังไม่มีลูกค้า</div>';
       return;
     }
+
+    // ช่องค้นหาชื่อ/เบอร์โทร — แสดงเสมอไม่ว่าจะมีข้อมูลพื้นที่หรือไม่
+    const searchBar = `
+      <div style="margin-bottom:8px;">
+        <input type="text" class="cf-search" oninput="filterMyCustomers(this)"
+          placeholder="🔍 ค้นหาชื่อ / เบอร์โทรลูกค้า"
+          style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid var(--border-red2);border-radius:8px;font-size:12px;font-family:inherit;">
+      </div>`;
 
     // แถบตัวกรองพื้นที่ — โผล่เฉพาะตอนมีข้อมูลจังหวัด/อำเภอ/ตำบลอย่างน้อย 1 รายการ
     // หมายเหตุ: ใช้ class ไม่ใช้ id เพราะ HTML ก้อนนี้จะถูกคัดลอกซ้ำเข้า modal ทีหลัง (ป้องกัน id ชนกัน)
@@ -2854,9 +2914,19 @@ async function loadCustomersList() {
         </select>
       </div>` : '';
 
-    cl.innerHTML = `<div class="my-cust-wrap">${filterBar}<div class="my-cust-cards">${_renderCustomerCards(pins)}</div></div>`;
+    cl.innerHTML = `<div class="my-cust-wrap">${searchBar}${filterBar}<div class="my-cust-cards">${_renderCustomerCards(pins)}</div></div>`;
   } catch(e) {
-    if (cl) cl.innerHTML = '<div style="color:var(--red-500);font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
+    // ลองใหม่อัตโนมัติอีก 1 ครั้งก่อนยอมแพ้ (กันเคส network สะดุด/Supabase จำกัดจำนวน request ชั่วคราว)
+    // เดิมพลาดครั้งเดียวแล้วค้าง ต้องรอผู้ใช้กดรีเฟรชเองเท่านั้น
+    if (!_isRetry) {
+      await new Promise(res => setTimeout(res, 1500));
+      return _loadCustomersListImpl(true);
+    }
+    if (cl && (!_myPinsCache || !_myPinsCache.length)) {
+      cl.innerHTML = '<div style="color:var(--red-500);font-size:12px;">⚠️ โหลดไม่สำเร็จ</div>';
+    }
+    // หมายเหตุ: จงใจไม่แตะ stat-pins/ds-pins/customer-count ตรงนี้ — ปล่อยให้แสดงค่าล่าสุดที่รู้
+    // แน่ชัดค้างไว้ (ถ้ามี) ดีกว่าล้างไปเป็น 0/"—" ทั้งที่จริงๆ อาจจะยังมีลูกค้าอยู่ 39 ราย
   }
 }
 
@@ -2883,13 +2953,24 @@ function _buildStorefrontUrl() {
 }
 
 function orderForCustomer(pinId) {
-  const p = (_myPinsCache || []).find(x => String(x.id) === String(pinId));
+  // หาจาก _myPinsCache ก่อน (มาจากหน้า "ลูกค้าของฉัน") ถ้าไม่เจอลองหาจาก customers
+  // (มาจากหมุดบนแผนที่ — โหลดเร็วกว่าตอนเปิดแอปครั้งแรก) กันเคสกดจากแผนที่ก่อนที่
+  // _myPinsCache จะโหลดเสร็จ
+  const p = (_myPinsCache || []).find(x => String(x.id) === String(pinId))
+         || (customers || []).find(x => String(x.id) === String(pinId));
   if (!p) { showToast('⚠️ ไม่พบข้อมูลลูกค้ารายนี้'); return; }
   _orderingForPin = p;
   closeStatDetailModal();
   switchPage('sell');   // จะเรียก setSellMode('liff') ให้อัตโนมัติ (โหมดหน้าร้านจริง) พร้อมเติมพารามิเตอร์สั่งแทนลูกค้า
   _renderOrderForBanner();
   showToast('🧾 กำลังสั่งแทน: ' + (p.name || 'ลูกค้า') + ' — ระบบเติมชื่อ/เบอร์/พิกัดในหน้าร้านให้แล้ว', 'success');
+}
+
+// สั่งซื้อแทนลูกค้าจาก pop-up หมุดบนแผนที่ (เหมือน orderForCustomer แต่ปิด pop-up
+// ของแผนที่ก่อนสลับหน้าไปหน้าร้าน กันปุ่ม pop-up ค้างซ้อนอยู่เวลากลับมาแผนที่)
+function orderForCustomerFromMap(pinId) {
+  if (salesMap && typeof salesMap.closePopup === 'function') salesMap.closePopup();
+  orderForCustomer(pinId);
 }
 
 function cancelOrderForCustomer() {
@@ -3942,7 +4023,11 @@ function addCustomerMarker(c) {
     + '<div class="cust-card-btns">'
     + '<button class="cust-card-btn" data-cid="' + c.id + '" data-act="edit">✏️ แก้ไข</button>'
     + '<button class="cust-card-btn del" data-cid="' + c.id + '" data-act="del">🗑️ ลบ</button>'
-    + '</div></div></div>';
+    + '</div>'
+    + '<button data-cid="' + c.id + '" data-act="orderfor" '
+    + 'style="width:100%;margin-top:6px;padding:8px 6px;background:linear-gradient(120deg,var(--red-700),var(--red-500));border:none;border-radius:8px;font-size:11px;color:#fff;font-weight:700;cursor:pointer;">'
+    + '🧾 สั่งซื้อแทนลูกค้ารายนี้</button>'
+    + '</div></div>';
 
   m.bindPopup(popupHtml, {
     closeButton: true, autoClose: true, closeOnClick: true,
@@ -3960,6 +4045,7 @@ function addCustomerMarker(c) {
         const id  = btn.getAttribute('data-cid');
         const act = btn.getAttribute('data-act');
         if (act === 'edit') openPinCustModal(null, null, id);
+        else if (act === 'orderfor') orderForCustomerFromMap(id);
         else deleteCustomer(id);
       };
     });
