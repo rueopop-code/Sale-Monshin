@@ -1089,7 +1089,7 @@ html, body {
   <symbol id="ic-play"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
   <symbol id="ic-trash"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
   <symbol id="ic-info"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
-  <symbol id="ic-line"     viewBox="0 0 24 24" fill="currentColor"><path d="M19.952 12.475c0-4.394-4.406-7.973-9.822-7.973S.307 8.08.307 12.475c0 3.94 3.49 7.239 8.203 7.864.319.069.755.21.865.483.099.248.065.636.032.887l-.14.839c-.043.248-.197.972.851.53s5.657-3.33 7.715-5.699c1.423-1.562 2.119-3.147 2.119-4.904z"/></svg></symbol>
+  <symbol id="ic-line"     viewBox="0 0 24 24" fill="currentColor"><path d="M19.952 12.475c0-4.394-4.406-7.973-9.822-7.973S.307 8.08.307 12.475c0 3.94 3.49 7.239 8.203 7.864.319.069.755.21.865.483.099.248.065.636.032.887l-.14.839c-.043.248-.197.972.851.53s5.657-3.33 7.715-5.699c1.423-1.562 2.119-3.147 2.119-4.904z"/></symbol>
   <symbol id="ic-qr"       viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="14" y1="20" x2="17" y2="20"/><line x1="20" y1="14" x2="20" y2="17"/></symbol>
   <symbol id="ic-share"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
   <symbol id="ic-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
@@ -1271,7 +1271,10 @@ html, body {
       <button onclick="toggleMapAreaFilterPanel()" title="กรองตามพื้นที่" class="fab-btn" id="btn-map-areafilter">
         <span style="font-size:18px;">🔎</span>
       </button>
-      <div id="map-areafilter-panel" style="display:none;position:absolute;top:48px;left:0;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.25);padding:10px;width:180px;">
+      <div id="map-areafilter-panel" style="display:none;position:absolute;top:48px;left:0;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.25);padding:10px;width:200px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">🔍 ค้นหาลูกค้า</div>
+        <input type="text" id="maf-search" oninput="applyMapAreaFilter()" placeholder="ชื่อ / เบอร์โทรลูกค้า"
+          style="width:100%;box-sizing:border-box;padding:6px 8px;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;font-family:inherit;margin-bottom:8px;">
         <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">📍 กรองตามพื้นที่</div>
         <select id="maf-province" onchange="applyMapAreaFilter()" style="width:100%;padding:6px 8px;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;font-family:inherit;margin-bottom:6px;">
           <option value="">ทุกจังหวัด</option>
@@ -1473,7 +1476,7 @@ html, body {
       <input type="file" id="pc-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="onPinPhotoSelected(this)">
       <div id="pc-photo-preview" style="display:none;position:relative;border-radius:10px;overflow:hidden;margin-top:4px;">
         <img id="pc-photo-img" src="" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;display:block;">
-        <button type="button" onclick="clearPinPhoto()" class="photo-clear-btn"><svg width="12" height="12"><use href="#ic-close"/></svg></button>
+        <button type="button" onclick="removePinPhoto()" class="photo-clear-btn"><svg width="12" height="12"><use href="#ic-close"/></svg></button>
       </div>
       <div id="pc-photo-status" class="status-text" style="display:none;"></div>
     </div>
@@ -2813,6 +2816,14 @@ function _renderCustomerCards(pins) {
           style="padding:6px 10px;background:#fff;border:1.5px solid var(--border-red2);border-radius:8px;font-size:11px;color:var(--red-500);flex-shrink:0;font-weight:700;cursor:pointer;">
           🗺️ นำทาง
         </button>
+        <button onclick="openPinCustModal(null,null,'${p.id}')" title="แก้ไขข้อมูล/รูปลูกค้า"
+          style="padding:6px 9px;background:#fff;border:1.5px solid var(--border-red2);border-radius:8px;font-size:12px;color:var(--red-500);flex-shrink:0;font-weight:700;cursor:pointer;">
+          ✏️
+        </button>
+        <button onclick="deleteCustomer('${p.id}')" title="ลบลูกค้า"
+          style="padding:6px 9px;background:#fff;border:1.5px solid #f3c9c7;border-radius:8px;font-size:12px;color:#c0392b;flex-shrink:0;font-weight:700;cursor:pointer;">
+          🗑️
+        </button>
       </div>
       ${photoSection}
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
@@ -3649,14 +3660,35 @@ function applyMapAreaFilter() {
   const pv = document.getElementById('maf-province')?.value || '';
   const ds = document.getElementById('maf-district')?.value || '';
   const sb = document.getElementById('maf-subdistrict')?.value || '';
+  const q  = (document.getElementById('maf-search')?.value || '').trim().toLowerCase();
+  const qDigits = q.replace(/[^0-9]/g, '');
+  const matched = [];
   customers.forEach(c => {
     const m = customerMarkers[c.id];
     if (!m) return;
-    const match = (!pv || (c.province||'') === pv) && (!ds || (c.district||'') === ds) && (!sb || (c.subdistrict||'') === sb);
+    const areaMatch = (!pv || (c.province||'') === pv) && (!ds || (c.district||'') === ds) && (!sb || (c.subdistrict||'') === sb);
+    let searchMatch = true;
+    if (q) {
+      const nameMatch  = (c.name||'').toLowerCase().includes(q);
+      const phoneDigits = (c.phone||'').replace(/[^0-9]/g, '');
+      const phoneMatch = qDigits ? phoneDigits.includes(qDigits) : (c.phone||'').toLowerCase().includes(q);
+      searchMatch = nameMatch || phoneMatch;
+    }
+    const match = areaMatch && searchMatch;
+    if (match) matched.push(c);
     const onMap = salesMap.hasLayer(m);
     if (match && !onMap) salesMap.addLayer(m);
     else if (!match && onMap) { m.closePopup(); salesMap.removeLayer(m); }
   });
+  // ค้นหาแล้วเจอลูกค้าตรงกับคำค้นพอดี 1 ราย — เลื่อนแผนที่ไปหาและเปิดการ์ดให้เลย ไม่ต้องไล่หาเอง
+  if (q && matched.length === 1) {
+    const c = matched[0];
+    const m = customerMarkers[c.id];
+    if (m && c.lat && c.lng) {
+      salesMap.flyTo([c.lat, c.lng], 16, { duration: 0.6 });
+      setTimeout(() => m.openPopup(), 650);
+    }
+  }
 }
 
 // ── GPS ──────────────────────────────────────────────────
@@ -4170,12 +4202,14 @@ function closePinCustModal() {
 // ── Pin photo helpers ──────────────────────────────────
 let _pinPhotoFile = null;
 let _pinPhotoUrl  = null;   // URL ที่อัปแล้วหรือ URL เดิม (กรณี edit)
+let _pinPhotoRemoved = false; // true = ผู้ใช้กดปุ่ม × ลบรูปเดิมออกโดยตั้งใจ (ต้องส่ง null ไปลบจริง ไม่ใช่แค่เว้นฟิลด์ไว้)
 
 function onPinPhotoSelected(input) {
   const file = input.files[0];
   if (!file) return;
   _pinPhotoFile = file;
   _pinPhotoUrl  = null;
+  _pinPhotoRemoved = false; // เลือกรูปใหม่แล้ว ไม่ใช่การลบ
   const reader = new FileReader();
   reader.onload = e => {
     document.getElementById('pc-photo-img').src = e.target.result;
@@ -4186,9 +4220,11 @@ function onPinPhotoSelected(input) {
   input.value = '';
 }
 
+// รีเซ็ตสถานะรูปในฟอร์ม — ใช้ตอนเปิด/ปิด modal เท่านั้น (ไม่ใช่การลบรูปเดิมของลูกค้าที่มีอยู่)
 function clearPinPhoto() {
   _pinPhotoFile = null;
   _pinPhotoUrl  = null;
+  _pinPhotoRemoved = false;
   const preview = document.getElementById('pc-photo-preview');
   if (preview) { preview.style.display = 'none'; document.getElementById('pc-photo-img').src = ''; }
   const status = document.getElementById('pc-photo-status');
@@ -4199,7 +4235,14 @@ function clearPinPhoto() {
   if (inp2) inp2.value = '';
 }
 
+// ผู้ใช้กดปุ่ม × บนรูปพรีวิว — ตั้งใจลบรูปที่มีอยู่ของลูกค้ารายนี้ออก
+function removePinPhoto() {
+  clearPinPhoto();
+  _pinPhotoRemoved = true;
+}
+
 async function uploadPinPhoto() {
+  if (_pinPhotoRemoved) return null; // ผู้ใช้ตั้งใจลบรูป — ไม่อัปโหลดอะไร คืน null ไปเคลียร์ค่าในฐานข้อมูล
   if (!_pinPhotoFile) return _pinPhotoUrl || null;
   const status = document.getElementById('pc-photo-status');
   if (status) { status.style.display = 'block'; status.textContent = '⏳ กำลังอัปโหลดรูป...'; }
@@ -4245,7 +4288,7 @@ async function savePinCustomer() {
     const idx = customers.findIndex(x => x.id === _editCustId);
     if (idx >= 0) {
       const prev = customers[idx];
-      customers[idx] = { ...customers[idx], name, phone, address: addr, province, district, subdistrict, type, note, photo_url: photoUrl || customers[idx].photo_url || null };
+      customers[idx] = { ...customers[idx], name, phone, address: addr, province, district, subdistrict, type, note, photo_url: photoUrl };
       if (customerMarkers[_editCustId]) {
         salesMap.removeLayer(customerMarkers[_editCustId]);
         delete customerMarkers[_editCustId];
@@ -4254,6 +4297,7 @@ async function savePinCustomer() {
       try {
         await updatePinInSupabase(customers[idx]);
         showToast('✅ แก้ไขลูกค้าแล้ว', 'success');
+        loadCustomersList(); // sync การ์ดในหน้า "ลูกค้าของฉัน" ให้ตรงกับข้อมูลที่เพิ่งแก้
       } catch(e) {
         // บันทึกไม่สำเร็จจริง - ย้อนกลับข้อมูลบนหน้าจอ ไม่ให้ค้างเป็นข้อมูลหลอกที่จะหายไปตอนรีเฟรช
         customers[idx] = prev;
@@ -4274,6 +4318,7 @@ async function savePinCustomer() {
     try {
       await savePinToSupabase(cust);
       showToast('✅ เพิ่มลูกค้าแล้ว', 'success');
+      loadCustomersList(); // sync การ์ดในหน้า "ลูกค้าของฉัน" ให้ตรงกับข้อมูลที่เพิ่มใหม่
     } catch(e) {
       // บันทึกไม่สำเร็จจริง - เอาหมุดที่เพิ่มไว้ชั่วคราวออก ไม่ให้ผู้ใช้เข้าใจผิดว่าปักสำเร็จแล้ว
       customers = customers.filter(x => x.id !== cust.id);
@@ -4287,12 +4332,17 @@ async function savePinCustomer() {
 
 function deleteCustomer(id) {
   if (!confirm('ลบลูกค้านี้?')) return;
+  const removed = customers.find(x => x.id === id);
   customers = customers.filter(x => x.id !== id);
-  if (customerMarkers[id]) { salesMap.removeLayer(customerMarkers[id]); delete customerMarkers[id]; }
-  salesMap.closePopup();
+  if (customerMarkers[id]) { salesMap && salesMap.removeLayer(customerMarkers[id]); delete customerMarkers[id]; }
+  if (salesMap) salesMap.closePopup();
   deletePinFromSupabase(id)
-    .then(() => showToast('ลบแล้ว'))
-    .catch(() => showToast('⚠️ ลบไม่สำเร็จ'));
+    .then(() => { showToast('ลบแล้ว'); loadCustomersList(); }) // sync การ์ดในหน้า "ลูกค้าของฉัน"
+    .catch(() => {
+      // ลบไม่สำเร็จจริง - เอาลูกค้ากลับเข้าลิสต์และวาดหมุดคืน ไม่ให้หายไปเฉยๆ ทั้งที่ยังอยู่ในฐานข้อมูล
+      if (removed) { customers.push(removed); addCustomerMarker(removed); }
+      showToast('⚠️ ลบไม่สำเร็จ');
+    });
 }
 
 function toggleAddPin() { setAddPin(!addPinMode); }
