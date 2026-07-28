@@ -132,8 +132,14 @@ jobs:
               startTracking();
               return START_STICKY;
             }
+            private static final float ACC_MAX_M = 100f; // ตัดสัญญาณหยาบทิ้ง ให้เกณฑ์เดียวกับฝั่ง JS (startGPS)
             private void startTracking() {
-              listener = loc -> sendLocation(loc.getLatitude(), loc.getLongitude());
+              listener = loc -> {
+                // กรองสัญญาณหยาบทิ้งตั้งแต่ต้นทาง (โดยเฉพาะ NETWORK_PROVIDER ที่คลาดเคลื่อนได้เป็นร้อยเมตร)
+                // เดิมไม่กรองเลย และไม่ส่ง accuracy ไปด้วย ทำให้ฝั่งแอดมินกรองสัญญาณหยาบไม่ได้จริง
+                if (loc.hasAccuracy() && loc.getAccuracy() > ACC_MAX_M) return;
+                sendLocation(loc.getLatitude(), loc.getLongitude(), loc.hasAccuracy() ? loc.getAccuracy() : null);
+              };
               try {
                 if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER))
                   lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30000, 10, listener);
@@ -141,7 +147,7 @@ jobs:
                   lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30000, 10, listener);
               } catch (SecurityException e) { Log.e("GPS", "No permission", e); }
             }
-            private void sendLocation(double lat, double lng) {
+            private void sendLocation(double lat, double lng, Float accuracy) {
               new Thread(() -> { try {
                 URL url = new URL(SB_URL + "/rest/v1/sales_locations");
                 HttpURLConnection c = (HttpURLConnection) url.openConnection();
@@ -151,7 +157,8 @@ jobs:
                 c.setRequestProperty("Content-Type", "application/json");
                 c.setRequestProperty("Prefer", "resolution=merge-duplicates");
                 c.setDoOutput(true);
-                String body = "{\"sales_id\":\""+salesId+"\",\"lat\":"+lat+",\"lng\":"+lng+",\"updated_at\":\""+java.time.Instant.now().toString()+"\"}";
+                String accField = accuracy != null ? String.valueOf(accuracy) : "null";
+                String body = "{\"sales_id\":\""+salesId+"\",\"lat\":"+lat+",\"lng\":"+lng+",\"accuracy\":"+accField+",\"updated_at\":\""+java.time.Instant.now().toString()+"\"}";
                 c.getOutputStream().write(body.getBytes());
                 c.getResponseCode();
                 c.disconnect();
