@@ -1649,11 +1649,22 @@ window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 200)
 // ══════════════════════════════════════════
 // GAS URL ฝังตรงนี้เลย
 const SESSION_KEY = 'sales_session';
-const BASE_URL    = window.location.origin + window.location.pathname.replace('sales.html','');
-const LINE_OA_ID   = '@monshin';
-const LINE_OA_URL  = 'https://line.me/R/ti/p/' + encodeURIComponent(LINE_OA_ID);
+const CFG_KEY = 'sales_gas_cfg'; // ใช้โดย saveCfg()/openCfg() (หน้าตั้งค่า GAS URL แบบ manual — ปัจจุบัน URL ถูกฝังตรงใน getGasUrl() แล้ว จุดนี้เป็น fallback เผื่ออนาคต)
 const BACKEND_URL  = 'https://lineoa-u0v2.onrender.com';
-const LIFF_URL     = 'https://liff.line.me/2010305355-NY9E6yu7';
+
+// กัน HTML/script injection: ชื่อ/ที่อยู่/หมายเหตุ ของลูกค้าเป็นข้อความที่พิมพ์เอง
+// (ทั้งจากเซลปักหมุด และจากลูกค้าที่สั่งผ่านหน้าร้าน) แล้วถูกใส่ตรงๆ ลง innerHTML
+// หลายจุด ถ้าใครพิมพ์ข้อความที่มี HTML tag (เช่น <img src=x onerror=...>) จะรันโค้ดได้จริง
+// ต้อง escape ก่อนแทรกเข้า innerHTML เสมอ
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function getGasUrl() { return 'https://script.google.com/macros/s/AKfycbw8PT4PBw0AVXiYiyp9LW4mZexvHxkBiohODVoTkq26Tu4YskhyDsbA821E2MBaLJjl/exec'; }
 async function gasCall(body) {
@@ -1779,6 +1790,7 @@ let _myPinsCache = [];       // cache ล่าสุดของ sales_pins ท
 let _lastStats = { orders: null, revenue: null, pins: null };
 let _loadCustomersInFlight = null; // Promise ของ loadCustomersList() ที่กำลังวิ่งอยู่ (กันเรียกซ้อน)
 let _dashboardLoadInFlight = null; // Promise ของ loadDashboard() ที่กำลังวิ่งอยู่ (กันเรียกซ้อน)
+let _statsLoadInFlight = null; // Promise ของ loadSalesStats() ที่กำลังวิ่งอยู่ (กันเรียกซ้อน/กันชนกับตัวเองจากหลายจุดพร้อมกัน)
 
 // ══════════════════════════════════════════
 //  AUTH TABS
@@ -1825,7 +1837,7 @@ async function doRegister() {
 // ══════════════════════════════════════════
 //  LOGIN
 // ══════════════════════════════════════════
-document.getElementById('l-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('l-pass')?.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
 async function doLogin() {
   const user = document.getElementById('l-user').value.trim();
@@ -2133,7 +2145,7 @@ function renderIdCard() {
           </div>
           <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
         </div>
-        <div class="stg2-profile-name">${s.name}</div>
+        <div class="stg2-profile-name">${escapeHtml(s.name)}</div>
         <div class="stg2-profile-role">💼 พนักงานขาย · Monshin Supply</div>
         <div class="stg2-badge"><span class="stg2-dot"></span>รหัสเซล ${s.salesId}</div>
 
@@ -2264,7 +2276,17 @@ function renderIdCard() {
   loadDashboard();
 }
 
-async function loadSalesStats() {
+function loadSalesStats() {
+  // กันเรียกซ้อน: เดิมถูกเรียกพร้อมกันได้จากหลายจุด (visibilitychange, ตัวจับเวลา
+  // auto-refresh 20 วิ, renderIdCard()) ทำให้ผลลัพธ์แข่งกันเขียนทับ DOM — ชุดที่ตอบช้ากว่า
+  // อาจเขียนทับค่าที่ใหม่กว่าให้กลายเป็นค่าเก่า
+  if (_statsLoadInFlight) return _statsLoadInFlight;
+  _statsLoadInFlight = _loadSalesStatsImpl().finally(() => { _statsLoadInFlight = null; });
+  return _statsLoadInFlight;
+}
+
+async function _loadSalesStatsImpl() {
+  if (!session) return;
   try {
     // ดึงจาก Supabase ทั้ง sales_id และ ref_code กรอง cancelled ออก
     const [resSales, resRef] = await Promise.all([
@@ -2280,8 +2302,10 @@ async function loadSalesStats() {
       .filter(o => { if (!o.order_id || seen.has(o.order_id)) return false; seen.add(o.order_id); return true; });
     const totalRevenue = merged.reduce((s,o) => s + parseFloat(o.total_price||o.total||o.amount||0), 0);
     const revenueTxt = totalRevenue.toLocaleString('th-TH', {minimumFractionDigits:0});
-    document.getElementById('stat-orders').textContent  = merged.length;
-    document.getElementById('stat-revenue').textContent = revenueTxt;
+    const so = document.getElementById('stat-orders');
+    const sr = document.getElementById('stat-revenue');
+    if (so) so.textContent = merged.length;
+    if (sr) sr.textContent = revenueTxt;
     _lastStats.orders = merged.length;
     _lastStats.revenue = revenueTxt;
   } catch(_) {}
@@ -2346,7 +2370,7 @@ function printSalesCard() {
         <div style="padding:28px 20px 20px;display:flex;gap:16px;align-items:flex-start;">
           <div style="flex-shrink:0;">${avatarHtml}</div>
           <div style="flex:1;">
-            <div style="font-family:Prompt,sans-serif;font-size:18px;font-weight:800;color:#1a1a1a;">${s.name}</div>
+            <div style="font-family:Prompt,sans-serif;font-size:18px;font-weight:800;color:#1a1a1a;">${escapeHtml(s.name)}</div>
             <span style="display:inline-block;background:var(--red-500);color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-top:5px;">💼 ${s.salesId}</span>
             <div style="font-size:11px;color:#888;margin-top:5px;">พนักงานขาย · Sales Representative</div>
             ${s.phone ? `<div style="font-size:13px;color:var(--red-500);font-weight:600;margin-top:4px;">📞 ${formatThaiPhone(s.phone)}</div>` : ''}
@@ -2368,7 +2392,7 @@ function printSalesCard() {
       <!-- ด้านหลัง -->
       <div class="print-card" style="background:linear-gradient(160deg,#fff 60%,var(--red-50));border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.18);margin-bottom:16px;">
         <div style="font-family:Prompt,sans-serif;font-size:13px;font-weight:700;color:var(--red-500);margin-bottom:10px;border-bottom:2px solid var(--red-500);padding-bottom:6px;">📋 ข้อมูลพนักงานขาย</div>
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">ชื่อ</span><span style="font-weight:600;color:#1a1a1a;">${s.name}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">ชื่อ</span><span style="font-weight:600;color:#1a1a1a;">${escapeHtml(s.name)}</span></div>
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">รหัสเซล</span><span style="font-weight:600;color:var(--red-500);font-family:Prompt,sans-serif;">${s.salesId}</span></div>
         ${s.phone ? `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">เบอร์โทร</span><span style="font-weight:600;color:#1a1a1a;">${formatThaiPhone(s.phone)}</span></div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="color:#888;width:70px;flex-shrink:0;">LINE OA</span><span style="font-weight:600;color:#06C755;">@monshin</span></div>
@@ -2586,11 +2610,11 @@ async function _loadDashboardImpl() {
     // ดึงออเดอร์ทั้งจาก sales_id และ ref_code (สั่งแทนลูกค้า)
     const [resSales, resRef] = await Promise.all([
       fetch(
-        SB_URL + '/rest/v1/orders?sales_id=eq.' + session.salesId + '&status=neq.cancelled&order=created_at.desc&limit=200',
+        SB_URL + '/rest/v1/orders?sales_id=eq.' + session.salesId + '&status=neq.cancelled&order=created_at.desc&limit=5000',
         { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }
       ),
       fetch(
-        SB_URL + '/rest/v1/orders?ref_code=eq.' + session.salesId + '&status=neq.cancelled&order=created_at.desc&limit=200',
+        SB_URL + '/rest/v1/orders?ref_code=eq.' + session.salesId + '&status=neq.cancelled&order=created_at.desc&limit=5000',
         { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }
       )
     ]);
@@ -2639,14 +2663,11 @@ function renderDashboard() {
   if (dsO) dsO.textContent = orders.length;
   if (dsR) dsR.textContent = total.toLocaleString('th-TH', {minimumFractionDigits:0});
 
-  // อัปเดต stat-orders, stat-revenue ด้านบนด้วย
-  const so = document.getElementById('stat-orders');
-  const sr = document.getElementById('stat-revenue');
-  const allRevenueTxt = allOrders.reduce((s,o)=>s+(parseFloat(o.total_price||o.total||o.amount||0)),0).toLocaleString('th-TH',{minimumFractionDigits:0});
-  if (so) so.textContent = allOrders.length;
-  if (sr) sr.textContent = allRevenueTxt;
-  _lastStats.orders = allOrders.length;
-  _lastStats.revenue = allRevenueTxt;
+  // หมายเหตุ: ไม่เขียนทับ stat-orders/stat-revenue (การ์ดสรุปด้านบน) ตรงนี้อีกต่อไป
+  // เดิมทั้ง renderDashboard() และ loadSalesStats() ต่างคำนวณ "จำนวนออเดอร์/ยอดขายทั้งหมด"
+  // แยกกันคนละ query แล้วเขียนทับ element เดียวกันแบบไม่ประสานกัน (ใครเสร็จทีหลังชนะ)
+  // ทำให้ตัวเลขกระพริบ/ไม่ตรงกันได้ — ตอนนี้ให้ loadSalesStats() (query ไม่จำกัดจำนวน)
+  // เป็นเจ้าของค่านี้แต่เพียงผู้เดียว
 
   // รายการออเดอร์ล่าสุด
   const ol = document.getElementById('orders-list');
@@ -2663,7 +2684,7 @@ function renderDashboard() {
     const statusText = status === 'completed' ? '✅ สำเร็จ' : status === 'cancelled' ? '❌ ยกเลิก' : '⏳ รอดำเนินการ';
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
       <div>
-        <div style="font-weight:600;color:#333;font-size:12px;">${o.customer_name || o.name || 'ลูกค้า'}</div>
+        <div style="font-weight:600;color:#333;font-size:12px;">${escapeHtml(o.customer_name || o.name || 'ลูกค้า')}</div>
         <div style="color:#888;font-size:11px;">${date}</div>
       </div>
       <div style="text-align:right;">
@@ -2741,7 +2762,7 @@ function renderOrdersDetailList(list, sortByRevenue) {
     const statusText = status === 'completed' ? '✅ สำเร็จ' : status === 'cancelled' ? '❌ ยกเลิก' : '⏳ รอดำเนินการ';
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
       <div>
-        <div style="font-weight:600;color:#333;font-size:12px;">${o.customer_name || o.name || 'ลูกค้า'}</div>
+        <div style="font-weight:600;color:#333;font-size:12px;">${escapeHtml(o.customer_name || o.name || 'ลูกค้า')}</div>
         <div style="color:#888;font-size:11px;">${date}</div>
       </div>
       <div style="text-align:right;">
@@ -2780,7 +2801,7 @@ function closeStatDetailModal() {
 // สร้าง <option> ของค่าที่ไม่ซ้ำ ใช้ทำ dropdown กรองพื้นที่
 function _uniqOptions(pins, field) {
   const vals = [...new Set(pins.map(p => (p[field]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
-  return vals.map(v => `<option value="${v}">${v}</option>`).join('');
+  return vals.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
 }
 
 function _renderCustomerCards(pins) {
@@ -2808,8 +2829,8 @@ function _renderCustomerCards(pins) {
       <div style="display:flex;align-items:center;gap:10px;">
         <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red-700),var(--red-500));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${i+1}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;color:#1a1a1a;font-size:13px;">${typeIcon} ${p.name || 'ไม่ระบุชื่อ'}</div>
-          ${p.address ? `<div style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.address}</div>` : ''}
+          <div style="font-weight:700;color:#1a1a1a;font-size:13px;">${typeIcon} ${escapeHtml(p.name) || 'ไม่ระบุชื่อ'}</div>
+          ${p.address ? `<div style="color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.address)}</div>` : ''}
           ${areaLine ? `<div style="color:var(--red-500);font-size:10px;font-weight:700;margin-top:1px;">📍 ${areaLine}</div>` : ''}
         </div>
         <button onclick="openNavigation(${p.lat},${p.lng})"
@@ -2827,10 +2848,10 @@ function _renderCustomerCards(pins) {
       </div>
       ${photoSection}
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-        ${p.phone ? `<a href="tel:${p.phone}" style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:20px;font-size:11px;color:#333;text-decoration:none;">📞 ${p.phone}</a>` : ''}
+        ${p.phone ? `<a href="tel:${escapeHtml(p.phone)}" style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:20px;font-size:11px;color:#333;text-decoration:none;">📞 ${escapeHtml(p.phone)}</a>` : ''}
         ${orderCount > 0 ? `<span style="padding:4px 10px;background:var(--red-50);border:1px solid var(--border-red);border-radius:20px;font-size:11px;color:var(--red-500);font-weight:600;">🧾 ${orderCount} ออเดอร์</span>` : ''}
         ${addedDate ? `<span style="padding:4px 10px;background:#f5f5f5;border-radius:20px;font-size:11px;color:#888;">📅 เพิ่ม ${addedDate}</span>` : ''}
-        ${p.note ? `<span style="padding:4px 10px;background:#fffbf0;border:1px solid rgba(245,158,11,0.3);border-radius:20px;font-size:11px;color:#888;">📝 ${p.note}</span>` : ''}
+        ${p.note ? `<span style="padding:4px 10px;background:#fffbf0;border:1px solid rgba(245,158,11,0.3);border-radius:20px;font-size:11px;color:#888;">📝 ${escapeHtml(p.note)}</span>` : ''}
       </div>
       <button onclick="orderForCustomer('${p.id}')"
         style="width:100%;margin-top:10px;padding:9px 10px;background:linear-gradient(120deg,var(--red-700),var(--red-500));border:none;border-radius:10px;font-size:12px;color:#fff;font-weight:700;cursor:pointer;">
@@ -3007,7 +3028,7 @@ function _renderOrderForBanner() {
     bar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--red-50,#fff0ef);border-bottom:1.5px solid var(--border-red2,#f3b9b5);font-size:12px;color:var(--red-700,#b3261e);font-weight:700;';
     wrap.insertBefore(bar, wrap.firstChild);
   }
-  bar.innerHTML = `🧾 กำลังสั่งแทน: ${p.name || 'ลูกค้า'} ${p.address ? '· ' + p.address : ''}
+  bar.innerHTML = `🧾 กำลังสั่งแทน: ${escapeHtml(p.name) || 'ลูกค้า'} ${p.address ? '· ' + escapeHtml(p.address) : ''}
     <span onclick="cancelOrderForCustomer()" style="margin-left:auto;cursor:pointer;color:#888;font-weight:400;">✕ ยกเลิก</span>`;
 }
 
@@ -3185,7 +3206,6 @@ async function saveSettingsPassword() {
 function downloadCard(btn) {
   btn.textContent = '⏳ กำลังสร้างรูป...';
   btn.disabled = true;
-  var salesId = btn.closest('body') ? (document.querySelector('.sales-code') || {textContent:''}).textContent.replace('💼 ','') : '';
   var cardWrap = document.querySelector('.card-wrap');
   if (typeof html2canvas === 'undefined') {
     alert('ไม่สามารถดาวน์โหลดได้ กรุณาใช้ปุ่มพิมพ์แทน');
@@ -3250,6 +3270,16 @@ async function sbFetch(path, opts={}) {
   return res.json();
 }
 
+// วาดลิสต์สินค้าใหม่ โดยเคารพคำค้นหาที่พิมพ์ค้างไว้ใน #prod-search (ถ้ามี)
+// แก้บั๊ก: เดิม loadProducts() เรียก renderProducts(products) ตรงๆ ทุกครั้งที่รีเฟรช
+// ทำให้ผลค้นหาที่กำลังดูอยู่ถูกล้างกลับเป็นสินค้าทั้งหมดเงียบๆ ทั้งที่ช่องค้นหายังมีคำอยู่
+function _renderProductsRespectingSearch() {
+  const searchEl = document.getElementById('prod-search');
+  const q = searchEl ? searchEl.value.trim() : '';
+  if (q) filterProducts();
+  else renderProducts(products);
+}
+
 async function loadProducts() {
   // โหลดจาก localStorage ก่อน (เหมือนหน้าร้าน)
   try {
@@ -3261,7 +3291,7 @@ async function loadProducts() {
         cat: r.cat||'', desc: r.description||r.desc||'',
         sizes: r.sizes||[], stock: r.stock||null
       }));
-      renderProducts(products);
+      _renderProductsRespectingSearch();
     }
   } catch(_) {}
 
@@ -3276,7 +3306,7 @@ async function loadProducts() {
         sizes: r.sizes||[], stock: r.stock||null
       }));
       try { localStorage.setItem('ms_products', JSON.stringify(data)); } catch(_) {}
-      renderProducts(products);
+      _renderProductsRespectingSearch();
     }
   } catch(e) {
     if (!products.length) showToast('⚠️ โหลดสินค้าไม่สำเร็จ');
@@ -3305,7 +3335,7 @@ function renderProducts(list) {
       + imgHtml
       + '<div style="padding:8px;">'
       + (p.cat ? '<div style="font-size:10px;color:var(--red-500);font-weight:700;margin-bottom:3px">' + p.cat + '</div>' : '')
-      + '<div class="prod-name">' + p.name + '</div>'
+      + '<div class="prod-name">' + escapeHtml(p.name) + '</div>'
       + '<div class="prod-price">' + priceText + '</div>'
       + '<button class="prod-add" onclick="event.stopPropagation();openProductModal(\'' + pid + '\')">' + btnLabel + '</button>'
       + '</div></div>';
@@ -3325,12 +3355,12 @@ function openProductModal(id) {
       : '<div style="font-size:40px;text-align:center;margin-bottom:12px">' + (p.emoji||'📦') + '</div>';
     document.getElementById('size-modal-body').innerHTML =
       imgHtml
-      + '<div style="font-size:15px;font-weight:700;margin-bottom:4px">' + p.name + '</div>'
-      + (p.desc ? '<div style="font-size:12px;color:#888;margin-bottom:12px">' + p.desc + '</div>' : '')
+      + '<div style="font-size:15px;font-weight:700;margin-bottom:4px">' + escapeHtml(p.name) + '</div>'
+      + (p.desc ? '<div style="font-size:12px;color:#888;margin-bottom:12px">' + escapeHtml(p.desc) + '</div>' : '')
       + '<div style="font-size:12px;color:#888;font-weight:600;margin-bottom:8px">เลือกขนาด</div>'
       + sizes.map((s,i) =>
           '<button onclick="addSizeToCart(' + i + ')" style="width:100%;padding:11px;margin-bottom:8px;border-radius:10px;border:1.5px solid var(--border-red2);background:#fff;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">'
-          + '<span>' + (s.n||s.name) + '</span><span style="color:var(--red-500);font-weight:700">฿' + (s.p||s.price||0).toLocaleString() + '</span></button>'
+          + '<span>' + escapeHtml(s.n||s.name) + '</span><span style="color:var(--red-500);font-weight:700">฿' + (s.p||s.price||0).toLocaleString() + '</span></button>'
         ).join('');
     document.getElementById('size-modal').classList.add('show');
   } else {
@@ -3388,7 +3418,7 @@ function openCart() {
       : '<div style="width:40px;height:40px;background:var(--red-50);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📦</div>';
     return '<div class="cart-item">'
       + imgHtml
-      + '<div class="cart-item-name" style="flex:1;margin-left:8px">' + v.name + '</div>'
+      + '<div class="cart-item-name" style="flex:1;margin-left:8px">' + escapeHtml(v.name) + '</div>'
       + '<div class="qty-ctrl">'
       + '<button class="qbtn" onclick="changeQty(\'' + id + '\',-1)">−</button>'
       + '<span class="qval" id="cq-' + id + '">' + v.qty + '</span>'
@@ -3427,7 +3457,7 @@ function goToCheckout() {
     } else {
       pinLat = null; pinLng = null;
       document.getElementById('pin-status').textContent = 'ยังไม่ปักหมุด';
-      document.getElementById('pin-status').style.color = 'var(--muted)';
+      document.getElementById('pin-status').style.color = 'var(--text-3)';
     }
   } else {
     document.getElementById('c-name').value  = '';
@@ -3436,7 +3466,7 @@ function goToCheckout() {
     document.getElementById('c-note').value  = '';
     pinLat = null; pinLng = null;
     document.getElementById('pin-status').textContent = 'ยังไม่ปักหมุด';
-    document.getElementById('pin-status').style.color = 'var(--muted)';
+    document.getElementById('pin-status').style.color = 'var(--text-3)';
   }
   document.getElementById('checkout-modal').classList.add('show');
 }
@@ -3556,7 +3586,7 @@ async function submitOrder() {
     });
     const data = await res.json();
 
-    if (data.order_id || data.ok || data.success || res.ok) {
+    if (data.order_id || data.ok || data.success) {
       const orderId = data.order_id || data.orderId || ('SO_' + Date.now());
 
       // อัปเดต sales_id ใน Supabase โดยตรง (background)
@@ -3807,7 +3837,7 @@ function startGPS() {
 
   // push ทุก 30 วิแม้ไม่ขยับ (keepalive) — ส่งค่าความแม่นยำจริงล่าสุด ไม่ใช่ 0
   _gpsInterval = setInterval(() => {
-    if (myLat) pushGpsToSupabase(myLat, myLng, window._lastGpsAcc || null);
+    if (myLat !== null) pushGpsToSupabase(myLat, myLng, window._lastGpsAcc || null);
   }, 30000);
 }
 
@@ -3859,7 +3889,7 @@ function setGpsStatus(ok, msg) {
 }
 
 function centerGPS() {
-  if (!myLat) { showToast('⚠️ ยังไม่พบ GPS'); return; }
+  if (myLat === null) { showToast('⚠️ ยังไม่พบ GPS'); return; }
   salesMap.flyTo([myLat, myLng], 15, { duration:0.8 });
 }
 
@@ -3901,7 +3931,7 @@ function toggleMapSatellite() {
 }
 
 function calcRouteFromMe() {
-  if (!myLat) { showToast('⚠️ ยังไม่พบ GPS'); return; }
+  if (myLat === null) { showToast('⚠️ ยังไม่พบ GPS'); return; }
   const pts = customers.filter(c => c.lat);
   if (!pts.length) { showToast('⚠️ ยังไม่มีหมุดลูกค้า'); return; }
   // คำนวณเส้นทางจากตำแหน่งปัจจุบัน → ลูกค้าทุกคน
@@ -3926,7 +3956,7 @@ function calcRouteFromMe() {
 
 // ── ปักหมุดจาก GPS ทันที ─────────────────────────────────
 function pinFromGPS() {
-  if (!myLat) { showToast('⚠️ ยังไม่พบ GPS กรุณารอสักครู่'); return; }
+  if (myLat === null) { showToast('⚠️ ยังไม่พบ GPS กรุณารอสักครู่'); return; }
   _pendingPinLat = myLat;
   _pendingPinLng = myLng;
   openPinCustModal(myLat, myLng, null);
@@ -4014,7 +4044,7 @@ function openNavigation(lat, lng) {
 function calcDistM(lat1, lng1, lat2, lng2) {
   const R = 6371000;
   const dLat = (lat2-lat1) * Math.PI/180;
-  const dLng = (lat2-lng1) * Math.PI/180;
+  const dLng = (lng2-lng1) * Math.PI/180;
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
@@ -4050,8 +4080,8 @@ function addCustomerMarker(c) {
     '<div>'
     + imgHtml
     + '<div class="cust-card-body">'
-    + '<div class="cust-card-name">' + (icons[c.type]||'📍') + ' ' + c.name + '</div>'
-    + (c.phone ? '<div class="cust-card-phone">📞 ' + c.phone + '</div>' : '')
+    + '<div class="cust-card-name">' + (icons[c.type]||'📍') + ' ' + escapeHtml(c.name) + '</div>'
+    + (c.phone ? '<div class="cust-card-phone">📞 ' + escapeHtml(c.phone) + '</div>' : '')
     + '<div class="cust-card-btns">'
     + '<button class="cust-card-btn" data-cid="' + c.id + '" data-act="edit">✏️ แก้ไข</button>'
     + '<button class="cust-card-btn del" data-cid="' + c.id + '" data-act="del">🗑️ ลบ</button>'
@@ -4259,7 +4289,9 @@ async function uploadPinPhoto() {
     return _pinPhotoUrl;
   } catch(e) {
     if (status) { status.textContent = '⚠️ อัปโหลดรูปไม่สำเร็จ'; }
-    return null;
+    // โยน error ต่อให้ผู้เรียก (savePinCustomer) รู้ว่าอัปโหลดรูปไม่สำเร็จจริง
+    // แทนที่จะคืน null เงียบๆ ซึ่งทำให้บันทึกลูกค้าสำเร็จ (toast ✅) โดยที่รูปหายไปเฉยๆ
+    throw new Error('อัปโหลดรูปไม่สำเร็จ');
   }
 }
 
@@ -4279,8 +4311,17 @@ async function savePinCustomer() {
   const saveBtn = document.getElementById('pc-save-btn');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ กำลังบันทึก...'; }
 
-  // อัปโหลดรูปก่อน (ถ้ามี)
-  const photoUrl = await uploadPinPhoto();
+  // อัปโหลดรูปก่อน (ถ้ามี) — ถ้าอัปโหลดไม่สำเร็จ หยุดตรงนี้เลย ไม่บันทึกลูกค้าต่อ
+  // (เดิม: ถ้าอัปโหลดพลาด จะยังบันทึกลูกค้าต่อโดยไม่มีรูป แล้วโชว์ "✅ เพิ่มลูกค้าแล้ว"
+  //  ทำให้ผู้ใช้ไม่รู้เลยว่ารูปหายไป เพราะ modal ปิดไปก่อนจะทันเห็นข้อความ error บนรูป)
+  let photoUrl;
+  try {
+    photoUrl = await uploadPinPhoto();
+  } catch (e) {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '✅ บันทึกลูกค้า'; }
+    showToast('⚠️ อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่ หรือกดบันทึกอีกครั้งโดยไม่แนบรูป', 'error');
+    return;
+  }
 
   const typeIcons = { shop:'🏪', home:'🏠', business:'🏢', other:'📍' };
 
@@ -4421,7 +4462,7 @@ function switchPage(name) {
     setTimeout(() => {
       salesMap.invalidateSize();
       renderCustomerMarkers();
-      if (myLat && myLng) renderMyPositionOnMap();
+      if (myLat && myLng) renderMyPositionOnMap(window._lastGpsAcc || null);
     }, 100);
   }
   if (name === 'sell') setSellMode('liff');
@@ -4453,8 +4494,12 @@ function showToast(msg, type='warn') {
 //  INIT
 // ══════════════════════════════════════════
 // เช็ค ref code จาก URL (ถ้ามี)
+// หมายเหตุ: บรรทัดนี้รันทันทีตอนโหลดสคริปต์ (อยู่นอกฟังก์ชันใดๆ) — ถ้า localStorage
+// ใช้งานไม่ได้ (private browsing / WebView บางตัวบล็อกไว้ / quota เต็ม) แล้วโยน error
+// โดยไม่มี try/catch ตรงนี้ สคริปต์ทั้งไฟล์จะหยุดทำงานทันที ทำให้ปุ่มล็อกอิน/init
+// ด้านล่างทั้งหมดไม่ทำงานเลยแม้แต่น้อย จึงต้องกันไว้
 const urlRef = new URLSearchParams(window.location.search).get('ref');
-if (urlRef) localStorage.setItem('sales_ref', urlRef);
+if (urlRef) { try { localStorage.setItem('sales_ref', urlRef); } catch(_) {} }
 
 (async function init() {
   const raw = localStorage.getItem(SESSION_KEY);
