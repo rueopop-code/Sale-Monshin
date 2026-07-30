@@ -2309,9 +2309,9 @@ async function _loadSalesStatsImpl() {
   try {
     // ดึงจาก Supabase ทั้ง sales_id และ ref_code กรอง cancelled ออก
     const [resSales, resRef] = await Promise.all([
-      fetch(SB_URL + '/rest/v1/orders?sales_id=eq.' + session.salesId + '&status=neq.cancelled&select=order_id,total,total_price,amount',
+      fetch(SB_URL + '/rest/v1/orders?sales_id=eq.' + session.salesId + '&status=neq.cancelled&select=order_id,total',
         { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } }),
-      fetch(SB_URL + '/rest/v1/orders?ref_code=eq.' + session.salesId + '&status=neq.cancelled&select=order_id,total,total_price,amount',
+      fetch(SB_URL + '/rest/v1/orders?ref_code=eq.' + session.salesId + '&status=neq.cancelled&select=order_id,total',
         { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON } })
     ]);
     const s1 = await resSales.json();
@@ -2319,7 +2319,7 @@ async function _loadSalesStatsImpl() {
     const seen = new Set();
     const merged = [...(Array.isArray(s1)?s1:[]), ...(Array.isArray(s2)?s2:[])]
       .filter(o => { if (!o.order_id || seen.has(o.order_id)) return false; seen.add(o.order_id); return true; });
-    const totalRevenue = merged.reduce((s,o) => s + parseFloat(o.total_price||o.total||o.amount||0), 0);
+    const totalRevenue = merged.reduce((s,o) => s + parseFloat(o.total||0), 0);
     const revenueTxt = totalRevenue.toLocaleString('th-TH', {minimumFractionDigits:0});
     const so = document.getElementById('stat-orders');
     const sr = document.getElementById('stat-revenue');
