@@ -2702,8 +2702,7 @@ function renderDashboard() {
     const date = o.created_at ? new Date(o.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '-';
     const amount = parseFloat(o.total_price || o.total || o.amount || 0).toLocaleString('th-TH');
     const status = o.status || 'pending';
-    const statusColor = status === 'completed' ? '#27ae60' : status === 'cancelled' ? '#e74c3c' : '#e67e22';
-    const statusText = status === 'completed' ? '✅ สำเร็จ' : status === 'cancelled' ? '❌ ยกเลิก' : '⏳ รอดำเนินการ';
+    const { text: statusText, color: statusColor } = getOrderStatusDisplay(status);
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
       <div>
         <div style="font-weight:600;color:#333;font-size:12px;">${escapeHtml(o.customer_name || o.name || 'ลูกค้า')}</div>
@@ -2715,6 +2714,25 @@ function renderDashboard() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ══════════════════════════════════════════
+//  สถานะออเดอร์ — ใช้ enum เดียวกับหน้าแอดมิน/หน้าร้าน (pending/sent/confirmed/
+//  shipped/done/cancelled/failed) ห้ามใช้ 'completed' เพราะไม่มีจริงในระบบ —
+//  เดิมโค้ดเช็ค status==='completed' ทำให้ออเดอร์ที่จริง ๆ done แล้ว ขึ้น
+//  "รอดำเนินการ" ค้างตลอด ไม่ตรงกับสถานะจริงในแอดมินเลย
+// ══════════════════════════════════════════
+const ORDER_STATUS_DISPLAY = {
+  pending:   { text: '⏳ รอดำเนินการ',    color: '#e67e22' },
+  sent:      { text: '📦 ร้านได้รับแล้ว',  color: '#2980b9' },
+  confirmed: { text: '✅ ยืนยันแล้ว',      color: '#27ae60' },
+  shipped:   { text: '🚚 กำลังจัดส่ง',     color: '#2980b9' },
+  done:      { text: '✅ เสร็จสิ้น',       color: '#27ae60' },
+  cancelled: { text: '❌ ยกเลิก',         color: '#e74c3c' },
+  failed:    { text: '⚠️ ผิดพลาด',        color: '#e74c3c' },
+};
+function getOrderStatusDisplay(status) {
+  return ORDER_STATUS_DISPLAY[status] || ORDER_STATUS_DISPLAY.pending;
 }
 
 function renderChart() {
@@ -2780,8 +2798,7 @@ function renderOrdersDetailList(list, sortByRevenue) {
     const date = o.created_at ? new Date(o.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '-';
     const amount = parseFloat(o.total_price || o.total || o.amount || 0).toLocaleString('th-TH');
     const status = o.status || 'pending';
-    const statusColor = status === 'completed' ? '#27ae60' : status === 'cancelled' ? '#e74c3c' : '#e67e22';
-    const statusText = status === 'completed' ? '✅ สำเร็จ' : status === 'cancelled' ? '❌ ยกเลิก' : '⏳ รอดำเนินการ';
+    const { text: statusText, color: statusColor } = getOrderStatusDisplay(status);
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;">
       <div>
         <div style="font-weight:600;color:#333;font-size:12px;">${escapeHtml(o.customer_name || o.name || 'ลูกค้า')}</div>
