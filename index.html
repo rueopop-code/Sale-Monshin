@@ -1697,7 +1697,7 @@ async function gasCall(body) {
 //  STATE
 // ══════════════════════════════════════════
 let session = null;
-let cart = {};       // { productId: { name, price, qty } }
+let cart = {};       // { key: { name, price, qty, productId, sizeName, basePrice, tiers, bundle } }
 let products = [];
 let customers = []; // โหลดจาก Supabase
 
@@ -3417,10 +3417,65 @@ function addSizeToCart(idx) {
   document.getElementById('size-modal').classList.remove('show');
 }
 
+// ── ราคาส่ง (tiers) / โปรชุด (bundle): ใช้ logic เดียวกับหน้าร้านจริง (LINEOA-main) ──
+// 🔒 ก่อนหน้านี้ cart ไม่เคยเก็บ productId/sizeName เลย — ทำให้ /send-order (ที่ตรวจ/คำนวณราคา
+// จริงฝั่ง server) ปฏิเสธออเดอร์ทุกใบที่มาจากตะกร้านี้ (ต้องมี productId+sizeName ถึงจะยืนยันราคาได้)
+// และ deduct_stock ก็ข้ามไปเงียบๆ (เช็ค !it.productId) สต็อกเลยไม่ถูกตัด — เพิ่ม field พวกนี้กลับเข้าไป
+// พร้อมคำนวณราคาส่ง/โปรชุดในตะกร้าเอง ให้เซลเห็นราคาที่ถูกต้องตั้งแต่ก่อนกดยืนยันออเดอร์
+function scGetBundle(item) {
+  const b = item.bundle;
+  return (b && b.q >= 2 && b.price > 0 && b.price < item.basePrice) ? b : null;
+}
+function scEffectiveQty(productId, basePrice, excludeKey) {
+  let total = 0;
+  for (const k in cart) {
+    if (k === excludeKey) continue;
+    const v = cart[k];
+    if (v.productId === productId && v.basePrice === basePrice) total += v.qty;
+  }
+  return total;
+}
+function scTierUnitPrice(item, key) {
+  if (!item.tiers || !item.tiers.length) return item.basePrice;
+  const groupQty = item.qty + scEffectiveQty(item.productId, item.basePrice, key);
+  const sorted = [...item.tiers].sort((a,b) => (b.minQty||0) - (a.minQty||0));
+  for (const t of sorted) { if (t.minQty && t.price && groupQty >= t.minQty) return t.price; }
+  return item.basePrice;
+}
+function scLineTotal(item, key) {
+  const b = scGetBundle(item);
+  if (b && item.qty > 0) {
+    const promoQty = Math.floor(item.qty / b.q) * b.q;
+    const normalQty = item.qty - promoQty;
+    return promoQty * b.price + normalQty * item.basePrice;
+  }
+  return scTierUnitPrice(item, key) * item.qty;
+}
+// อัปเดตราคา/ชิ้นที่แสดงในตะกร้าใหม่ทั้งหมด (เรียกทุกครั้งที่เพิ่ม/ลด/ลบสินค้า เพราะราคาส่งขึ้นกับ
+// จำนวนรวมข้ามไซซ์ราคาเดียวกันของสินค้าเดียวกัน เหมือนหน้าร้านจริง)
+function recalcCartPricing() {
+  for (const key in cart) {
+    const item = cart[key];
+    if (item.qty <= 0) continue;
+    const total = scLineTotal(item, key);
+    item.price = +(total / item.qty).toFixed(2);
+  }
+}
+
 function quickAddToCart(p, sz) {
   const key = p.id + '_' + (sz.n||sz.name||'0');
-  if (!cart[key]) cart[key] = { name: p.name + (sz.n ? ' (' + sz.n + ')' : ''), price: sz.p||sz.price||0, qty: 0, img: p.img||'' };
+  const basePrice = sz.p||sz.price||0;
+  if (!cart[key]) cart[key] = {
+    name: p.name + (sz.n ? ' (' + sz.n + ')' : ''),
+    price: basePrice, qty: 0, img: p.img||'',
+    productId: p.id,
+    sizeName: sz.n || sz.name || '',
+    basePrice,
+    tiers: Array.isArray(sz.tiers) ? sz.tiers : [],
+    bundle: sz.bundle || null
+  };
   cart[key].qty++;
+  recalcCartPricing();
   updateCartBar();
   showToast('✅ เพิ่ม ' + p.name, 'success');
 }
@@ -3475,6 +3530,7 @@ function changeQty(id, delta) {
   if (!cart[id]) return;
   cart[id].qty = Math.max(0, cart[id].qty + delta);
   if (cart[id].qty === 0) delete cart[id];
+  recalcCartPricing();
   updateCartBar(); openCart();
   if (!Object.keys(cart).length) closeCart();
 }
@@ -3593,8 +3649,35 @@ async function submitOrder() {
   const note    = document.getElementById('c-note').value.trim();
   const payment = document.getElementById('c-payment').value;
   if (!name) { showToast('⚠️ กรุณากรอกชื่อลูกค้า'); return; }
-  const items = Object.values(cart).filter(i => i.qty > 0);
-  if (!items.length) { showToast('⚠️ ไม่มีสินค้าในตะกร้า'); return; }
+  const cartEntries = Object.entries(cart).filter(([,i]) => i.qty > 0);
+  if (!cartEntries.length) { showToast('⚠️ ไม่มีสินค้าในตะกร้า'); return; }
+
+  // 🔒 ต้องส่ง productId/sizeName ให้ /send-order เสมอ — เซิร์ฟเวอร์ใช้สองอย่างนี้คำนวณราคาส่ง/โปรชุด
+  // และตัดสต็อกจริงจากตาราง products (ไม่ใช้ราคาที่ client ส่งมาตรงๆ) เหมือนหน้าร้านจริงทุกจุด
+  // ถ้าสินค้ามีโปรชุด ต้องแยกบรรทัด (ส่วนที่ได้ราคาโปร + ส่วนเกินคิดราคาปกติ) แบบเดียวกับหน้าร้าน
+  const items = cartEntries.flatMap(([key, i]) => {
+    const b = scGetBundle(i);
+    if (b && i.qty > 0) {
+      const promoQty  = Math.floor(i.qty / b.q) * b.q;
+      const normalQty = i.qty - promoQty;
+      const out = [];
+      if (promoQty > 0) out.push({
+        name: i.name + ' 🎁โปรชุด ' + b.q + ' ชิ้น', emoji: i.emoji || '',
+        price: b.price, qty: promoQty,
+        productId: i.productId, sizeName: i.sizeName, isBundle: true
+      });
+      if (normalQty > 0) out.push({
+        name: i.name, emoji: i.emoji || '',
+        price: i.basePrice, qty: normalQty,
+        productId: i.productId, sizeName: i.sizeName
+      });
+      return out;
+    }
+    return [{
+      name: i.name, price: i.price, qty: i.qty, emoji: i.emoji || '',
+      productId: i.productId, sizeName: i.sizeName
+    }];
+  });
   const total = items.reduce((s,i) => s + i.price*i.qty, 0);
   const btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.textContent = 'กำลังส่งออเดอร์...';
@@ -3610,7 +3693,7 @@ async function submitOrder() {
       phone:   phone || null,
       address: addr  || null,
       note:    note  || null,
-      items:   items.map(i => ({ name:i.name, price:i.price, qty:i.qty, emoji: i.emoji || '' })),
+      items,
       total,
       orderType: payment === 'cod' ? 'delivery' : 'pickup',
       mapLat: pinLat || null,
